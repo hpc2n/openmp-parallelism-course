@@ -27,7 +27,7 @@ How to run locally:
         $ cd _build/dirhtml
         $ python -m SimpleHTTPServer 8080
 
- 2a. If you are running Python 3.x, then instead do
+ 2a. If you are running Python 3.x, then instead do::
 
         $ cd _build/dirhtml
         $ python -m http.server 8080
