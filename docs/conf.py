@@ -21,9 +21,9 @@ project = 'Task-based parallelism in scientific computing'
 copyright = '2021, The contributors'
 author = 'Mirko Myllykoski'
 github_user = 'hpc2n'
-github_repo_name = 'Task-based-parallelism'  # auto-detected from dirname if blank
+github_repo_name = 'Task-based-parallelism-course'  # auto-detected from dirname if blank
 github_version = 'master'
-conf_py_path = '/content/' # with leading and trailing slash
+conf_py_path = '/docs/' # with leading and trailing slash
 
 # -- General configuration ---------------------------------------------------
 
