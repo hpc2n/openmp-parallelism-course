@@ -32,7 +32,8 @@ How to run locally:
         $ cd _build/dirhtml
         $ python -m http.server 8080
 
-       (or python3 -m python3 -m http.server 8080) 
+        or 
+        $ python3 -m http.server 8080 
 
  3. Open in your browser: http://localhost:8080/
 
