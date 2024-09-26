@@ -33,7 +33,6 @@ conf_py_path = '/docs/' # with leading and trailing slash
 extensions = [
     # githubpages just adds a .nojekyll file
     'sphinx.ext.githubpages',
-    'sphinx_lesson',
     # remove once sphinx_rtd_theme updated for contrast and accessibility:
     'sphinx_rtd_theme_ext_color_contrast',
 ]
