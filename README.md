@@ -31,3 +31,5 @@ Task-based parallelism in scientific computing
 **Recordings:** https://www.youtube.com/playlist?list=PL6jMHLEmPVLyVIp67mW1cRj0xbL-6iFMY
 
 **Registration:** https://www.hpc2n.umu.se/events/courses/task-based-parallelism-spring-2021
+
+**Acknowledgment:** This material was orignally created by Mirko Myllykoski (mirkom@cs.umu.se), and later modified. 
