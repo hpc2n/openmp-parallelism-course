@@ -50,4 +50,4 @@ For presentations, it is beneficial to enter either the **plain mode** or the **
 
 If you are using Google Chrome, you can open the browser in the app mode::
 
-    $ google-chrome --app=https://hpc2n.github.io/Task-based-parallelism/branch/master/
+    $ google-chrome --app=https://hpc2n.github.io/openmp-parallelism/branch/master/
