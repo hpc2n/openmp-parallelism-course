@@ -7,21 +7,23 @@ OpenMP parallelism in scientific computing
 
 :Format: The course will be three half-days and comprises of lectures and hands-on sessions. This is an online-only course (Zoom).
 
+<<<<<<< HEAD:docs/index.rst
 :Audience: This HPC2N course is part of the PRACE Training courses. It is open for academics and people who work in industry in PRACE member countries.
+=======
+:Audience: ...
+>>>>>>> 31c2f71 (Intro: updating hpc2n info):content/index.rst
 
 :Date and Time: 2021-05-{10,11,12}, 9:00-12:00
 
 :Location: Online through Zoom
 
-:Instructors: Mirko Myllykoski (mirkom@cs.umu.se)
+:Instructors: Pedro Ojeda-May (pedro.ojeda-may@umu.se)
 
-:Helpers: Birgitte Brydsö, Pedro Ojeda-May
+:Original author: Mirko Myllykoski.
 
-:Original author: Mirko Myllykoski (spring 2021)
+:Recordings: ...
 
-:Recordings: https://www.youtube.com/playlist?list=PL6jMHLEmPVLyVIp67mW1cRj0xbL-6iFMY
-
-:Registration: https://www.hpc2n.umu.se/events/courses/task-based-parallelism-spring-2021
+:Registration: ...
 
 :Acknowledgment: This material was orignally created by Mirko Myllykoski (mirkom@cs.umu.se), and later modified.
 

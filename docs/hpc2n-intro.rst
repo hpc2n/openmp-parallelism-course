@@ -13,9 +13,9 @@ Introduction to HPC2N
 Overview of HPC2N
 ^^^^^^^^^^^^^^^^^
 
-High Performance Computing Center North (HPC2N) is a national center for Scientific and Parallel Computing. It is a part of the Swedish National Infrastructure for Computing (SNIC).
+High Performance Computing Center North (HPC2N) is a national center for Scientific and Parallel Computing. It is a part of the National Infrastructure for Supercomputing Computing in Sweden (NAISS).
 
-HPC2N is funded by the Swedish Research Council (VR) and SNIC, as well as its partners (Luleå University of Technology, Mid Sweden University, Swedish Institute of Space Physics, the Swedish University of Agricultural Sciences, and Umeå University). 
+HPC2N is a collaboration between universities and research institutes (Luleå University of Technology, Mid Sweden University, Swedish Institute of Space Physics, the Swedish University of Agricultural Sciences, and Umeå University). 
 
 HPC2N provides 
  - computing resources
@@ -34,19 +34,15 @@ Management
 
 Application experts (AE)
  - Jerry Eriksson
- - Mirko Myllykoski
  - Pedro Ojeda-May
 
 System and support
  - Erik Andersson
  - Birgitte Brydsö (also AE)
  - Niklas Edmundsson
- - Ingemar Fällman
- - Magnus Jonsson
  - Roger Oscarsson
  - Åke Sandgren (also AE)
  - Matthias Wadenstein
- - Lars Viklund (also AE)
 
 In addition, there are several more people associated with HPC2N. See the list on `HPC2N's webpages <https://www.hpc2n.umu.se/about/people>`_.
 
