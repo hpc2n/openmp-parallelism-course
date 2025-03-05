@@ -32,4 +32,4 @@ OpenMP-based parallelism in scientific computing
 
 **Registration:** https://www.hpc2n.umu.se/events/courses/task-based-parallelism-spring-2021
 
-**Acknowledgment:** This material was orignally created by Mirko Myllykoski (mirkom@cs.umu.se), and later modified. 
+**Acknowledgment:** This material was orignally created by Mirko Myllykoski (mirkom@cs.umu.se), for the "Task-based parallelism course" and later modified. 
