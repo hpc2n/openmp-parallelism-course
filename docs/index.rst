@@ -39,6 +39,7 @@ OpenMP parallelism in scientific computing
    first-steps
    data-handling
    worksharing
+   worksharingii
    openmp-basics1
    openmp-basics2
 
