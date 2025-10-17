@@ -394,7 +394,7 @@ In a parallel region with n threads, thread IDs range from 0 to n-1.
 
 .. figure:: img/parallel_construct2.png
     :align: center
-    :scale: 75%
+    :scale: 30%
 
 **Example: Printing Thread Numbers**
 
