@@ -89,8 +89,8 @@ OpenMP Resources
 Threads in OpenMP
 ^^^^^^^^^^^^^^^^^
 
-Execution Model
----------------
+**Execution Model**
+
 
 Program execution follows a fork-join model:
 
@@ -102,15 +102,34 @@ Program execution follows a fork-join model:
 
 Different parallel regions can have different numbers of threads.
 
-----
+.. figure:: img/parallel_construct.png
+    :align: center
+    :scale: 75%
 
-OpenMP: Directive Based
-=======================
+
+**OpenMP: Directive Based**
+
 
 OpenMP is based on compiler directives that control parallel execution.
 
-Key Features
-------------
+In C and C++, an OpenMP pragma has the following form:
+
+.. code-block:: c
+
+    #pragma omp directive-name [clause[ [,] clause] ... ] new-line
+
+A compiler typically supports several types of pragmas, not just OpenMP pragmas.
+Therefore, all OpenMP pragmas begin with the keywords :code:`#pragma omp`.
+The :code:`directive-name` placeholder specifies the used OpenMP construct (e.g. :code:`parallel`) and a pragma is always followed by a new line.
+Typically, a pragma affects the user code that follows it but some OpenMP pragmas are *stand-alone*.
+You can span a pragma across multiple lines by using a backslash (:code:`\ `) immediately followed by a new line:
+
+.. code-block:: c
+
+    #pragma omp directive-name \
+        [clause[ [,] \
+        clause] ... ] new-line
+
 
 - **In Fortran:** Directives are special comments
 - **In C/C++:** Directives are ``#pragma`` statements
@@ -118,20 +137,19 @@ Key Features
 - This makes it easy to maintain a single source version for both serial and parallel execution
 - OpenMP also facilitates conditional compilation
 
-----
 
-OpenMP Directives in Fortran
-=============================
 
-Free Format
------------
+**OpenMP Directives in Fortran**
+
+
+*Free Format*
+
 
 .. code-block:: fortran
 
     !$omp directive_name [clause […]]
 
-Fixed Format
-------------
+*Fixed Format*
 
 Directives always start in column 1:
 
@@ -143,17 +161,17 @@ Directives always start in column 1:
 
 The first piece (e.g., ``!$omp``) is called the **sentinel**.
 
-Line Continuation
------------------
+**Line Continuation**
 
-**Free format example:**
+
+*Free format example:*
 
 .. code-block:: fortran
 
     !$omp parallel do &
     !$omp shared(a,b)
 
-**Fixed format example:**
+*Fixed format example:*
 
 .. code-block:: fortran
 
@@ -164,46 +182,39 @@ Line Continuation
 .. note::
    A non-blank character in column 6 marks a continuation line.
 
-----
 
-OpenMP Directives in C/C++
-==========================
+**OpenMP Directives in C/C++**
 
-Syntax
-------
 
 .. code-block:: c
 
     #pragma omp directive_name [clause […]]
 
-Line Continuation
------------------
+**Line Continuation**
+
 
 Use backslash ``\`` for line continuation.
 
-Components
-----------
 
 - **Directive name:** Specifies the action
 - **Clause(s):** Allow further specification
 
-----
 
 Library Functions
-=================
+^^^^^^^^^^^^^^^^^
 
 In addition to directives, OpenMP offers library functions mainly to control the operating environment.
 
-Including Headers
------------------
+**Including Headers**
 
-**In C:**
+
+*In C:*
 
 .. code-block:: c
 
     #include <omp.h>
 
-**In Fortran:**
+*In Fortran:*
 
 .. code-block:: fortran
 
@@ -215,15 +226,14 @@ or
 
     use omp_lib
 
-----
 
 Conditional Compilation
-=======================
+^^^^^^^^^^^^^^^^^^^^^^^
 
 OpenMP compilers define the preprocessor macro ``_OPENMP``.
 
-C Example
----------
+*C Example*
+
 
 .. code-block:: c
 
@@ -231,8 +241,7 @@ C Example
     #include <omp.h>
     #endif
 
-Fortran Example
----------------
+*Fortran Example*
 
 Lines starting with ``!$`` (free format) or ``!$``, ``*$``, ``c$`` (fixed format) are only compiled if OpenMP is active:
 
@@ -243,15 +252,12 @@ Lines starting with ``!$`` (free format) or ``!$``, ``*$``, ``c$`` (fixed format
 .. note::
    This guard is required if code needs to be compiled serially.
 
-----
+
 
 The ``parallel`` Construct in Fortran
-======================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The most important construct in OpenMP.
-
-Syntax
-------
 
 .. code-block:: fortran
 
@@ -259,14 +265,12 @@ Syntax
         structured block of Fortran
     !$omp end parallel
 
-Behavior
---------
 
 - Starts a team of threads working on the block between the directives
 - At the end of the parallel region, there's an implicit synchronization (wait for the last thread)
 
-First Example
--------------
+**First Example**
+
 
 .. code-block:: fortran
 
@@ -288,13 +292,11 @@ First Example
 - Each thread performs addition and prints "6+7="
 - Code also compiles serially (without OpenMP)
 
-----
+
 
 The ``parallel`` Construct in C
-================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Syntax
-------
 
 .. code-block:: c
 
@@ -303,14 +305,13 @@ Syntax
         structured block of C instructions
     }
 
-Behavior
---------
+
 
 - Starts a team of threads working on the block enclosed with ``{ }`` in parallel
 - At the end of the parallel region, there's an implicit synchronization (wait for the last thread)
 
-First Example
--------------
+**First Example**
+
 
 .. code-block:: c
 
@@ -332,29 +333,28 @@ First Example
 - Parallel construct creates threads
 - Each thread performs addition and prints "6+7="
 
-----
 
 Controlling the Number of Threads
-==================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The number of threads started by a parallel construct can be controlled in several ways (listed by increasing priority):
 
 1. Environment Variable
------------------------
+
 
 .. code-block:: bash
 
     export OMP_NUM_THREADS=n
 
 2. Function Call
-----------------
+
 
 .. code-block:: c
 
     omp_set_num_threads(n);
 
 3. Clause on Parallel Construct (Highest Priority)
----------------------------------------------------
+
 
 **Fortran:**
 
@@ -368,40 +368,39 @@ The number of threads started by a parallel construct can be controlled in sever
 
     #pragma omp parallel num_threads(n)
 
-----
 
-Thread Number and Thread ID
-============================
 
-Query Functions
----------------
+**Thread Number and Thread ID query Functions**
+
 
 These functions require header files to be included.
 
-**Query number of threads:**
+*Query number of threads:*
 
 .. code-block:: c
 
     omp_get_num_threads()
 
-**Query thread ID:**
+*Query thread ID:*
 
 .. code-block:: c
 
     omp_get_thread_num()
 
-Thread Numbering
-----------------
+**Thread Numbering**
+
 
 In a parallel region with n threads, thread IDs range from 0 to n-1.
 
-----
+.. figure:: img/parallel_construct2.png
+    :align: center
+    :scale: 75%
 
-Example: Printing Thread Numbers
-=================================
+**Example: Printing Thread Numbers**
 
-Fortran Version
----------------
+
+*Fortran Version*
+
 
 .. code-block:: fortran
 
@@ -417,7 +416,6 @@ Fortran Version
     end program FortranHello
 
 Sample Output (8 threads)
---------------------------
 
 .. code-block:: text
 
@@ -433,8 +431,7 @@ Sample Output (8 threads)
 .. note::
    Each thread prints its thread number and total number of threads. The order is non-deterministic.
 
-C Version
----------
+*C Version*
 
 .. code-block:: c
 
@@ -453,25 +450,19 @@ C Version
         return 0;
     }
 
-----
 
-Use Case: Task Farm Using Thread Numbers
-=========================================
 
-Scenario
---------
+**Use Case: Task Farm Using Thread Numbers**
+
+
 
 You have three serial programs and want to run them on different threads.
 
-Preparation
------------
 
 Convert the programs into functions/subroutines.
 
-Fortran Implementation
-----------------------
+*Fortran Implementation*
 
-**Before:**
 
 .. code-block:: fortran
 
@@ -479,7 +470,6 @@ Fortran Implementation
         ! statements
     End Program Prog2
 
-**After:**
 
 .. code-block:: fortran
 
@@ -487,7 +477,7 @@ Fortran Implementation
         ! statements
     End subroutine sub2
 
-**New main program:**
+New main program:
 
 .. code-block:: fortran
 
@@ -504,10 +494,9 @@ Fortran Implementation
         
     End program farm
 
-C Implementation
-----------------
+*C Implementation*
 
-**Before:**
+
 
 .. code-block:: c
 
@@ -516,7 +505,7 @@ C Implementation
         // statements
     }
 
-**After:**
+
 
 .. code-block:: c
 
@@ -525,7 +514,7 @@ C Implementation
         // statements
     }
 
-**New main function:**
+New main function:
 
 .. code-block:: c
 
@@ -543,15 +532,15 @@ C Implementation
         return 0;
     }
 
-----
+
 
 Timing OpenMP Code
-==================
+^^^^^^^^^^^^^^^^^^
 
 Parallel programming is all about speed, so timing is essential.
 
 Timer Function: ``omp_get_wtime()``
-------------------------------------
+
 
 - Returns elapsed wall-clock time in seconds
 - Returns ``double`` in C, ``double precision`` in Fortran
@@ -560,8 +549,8 @@ Timer Function: ``omp_get_wtime()``
 .. warning::
    Timer is bound to thread!
 
-Fortran Example
----------------
+*Fortran Example*
+
 
 .. code-block:: fortran
 
@@ -574,8 +563,7 @@ Fortran Example
     ftime = omp_get_wtime()
     print *, "time: ", ftime - stime
 
-C Example
----------
+*C Example*
 
 .. code-block:: c
 
@@ -586,15 +574,15 @@ C Example
     double ftime = omp_get_wtime() - stime;
     printf("time: %f\n", ftime);
 
-----
+
 
 Compiling OpenMP Code
-=====================
+^^^^^^^^^^^^^^^^^^^^^
 
 Most modern compilers support OpenMP. Simply add a compiler flag to enable OpenMP.
 
 Compiler Flags
---------------
+
 
 .. list-table::
    :header-rows: 1
@@ -634,8 +622,8 @@ Compiler Flags
      - version 17.0
      - OpenMP 4.5
 
-Example with GCC
-----------------
+*Example with GCC*
+
 
 .. code-block:: bash
 
@@ -644,10 +632,10 @@ Example with GCC
 .. note::
    Some features of newer standards may be available depending on compiler version.
 
-----
+
 
 Summary
-=======
+^^^^^^^
 
 This guide introduced the following OpenMP concepts:
 
