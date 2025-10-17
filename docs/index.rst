@@ -35,11 +35,6 @@ OpenMP parallelism in scientific computing
    hpc2n-intro
    setup
    first-steps
-   data-handling
-   worksharing
-   data-handlingii
-   worksharingii
-   tasks
    openmp-basics1
    openmp-basics2
 

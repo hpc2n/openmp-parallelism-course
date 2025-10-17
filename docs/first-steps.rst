@@ -58,23 +58,22 @@ In shared memory architecture, threads placed on several processing elements man
 
 
 OpenMP Resources
-================
+^^^^^^^^^^^^^^^^
 
-Official Resources
-------------------
+**Official Resources**
+
 
 - OpenMP is trademarked by the OpenMP ARB (a not-for-profit corporation)
 - Website: http://openmp.org
 - Standard specifications (free): http://www.openmp.org/specifications/
 
-Free Tutorials
---------------
+**Free Tutorials**
 
 - YouTube playlist: https://www.youtube.com/playlist?list=PLLX-Q6B8xqZ8n8bwjGdzBJ25X2utwnoEG
 - LLNL tutorial: https://computing.llnl.gov/tutorials/openMP/
 
-Textbooks
----------
+**Textbooks**
+
 
 1. **Using OpenMP** (OpenMP 2.5)
    
@@ -86,10 +85,9 @@ Textbooks
    :Authors: R van der Pas, E Stolzer, C Terboven
    :Publisher: MIT Press, Cambridge, Massachusetts, 2017
 
-----
 
 Threads in OpenMP
-=================
+^^^^^^^^^^^^^^^^^
 
 Execution Model
 ---------------
