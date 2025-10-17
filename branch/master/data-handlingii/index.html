@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>More on Private Data &mdash; OpenMP parallelism in scientific computing  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../" class="icon icon-home">
+            OpenMP parallelism in scientific computing
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Day 1</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hpc2n-intro/">Introduction to HPC2N</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup/">Introduction to Kebnekaise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../first-steps/">First Steps in OpenMP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../openmp-basics1/">Introduction to OpenMP (part 1)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../openmp-basics2/">Introduction to OpenMP (part 2)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 2</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../motivation/">Introduction to task-based parallelism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../task-basics-1/">OpenMP task basics (part 1)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../task-basics-2/">OpenMP task basics (part 2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../task-basics-lu/">Example: LU factorization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Miscellanous</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick-reference/">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/">Instructor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../">OpenMP parallelism in scientific computing</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">More on Private Data</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/hpc2n/OpenMP-parallelism-course/blob/master/docs/data-handlingii.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="more-on-private-data">
+<h1>More on Private Data<a class="headerlink" href="#more-on-private-data" title="Permalink to this heading"></a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Pedro Ojeda &amp; Joachim Hein</p>
+</dd>
+<dt class="field-even">Institutions<span class="colon">:</span></dt>
+<dd class="field-even"><p>High Performance Computing Center North &amp; Lund University</p>
+</dd>
+</dl>
+<hr class="docutils" />
+<section id="outline">
+<h2>Outline<a class="headerlink" href="#outline" title="Permalink to this heading"></a></h2>
+<p>This guide covers special versions of private data:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">firstprivate</span></code> - initialization of private variables</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lastprivate</span></code> - capturing values from last iteration</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reduction</span></code> - parallel reductions (sums, products, etc.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">threadprivate</span></code> - privatizing global storage</p></li>
+<li><p>User-defined reductions (OpenMP 4.0+)</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="private-and-shared-data-review">
+<h2>Private and Shared Data: Review<a class="headerlink" href="#private-and-shared-data-review" title="Permalink to this heading"></a></h2>
+<p>In a parallel region, data can be either shared or private.</p>
+<section id="shared-data">
+<h3>Shared Data<a class="headerlink" href="#shared-data" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Value unchanged on entry to parallel region</p></li>
+<li><p>Survives after end of parallel region</p></li>
+</ul>
+</section>
+<section id="private-data">
+<h3>Private Data<a class="headerlink" href="#private-data" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Each thread has its own private copy</p></li>
+<li><p>Normally uninitialized at beginning of parallel region</p></li>
+<li><p>Contents typically lost when parallel region finishes</p></li>
+<li><p><strong>However:</strong> Connection to values before/after is often needed</p></li>
+</ul>
+</section>
+<section id="memory-layout">
+<h3>Memory Layout<a class="headerlink" href="#memory-layout" title="Permalink to this heading"></a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Main Memory: [Shared data]
+
+Thread 0: [Private T0]
+Thread 1: [Private T1]
+Thread 2: [Private T2]
+Thread 3: [Private T3]
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="clause-firstprivate">
+<h2>Clause: firstprivate<a class="headerlink" href="#clause-firstprivate" title="Permalink to this heading"></a></h2>
+<section id="problem">
+<h3>Problem<a class="headerlink" href="#problem" title="Permalink to this heading"></a></h3>
+<p>Private variables are not initialized by default.</p>
+</section>
+<section id="solution-firstprivate-clause">
+<h3>Solution: firstprivate Clause<a class="headerlink" href="#solution-firstprivate-clause" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">firstprivate</span></code> clause:</p>
+<ul class="simple">
+<li><p>Declares variable(s) as private</p></li>
+<li><p>Initializes each private copy with the value prior to the construct</p></li>
+</ul>
+</section>
+<section id="fortran-example">
+<h3>Fortran Example<a class="headerlink" href="#fortran-example" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">lsum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span>
+
+<span class="c">!$omp parallel &amp;</span>
+<span class="c">!$omp firstprivate(lsum)</span>
+<span class="w">    </span><span class="n">lsum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lsum</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">lsum</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+</section>
+<section id="c-example">
+<h3>C Example<a class="headerlink" href="#c-example" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">lsum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel \</span>
+<span class="cp">    firstprivate(lsum)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">lsum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">lsum</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="expected-output">
+<h3>Expected Output<a class="headerlink" href="#expected-output" title="Permalink to this heading"></a></h3>
+<p>With 4 threads:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread 0: 10
+Thread 1: 11
+Thread 2: 12
+Thread 3: 13
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-vector-norm-with-private">
+<h2>Example: Vector Norm with private<a class="headerlink" href="#example-vector-norm-with-private" title="Permalink to this heading"></a></h2>
+<section id="fortran-version">
+<h3>Fortran Version<a class="headerlink" href="#fortran-version" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+
+<span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp shared(vect, norm) private(i, lNorm)</span>
+<span class="w">    </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">vleng</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="w">    </span><span class="k">enddo</span>
+
+<span class="w">    </span><span class="c">!$omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">lNorm</span>
+<span class="c">!$omp end parallel</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="c-version">
+<h3>C Version<a class="headerlink" href="#c-version" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    shared(vect, norm) private(i, lNorm)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">vleng</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+
+<span class="w">    </span><span class="cp">#pragma omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">lNorm</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i) \cdot v(i)}\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">lNorm</span></code> must be explicitly initialized to 0.0 inside the parallel region.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-vector-norm-with-firstprivate">
+<h2>Example: Vector Norm with firstprivate<a class="headerlink" href="#example-vector-norm-with-firstprivate" title="Permalink to this heading"></a></h2>
+<section id="id1">
+<h3>Fortran Version<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+
+<span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp shared(vect, norm) private(i) firstprivate(lNorm)</span>
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">vleng</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="w">    </span><span class="k">enddo</span>
+
+<span class="w">    </span><span class="c">!$omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">lNorm</span>
+<span class="c">!$omp end parallel</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>C Version<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    shared(vect, norm) private(i) firstprivate(lNorm)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">vleng</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+
+<span class="w">    </span><span class="cp">#pragma omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">lNorm</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i) \cdot v(i)}\)</span></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">firstprivate</span></code>, <code class="docutils literal notranslate"><span class="pre">lNorm</span></code> is automatically initialized to 0.0 from the master thread’s value.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="clause-lastprivate">
+<h2>Clause: lastprivate<a class="headerlink" href="#clause-lastprivate" title="Permalink to this heading"></a></h2>
+<section id="purpose">
+<h3>Purpose<a class="headerlink" href="#purpose" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">lastprivate</span></code> clause:</p>
+<ul class="simple">
+<li><p>Used with loop and sections constructs</p></li>
+<li><p>Variable is private during execution</p></li>
+<li><p>At the end: assigns value from last iteration or section</p></li>
+<li><p>Undefined if not set in last iteration/section</p></li>
+</ul>
+</section>
+<section id="combined-usage">
+<h3>Combined Usage<a class="headerlink" href="#combined-usage" title="Permalink to this heading"></a></h3>
+<p>Variables can be both <code class="docutils literal notranslate"><span class="pre">firstprivate</span></code> <strong>and</strong> <code class="docutils literal notranslate"><span class="pre">lastprivate</span></code>.</p>
+</section>
+<section id="id3">
+<h3>Fortran Example<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">a</span>
+
+<span class="c">!$omp parallel do &amp;</span>
+<span class="c">!$omp lastprivate(a)</span>
+<span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span>
+<span class="w">    </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">call </span><span class="n">func</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="k">enddo</span>
+
+<span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;a=&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span>
+<span class="c">! This prints: a=101</span>
+</pre></div>
+</div>
+</section>
+<section id="id4">
+<h3>C Example<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel for \</span>
+<span class="cp">    lastprivate(a)</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">100</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="n">func</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">printf</span><span class="p">(</span><span class="s">&quot;a=%i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">);</span>
+<span class="c1">// This prints: a=100</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The value from the sequentially last iteration is assigned back to the original variable.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="reduction-variables">
+<h2>Reduction Variables<a class="headerlink" href="#reduction-variables" title="Permalink to this heading"></a></h2>
+<section id="common-need">
+<h3>Common Need<a class="headerlink" href="#common-need" title="Permalink to this heading"></a></h3>
+<p>Reductions of private variables are frequently needed:</p>
+<ul class="simple">
+<li><p>Averages of array values</p></li>
+<li><p>Scalar products</p></li>
+<li><p>Sum, product, minimum, maximum operations</p></li>
+</ul>
+</section>
+<section id="previous-approach">
+<h3>Previous Approach<a class="headerlink" href="#previous-approach" title="Permalink to this heading"></a></h3>
+<p>We’ve done this before (e.g., vector norm example) using <code class="docutils literal notranslate"><span class="pre">atomic</span></code> to protect the update.</p>
+</section>
+<section id="better-approach-reduction-clause">
+<h3>Better Approach: Reduction Clause<a class="headerlink" href="#better-approach-reduction-clause" title="Permalink to this heading"></a></h3>
+<p>For a reduction, we specify:</p>
+<ul class="simple">
+<li><p><strong>Operation:</strong> e.g., addition, multiplication, OR, AND, etc.</p></li>
+<li><p><strong>One or more variables</strong></p></li>
+<li><p>A construct can have more than one reduction</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="behavior-of-reduction">
+<h2>Behavior of Reduction<a class="headerlink" href="#behavior-of-reduction" title="Permalink to this heading"></a></h2>
+<section id="basic-syntax">
+<h3>Basic Syntax<a class="headerlink" href="#basic-syntax" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">reduction</span><span class="p">(</span><span class="n">operator</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">variable_list</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="how-it-works">
+<h3>How It Works<a class="headerlink" href="#how-it-works" title="Permalink to this heading"></a></h3>
+<p><strong>Variables specified in reduction:</strong></p>
+<ol class="arabic simple">
+<li><p>Each thread gets a private copy</p></li>
+<li><p>Private copies are initialized with default values matching the operator</p></li>
+<li><p>At the end of the construct (e.g., parallel region):</p>
+<ul class="simple">
+<li><p>Value prior to construct is combined with private copies</p></li>
+<li><p>Using the specified operator for combining values</p></li>
+<li><p>New combined value is available after the construct</p></li>
+</ul>
+</li>
+</ol>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-memory-movements-for-reduction-c">
+<h2>Example: Memory Movements for Reduction (C)<a class="headerlink" href="#example-memory-movements-for-reduction-c" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel \</span>
+<span class="cp">    reduction(+:b)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="n">printf</span><span class="p">(</span><span class="s">&quot;%i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+</pre></div>
+</div>
+<section id="memory-behavior">
+<h3>Memory Behavior<a class="headerlink" href="#memory-behavior" title="Permalink to this heading"></a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Main Memory: b = 5
+
+Thread 0: b = 0 → b = 0
+Thread 1: b = 0 → b = 1
+Thread 2: b = 0 → b = 2
+Thread 3: b = 0 → b = 3
+
+Final: 5 + 0 + 1 + 2 + 3 = 11
+</pre></div>
+</div>
+<p>Output: <code class="docutils literal notranslate"><span class="pre">11</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each thread’s private copy is initialized to 0 (identity for addition), then combined at the end.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-memory-movements-for-reduction-fortran">
+<h2>Example: Memory Movements for Reduction (Fortran)<a class="headerlink" href="#example-memory-movements-for-reduction-fortran" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">b</span>
+
+<span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+
+<span class="c">!$omp parallel &amp;</span>
+<span class="c">!$omp reduction(+:b)</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+<span class="c">!$omp end parallel</span>
+
+<span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">b</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Memory Behavior<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Main Memory: b = 5
+
+Thread 0: b = 0 → b = 0
+Thread 1: b = 0 → b = 1
+Thread 2: b = 0 → b = 2
+Thread 3: b = 0 → b = 3
+
+Final: 5 + 0 + 1 + 2 + 3 = 11
+</pre></div>
+</div>
+<p>Output: <code class="docutils literal notranslate"><span class="pre">11</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each thread’s private copy is initialized to 0 (identity for addition), then combined at the end.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-vector-norm-with-atomic-update">
+<h2>Example: Vector Norm with atomic update<a class="headerlink" href="#example-vector-norm-with-atomic-update" title="Permalink to this heading"></a></h2>
+<section id="id6">
+<h3>Fortran Version<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+
+<span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp shared(vect, norm) private(i) firstprivate(lNorm)</span>
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">vleng</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="w">  </span><span class="c">! private copy</span>
+<span class="w">    </span><span class="k">enddo</span>
+
+<span class="w">    </span><span class="c">!$omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">lNorm</span>
+<span class="c">!$omp end parallel  ! combine copies</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span><span class="w">  </span><span class="c">! master copy</span>
+</pre></div>
+</div>
+</section>
+<section id="id7">
+<h3>C Version<a class="headerlink" href="#id7" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    shared(vect, norm) private(i) firstprivate(lNorm)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">vleng</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+
+<span class="w">    </span><span class="cp">#pragma omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">lNorm</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i) \cdot v(i)}\)</span></p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-vector-norm-with-reduction">
+<h2>Example: Vector Norm with reduction<a class="headerlink" href="#example-vector-norm-with-reduction" title="Permalink to this heading"></a></h2>
+<section id="id8">
+<h3>Fortran Version<a class="headerlink" href="#id8" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="w">  </span><span class="c">! master copy</span>
+<span class="c">! lNorm gone</span>
+
+<span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp shared(vect) reduction(+:norm) private(i)</span>
+<span class="w">    </span><span class="c">!$omp do  ! private copy = 0</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">vleng</span>
+<span class="w">        </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="w">  </span><span class="c">! private copy</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="c">!$omp end parallel  ! combine copies</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span><span class="w">  </span><span class="c">! master copy</span>
+</pre></div>
+</div>
+</section>
+<section id="id9">
+<h3>C Version<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">  </span><span class="c1">// master copy</span>
+<span class="c1">// lNorm gone!</span>
+
+<span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    shared(vect) reduction(+:norm) private(i)</span>
+<span class="p">{</span><span class="w">  </span><span class="c1">// private copy: 0</span>
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">vleng</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w">  </span><span class="c1">// private copy</span>
+<span class="p">}</span><span class="w">  </span><span class="c1">// combine copies</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span><span class="w">  </span><span class="c1">// master copy</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i) \cdot v(i)}\)</span></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>No need for <code class="docutils literal notranslate"><span class="pre">lNorm</span></code> variable or <code class="docutils literal notranslate"><span class="pre">atomic</span></code> directive. The reduction clause handles everything automatically.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-vector-norm-with-reduction-simplified">
+<h2>Example: Vector Norm with reduction (Simplified)<a class="headerlink" href="#example-vector-norm-with-reduction-simplified" title="Permalink to this heading"></a></h2>
+<section id="id10">
+<h3>Fortran Version<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="w">  </span><span class="c">! master copy</span>
+
+<span class="c">!$omp parallel do default(none) &amp;</span>
+<span class="c">!$omp shared(vect) reduction(+:norm)</span>
+<span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">vleng</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="w">  </span><span class="c">! private copy</span>
+<span class="k">enddo</span>
+<span class="c">!$omp end parallel do</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span><span class="w">  </span><span class="c">! master copy</span>
+</pre></div>
+</div>
+</section>
+<section id="id11">
+<h3>C Version<a class="headerlink" href="#id11" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">  </span><span class="c1">// master copy</span>
+
+<span class="cp">#pragma omp parallel for default(none) \</span>
+<span class="cp">    shared(vect) reduction(+:norm)</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">vleng</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w">  </span><span class="c1">// private copy</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span><span class="w">  </span><span class="c1">// master copy</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i) \cdot v(i)}\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Using <code class="docutils literal notranslate"><span class="pre">parallel</span> <span class="pre">do</span></code>/<code class="docutils literal notranslate"><span class="pre">parallel</span> <span class="pre">for</span></code> makes the code even more concise.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="supported-operators-fortran-openmp-3-0">
+<h2>Supported Operators: Fortran (OpenMP 3.0)<a class="headerlink" href="#supported-operators-fortran-openmp-3-0" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.6%" />
+<col style="width: 21.4%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Symbol</p></th>
+<th class="head"><p>Initial Value of Local Copy</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>add</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">+</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>multiply</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">*</span></code></p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>subtract</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>logical AND</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.and.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.true.</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>logical OR</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.or.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.false.</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>EQUIVALENCE</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.eqv.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.true.</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>NON-EQUIV.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.neqv.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.false.</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>maximum</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">max</span></code></p></td>
+<td><p>smallest representable number</p></td>
+</tr>
+<tr class="row-even"><td><p>minimum</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">min</span></code></p></td>
+<td><p>largest representable number</p></td>
+</tr>
+<tr class="row-odd"><td><p>bitwise AND</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">iand</span></code></p></td>
+<td><p>all bits on</p></td>
+</tr>
+<tr class="row-even"><td><p>bitwise OR</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ior</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>bitwise XOR</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ieor</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<hr class="docutils" />
+<section id="supported-operators-c-openmp-3-0">
+<h2>Supported Operators: C (OpenMP 3.0)<a class="headerlink" href="#supported-operators-c-openmp-3-0" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 28.6%" />
+<col style="width: 21.4%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Symbol</p></th>
+<th class="head"><p>Initial Value of Local Copy</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>add</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">+</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>multiply</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">*</span></code></p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>subtract</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>bitwise AND</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&amp;</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">~0</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>bitwise OR</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">|</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>bitwise XOR</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">^</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p>logical AND</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code></p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>logical OR</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">||</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<hr class="docutils" />
+<section id="restrictions-on-reduction">
+<h2>Restrictions on Reduction<a class="headerlink" href="#restrictions-on-reduction" title="Permalink to this heading"></a></h2>
+<section id="important-limitations">
+<h3>Important Limitations<a class="headerlink" href="#important-limitations" title="Permalink to this heading"></a></h3>
+<p><strong>C/C++:</strong></p>
+<ul class="simple">
+<li><p>Arrays are <strong>unsupported</strong> as reduction variables</p></li>
+<li><p>No pointer or reference types</p></li>
+</ul>
+<p><strong>Fortran:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ALLOCATABLE</span></code> arrays must be allocated at the beginning of construct</p></li>
+<li><p>Must not be deallocated during construct</p></li>
+<li><p>No Fortran pointers or assumed-size arrays</p></li>
+</ul>
+</section>
+<section id="order-of-execution">
+<h3>Order of Execution<a class="headerlink" href="#order-of-execution" title="Permalink to this heading"></a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>No order of threads is specified!</p>
+<ul class="simple">
+<li><p>Repeated runs are typically <strong>not bit-identical</strong></p></li>
+<li><p>This is common in parallel computing</p></li>
+<li><p>This is technically a race condition, which is typically tolerated</p></li>
+</ul>
+</div>
+</section>
+<section id="openmp-4-0-enhancement">
+<h3>OpenMP 4.0 Enhancement<a class="headerlink" href="#openmp-4-0-enhancement" title="Permalink to this heading"></a></h3>
+<p>OpenMP 4.0 allows you to declare your own custom reductions.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="user-defined-reductions">
+<h2>User-Defined Reductions<a class="headerlink" href="#user-defined-reductions" title="Permalink to this heading"></a></h2>
+<section id="id12">
+<h3>Purpose<a class="headerlink" href="#id12" title="Permalink to this heading"></a></h3>
+<p>Allows definition of custom reduction operations.</p>
+</section>
+<section id="use-cases">
+<h3>Use Cases<a class="headerlink" href="#use-cases" title="Permalink to this heading"></a></h3>
+<p>Particularly useful with derived data types:</p>
+<ul class="simple">
+<li><p><strong>C/C++:</strong> <code class="docutils literal notranslate"><span class="pre">struct</span></code></p></li>
+<li><p><strong>Fortran:</strong> <code class="docutils literal notranslate"><span class="pre">type</span></code></p></li>
+</ul>
+</section>
+<section id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading"></a></h3>
+<p>You need to provide:</p>
+<ol class="arabic simple">
+<li><p><strong>Combiner:</strong> Combines thread-private results to final result</p></li>
+<li><p><strong>Initializer:</strong> Initializes private contributions at outset</p></li>
+</ol>
+</section>
+</section>
+<hr class="docutils" />
+<section id="case-study-maximum-value-and-its-position">
+<h2>Case Study: Maximum Value and Its Position<a class="headerlink" href="#case-study-maximum-value-and-its-position" title="Permalink to this heading"></a></h2>
+<section id="problem-statement">
+<h3>Problem Statement<a class="headerlink" href="#problem-statement" title="Permalink to this heading"></a></h3>
+<p>Given a large array:</p>
+<ul class="simple">
+<li><p>Determine the maximum value</p></li>
+<li><p>Find the location (index) of the maximum in the array</p></li>
+</ul>
+</section>
+<section id="parallelization-strategy">
+<h3>Parallelization Strategy<a class="headerlink" href="#parallelization-strategy" title="Permalink to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p>Assign a portion of array to each thread</p></li>
+<li><p>Each thread determines maximum and position in its part</p></li>
+<li><p>Use user-defined reduction to determine final result</p></li>
+</ol>
+</section>
+</section>
+<hr class="docutils" />
+<section id="user-defined-reduction-in-fortran">
+<h2>User-Defined Reduction in Fortran<a class="headerlink" href="#user-defined-reduction-in-fortran" title="Permalink to this heading"></a></h2>
+<section id="step-1-define-the-data-type">
+<h3>Step 1: Define the Data Type<a class="headerlink" href="#step-1-define-the-data-type" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">type</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">mx_s</span>
+<span class="w">    </span><span class="kt">real</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="k">value</span>
+<span class="k">    </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="nb">index</span>
+<span class="k">end type</span>
+</pre></div>
+</div>
+</section>
+<section id="step-2-declare-the-reduction">
+<h3>Step 2: Declare the Reduction<a class="headerlink" href="#step-2-declare-the-reduction" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp declare reduction(maxloc: mx_s: &amp;</span>
+<span class="c">!$omp mx_combine(omp_out, omp_in)) &amp;</span>
+<span class="c">!$omp initializer(mx_init(omp_priv, omp_orig))</span>
+</pre></div>
+</div>
+</section>
+<section id="properties">
+<h3>Properties<a class="headerlink" href="#properties" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>The operation can be triggered by the name <code class="docutils literal notranslate"><span class="pre">maxloc</span></code></p></li>
+<li><p>Utilizes subroutine <code class="docutils literal notranslate"><span class="pre">mx_combine</span></code> and <code class="docutils literal notranslate"><span class="pre">mx_init</span></code></p></li>
+<li><p>Acts on objects of type <code class="docutils literal notranslate"><span class="pre">mx_s</span></code></p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="the-initializer-in-fortran">
+<h2>The Initializer in Fortran<a class="headerlink" href="#the-initializer-in-fortran" title="Permalink to this heading"></a></h2>
+<section id="id13">
+<h3>Purpose<a class="headerlink" href="#id13" title="Permalink to this heading"></a></h3>
+<p>Can be a subroutine or assignment statement (here: subroutine).</p>
+</section>
+<section id="special-variables">
+<h3>Special Variables<a class="headerlink" href="#special-variables" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">omp_priv</span></code>: reference to variable to be initialized</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">omp_orig</span></code>: reference to original variable prior to construct</p></li>
+</ul>
+</section>
+<section id="example-implementation">
+<h3>Example Implementation<a class="headerlink" href="#example-implementation" title="Permalink to this heading"></a></h3>
+<p>Initialize from value prior to construct:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">mx_init</span><span class="p">(</span><span class="n">priv</span><span class="p">,</span><span class="w"> </span><span class="n">orig</span><span class="p">)</span>
+<span class="w">    </span><span class="k">type</span><span class="p">(</span><span class="n">mx_s</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">priv</span>
+<span class="w">    </span><span class="k">type</span><span class="p">(</span><span class="n">mx_s</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">orig</span>
+
+<span class="w">    </span><span class="n">priv</span><span class="p">%</span><span class="k">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orig</span><span class="p">%</span><span class="k">value</span>
+<span class="k">    </span><span class="n">priv</span><span class="p">%</span><span class="nb">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orig</span><span class="p">%</span><span class="nb">index</span>
+<span class="k">end subroutine </span><span class="n">mx_init</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="the-combiner-in-fortran">
+<h2>The Combiner in Fortran<a class="headerlink" href="#the-combiner-in-fortran" title="Permalink to this heading"></a></h2>
+<section id="id14">
+<h3>Purpose<a class="headerlink" href="#id14" title="Permalink to this heading"></a></h3>
+<p>Can be a subroutine or assignment statement (here: subroutine).</p>
+</section>
+<section id="id15">
+<h3>Special Variables<a class="headerlink" href="#id15" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">omp_in</span></code>: reference to contribution from thread</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">omp_out</span></code>: reference to combined result</p></li>
+</ul>
+</section>
+<section id="id16">
+<h3>Example Implementation<a class="headerlink" href="#id16" title="Permalink to this heading"></a></h3>
+<p>Replace if contribution is larger:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">mx_combine</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="n">in</span><span class="p">)</span>
+<span class="w">    </span><span class="k">type</span><span class="p">(</span><span class="n">mx_s</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">out</span>
+<span class="w">    </span><span class="k">type</span><span class="p">(</span><span class="n">mx_s</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">in</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">out</span><span class="p">%</span><span class="k">value</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">in</span><span class="p">%</span><span class="k">value</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        </span><span class="n">out</span><span class="p">%</span><span class="k">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">in</span><span class="p">%</span><span class="k">value</span>
+<span class="k">        </span><span class="n">out</span><span class="p">%</span><span class="nb">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">in</span><span class="p">%</span><span class="nb">index</span>
+<span class="nb">    </span><span class="k">endif</span>
+<span class="k">end subroutine </span><span class="n">mx_combine</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="using-user-defined-reduction-in-fortran">
+<h2>Using User-Defined Reduction in Fortran<a class="headerlink" href="#using-user-defined-reduction-in-fortran" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">mx</span><span class="p">%</span><span class="k">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">mx</span><span class="p">%</span><span class="nb">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+
+<span class="c">!$omp parallel do reduction(maxloc: mx)</span>
+<span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nb">count</span>
+<span class="nb">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mx</span><span class="p">%</span><span class="k">value</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">val</span><span class="p">(</span><span class="n">i</span><span class="p">))</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        </span><span class="n">mx</span><span class="p">%</span><span class="k">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="n">mx</span><span class="p">%</span><span class="nb">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span>
+<span class="w">    </span><span class="k">endif</span>
+<span class="k">enddo</span>
+</pre></div>
+</div>
+<section id="benefits">
+<h3>Benefits<a class="headerlink" href="#benefits" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Easily readable code</p></li>
+<li><p>Similar to what one would do in serial programming</p></li>
+<li><p>Abstracts away the parallel complexity</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="user-defined-reduction-in-c">
+<h2>User-Defined Reduction in C<a class="headerlink" href="#user-defined-reduction-in-c" title="Permalink to this heading"></a></h2>
+<section id="id17">
+<h3>Step 1: Define the Data Type<a class="headerlink" href="#id17" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">mx_s</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">value</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">index</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</section>
+<section id="id18">
+<h3>Step 2: Declare the Reduction<a class="headerlink" href="#id18" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp declare reduction(maxloc: \</span>
+<span class="cp">    struct mx_s: mx_combine(&amp;omp_out, &amp;omp_in)) \</span>
+<span class="cp">    initializer(mx_init(&amp;omp_priv, &amp;omp_orig))</span>
+</pre></div>
+</div>
+</section>
+<section id="id19">
+<h3>Properties<a class="headerlink" href="#id19" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>The operation can be triggered by the name <code class="docutils literal notranslate"><span class="pre">maxloc</span></code></p></li>
+<li><p>Utilizes functions <code class="docutils literal notranslate"><span class="pre">mx_combine</span></code> and <code class="docutils literal notranslate"><span class="pre">mx_init</span></code></p></li>
+<li><p>Acts on objects of type <code class="docutils literal notranslate"><span class="pre">struct</span> <span class="pre">mx_s</span></code></p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="the-initializer-in-c">
+<h2>The Initializer in C<a class="headerlink" href="#the-initializer-in-c" title="Permalink to this heading"></a></h2>
+<section id="id20">
+<h3>Purpose<a class="headerlink" href="#id20" title="Permalink to this heading"></a></h3>
+<p>An expression (here: implemented with a function).</p>
+</section>
+<section id="id21">
+<h3>Special Variables<a class="headerlink" href="#id21" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">omp_priv</span></code>: reference to variable to be initialized</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">omp_orig</span></code>: reference to original variable prior to construct</p></li>
+</ul>
+</section>
+<section id="id22">
+<h3>Example Implementation<a class="headerlink" href="#id22" title="Permalink to this heading"></a></h3>
+<p>Initialize from value prior to construct:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">mx_init</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">mx_s</span><span class="w"> </span><span class="o">*</span><span class="n">priv</span><span class="p">,</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">mx_s</span><span class="w"> </span><span class="o">*</span><span class="n">orig</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orig</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">;</span>
+<span class="w">    </span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orig</span><span class="o">-&gt;</span><span class="n">index</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="the-combiner-in-c">
+<h2>The Combiner in C<a class="headerlink" href="#the-combiner-in-c" title="Permalink to this heading"></a></h2>
+<section id="id23">
+<h3>Purpose<a class="headerlink" href="#id23" title="Permalink to this heading"></a></h3>
+<p>An expression (here: implemented with a function).</p>
+</section>
+<section id="id24">
+<h3>Special Variables<a class="headerlink" href="#id24" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">omp_in</span></code>: reference to contribution from thread</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">omp_out</span></code>: reference to combined result</p></li>
+</ul>
+</section>
+<section id="id25">
+<h3>Example Implementation<a class="headerlink" href="#id25" title="Permalink to this heading"></a></h3>
+<p>Replace if contribution is larger:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">mx_combine</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">mx_s</span><span class="w"> </span><span class="o">*</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">mx_s</span><span class="w"> </span><span class="o">*</span><span class="n">in</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">out</span><span class="o">-&gt;</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">in</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">out</span><span class="o">-&gt;</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">in</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">;</span>
+<span class="w">        </span><span class="n">out</span><span class="o">-&gt;</span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">in</span><span class="o">-&gt;</span><span class="n">index</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="using-user-defined-reduction-in-c">
+<h2>Using User-Defined Reduction in C<a class="headerlink" href="#using-user-defined-reduction-in-c" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">mx</span><span class="o">-&gt;</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="n">mx</span><span class="o">-&gt;</span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel for reduction(maxloc: mx)</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mx</span><span class="p">.</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">mx</span><span class="p">.</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="n">mx</span><span class="p">.</span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id26">
+<h3>Benefits<a class="headerlink" href="#id26" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Easily readable code</p></li>
+<li><p>Similar to what one would do in serial programming</p></li>
+<li><p>Abstracts away the parallel complexity</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="declaring-a-reduction-operation-syntax-summary">
+<h2>Declaring a Reduction Operation: Syntax Summary<a class="headerlink" href="#declaring-a-reduction-operation-syntax-summary" title="Permalink to this heading"></a></h2>
+<section id="c-syntax">
+<h3>C Syntax<a class="headerlink" href="#c-syntax" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp declare reduction (reduction-identifier : \</span>
+<span class="cp">    typename-list : combiner) [initializer-clause] new-line</span>
+</pre></div>
+</div>
+</section>
+<section id="fortran-syntax">
+<h3>Fortran Syntax<a class="headerlink" href="#fortran-syntax" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp declare reduction(reduction-identifier : &amp;</span>
+<span class="c">!$omp type-list : combiner) [initializer-clause]</span>
+</pre></div>
+</div>
+</section>
+<section id="components">
+<h3>Components<a class="headerlink" href="#components" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>reduction-identifier:</strong> Name for your reduction</p></li>
+<li><p><strong>typename-list/type-list:</strong> Data types the reduction applies to</p></li>
+<li><p><strong>combiner:</strong> Function/subroutine to combine values</p></li>
+<li><p><strong>initializer-clause:</strong> Optional initialization specification</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="dealing-with-global-storage">
+<h2>Dealing with Global Storage<a class="headerlink" href="#dealing-with-global-storage" title="Permalink to this heading"></a></h2>
+<section id="default-behavior">
+<h3>Default Behavior<a class="headerlink" href="#default-behavior" title="Permalink to this heading"></a></h3>
+<p>By default, global storage is shared among all threads.</p>
+</section>
+<section id="examples-of-global-storage">
+<h3>Examples of Global Storage<a class="headerlink" href="#examples-of-global-storage" title="Permalink to this heading"></a></h3>
+<p><strong>C/C++:</strong></p>
+<ul class="simple">
+<li><p>File scope variables</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">static</span></code> variables</p></li>
+</ul>
+<p><strong>Fortran:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">COMMON</span></code> blocks</p></li>
+<li><p>Module data</p></li>
+<li><p>Variables with <code class="docutils literal notranslate"><span class="pre">save</span></code> attribute</p></li>
+</ul>
+</section>
+<section id="id27">
+<h3>Problem<a class="headerlink" href="#id27" title="Permalink to this heading"></a></h3>
+<p>This default behavior is not always what is needed.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="directive-threadprivate-in-c">
+<h2>Directive: threadprivate in C<a class="headerlink" href="#directive-threadprivate-in-c" title="Permalink to this heading"></a></h2>
+<section id="id28">
+<h3>Purpose<a class="headerlink" href="#id28" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">threadprivate</span></code> directive makes global storage private to each thread.</p>
+</section>
+<section id="syntax">
+<h3>Syntax<a class="headerlink" href="#syntax" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="cp">#pragma omp threadprivate(g_var)</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cp">#pragma omp parallel</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">g_var</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="behavior">
+<h3>Behavior<a class="headerlink" href="#behavior" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Each thread gets a private copy</p></li>
+<li><p>Outside parallel region: modifications affect master’s copy</p></li>
+</ul>
+</section>
+<section id="example-output">
+<h3>Example Output<a class="headerlink" href="#example-output" title="Permalink to this heading"></a></h3>
+<p>With 4 threads:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread 0 (master): 4
+Thread 1: 1
+Thread 2: 1
+Thread 3: 1
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="directive-threadprivate-in-fortran">
+<h2>Directive: threadprivate in Fortran<a class="headerlink" href="#directive-threadprivate-in-fortran" title="Permalink to this heading"></a></h2>
+<section id="id29">
+<h3>Purpose<a class="headerlink" href="#id29" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">threadprivate</span></code> directive makes global storage private to each thread.</p>
+</section>
+<section id="id30">
+<h3>Syntax<a class="headerlink" href="#id30" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">module </span><span class="n">gmod</span>
+<span class="w">    </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="c">!$omp threadprivate(g_var)</span>
+<span class="k">end module </span><span class="n">gmod</span>
+
+<span class="k">program </span><span class="n">example</span>
+<span class="w">    </span><span class="k">use </span><span class="n">gmod</span>
+
+<span class="w">    </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span>
+
+<span class="w">    </span><span class="c">!$omp parallel</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">g_var</span>
+<span class="w">    </span><span class="c">!$omp end parallel</span>
+<span class="k">end program </span><span class="n">example</span>
+</pre></div>
+</div>
+</section>
+<section id="id31">
+<h3>Behavior<a class="headerlink" href="#id31" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Each thread gets a private copy</p></li>
+<li><p>Outside parallel region: modifications affect master’s copy</p></li>
+</ul>
+</section>
+<section id="id32">
+<h3>Example Output<a class="headerlink" href="#id32" title="Permalink to this heading"></a></h3>
+<p>With 4 threads:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread 0 (master): 4
+Thread 1: 1
+Thread 2: 1
+Thread 3: 1
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="clause-copyin">
+<h2>Clause: copyin<a class="headerlink" href="#clause-copyin" title="Permalink to this heading"></a></h2>
+<section id="id33">
+<h3>Purpose<a class="headerlink" href="#id33" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">copyin</span></code> clause initializes threadprivate data from the master thread.</p>
+</section>
+<section id="id34">
+<h3>C Example<a class="headerlink" href="#id34" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="cp">#pragma omp threadprivate(g_var)</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cp">#pragma omp parallel \</span>
+<span class="cp">        copyin(g_var)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">g_var</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id35">
+<h3>Fortran Example<a class="headerlink" href="#id35" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">module </span><span class="n">gmod</span>
+<span class="w">    </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="c">!$omp threadprivate(g_var)</span>
+<span class="k">end module </span><span class="n">gmod</span>
+
+<span class="k">program </span><span class="n">example</span>
+<span class="w">    </span><span class="k">use </span><span class="n">gmod</span>
+
+<span class="w">    </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span>
+
+<span class="w">    </span><span class="c">!$omp parallel copyin(g_var)</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">g_var</span>
+<span class="w">    </span><span class="c">!$omp end parallel</span>
+<span class="k">end program </span><span class="n">example</span>
+</pre></div>
+</div>
+</section>
+<section id="output">
+<h3>Output<a class="headerlink" href="#output" title="Permalink to this heading"></a></h3>
+<p>With 4 threads, <strong>all</strong> threads print: <code class="docutils literal notranslate"><span class="pre">4</span></code></p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="more-on-threadprivate">
+<h2>More on threadprivate<a class="headerlink" href="#more-on-threadprivate" title="Permalink to this heading"></a></h2>
+<section id="data-persistence">
+<h3>Data Persistence<a class="headerlink" href="#data-persistence" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">threadprivate</span></code> data remains unchanged between parallel regions if:</p>
+<ol class="arabic simple">
+<li><p>Neither region is nested inside another parallel region</p></li>
+<li><p>Both regions have the same thread count</p></li>
+<li><p>Internal variable <code class="docutils literal notranslate"><span class="pre">dyn-var</span></code> is false in both regions</p>
+<ul class="simple">
+<li><p>Use function <code class="docutils literal notranslate"><span class="pre">omp_set_dynamic</span></code> to control this</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="fortran-common-blocks">
+<h3>Fortran COMMON Blocks<a class="headerlink" href="#fortran-common-blocks" title="Permalink to this heading"></a></h3>
+<p>In Fortran, you can make a <code class="docutils literal notranslate"><span class="pre">COMMON</span></code> block threadprivate:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span>
+<span class="k">COMMON</span><span class="w"> </span><span class="o">/</span><span class="n">abccom</span><span class="o">/</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span>
+<span class="c">!$OMP threadprivate(/abccom/)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this heading"></a></h2>
+<p>This guide covered special private variables in OpenMP:</p>
+<section id="special-private-variable-types">
+<h3>Special Private Variable Types<a class="headerlink" href="#special-private-variable-types" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>firstprivate:</strong> Initialization of private variables from master thread</p></li>
+<li><p><strong>lastprivate:</strong> Set value of private variable to value of last loop iteration or last section at end of construct</p></li>
+<li><p><strong>reduction:</strong> Calculating sums, products, etc. in parallel</p></li>
+<li><p><strong>threadprivate:</strong> Privatize global storage</p></li>
+</ul>
+</section>
+<section id="id36">
+<h3>User-Defined Reductions<a class="headerlink" href="#id36" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Available in OpenMP 4.0+</p></li>
+<li><p>Useful for complex data types</p></li>
+<li><p>Requires combiner and initializer functions</p></li>
+</ul>
+</section>
+<section id="when-to-use-standard-constructs">
+<h3>When to Use Standard Constructs<a class="headerlink" href="#when-to-use-standard-constructs" title="Permalink to this heading"></a></h3>
+<p>The above constructs handle standard situations. For special cases, use:</p>
+<ul class="simple">
+<li><p>Explicit initialization of private variables from shared variables</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">atomic</span></code>/<code class="docutils literal notranslate"><span class="pre">critical</span></code> for writes to shared variables</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, The contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

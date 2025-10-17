@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data for Parallel Regions &mdash; OpenMP parallelism in scientific computing  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../" class="icon icon-home">
+            OpenMP parallelism in scientific computing
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Day 1</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hpc2n-intro/">Introduction to HPC2N</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup/">Introduction to Kebnekaise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../first-steps/">First Steps in OpenMP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../openmp-basics1/">Introduction to OpenMP (part 1)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../openmp-basics2/">Introduction to OpenMP (part 2)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 2</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../motivation/">Introduction to task-based parallelism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../task-basics-1/">OpenMP task basics (part 1)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../task-basics-2/">OpenMP task basics (part 2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../task-basics-lu/">Example: LU factorization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Miscellanous</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick-reference/">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/">Instructor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../">OpenMP parallelism in scientific computing</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Data for Parallel Regions</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/hpc2n/OpenMP-parallelism-course/blob/master/docs/data-handling.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="data-for-parallel-regions">
+<h1>Data for Parallel Regions<a class="headerlink" href="#data-for-parallel-regions" title="Permalink to this heading"></a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Joachim Hein</p>
+</dd>
+<dt class="field-even">Institution<span class="colon">:</span></dt>
+<dd class="field-even"><p>Lund University</p>
+</dd>
+</dl>
+<hr class="docutils" />
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>This guide covers:</p>
+<p><strong>Data:</strong></p>
+<ul class="simple">
+<li><p>What is private data</p></li>
+<li><p>What is shared data</p></li>
+<li><p>How to control which is which</p></li>
+</ul>
+<p><strong>Race conditions:</strong></p>
+<ul class="simple">
+<li><p>Basic constructs to avoid data races</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="shared-private-data">
+<h2>Shared &amp; Private Data<a class="headerlink" href="#shared-private-data" title="Permalink to this heading"></a></h2>
+<section id="private-and-shared-data-concepts">
+<h3>Private and Shared Data Concepts<a class="headerlink" href="#private-and-shared-data-concepts" title="Permalink to this heading"></a></h3>
+<p>In a parallel region, data can be either shared or private.</p>
+<section id="shared-data">
+<h4>Shared Data<a class="headerlink" href="#shared-data" title="Permalink to this heading"></a></h4>
+<ul class="simple">
+<li><p>Every thread can access the same memory location (potential for conflict)</p></li>
+<li><p>Value remains unchanged on entry to parallel region</p></li>
+<li><p>Value survives after end of parallel region</p></li>
+</ul>
+</section>
+<section id="private-data">
+<h4>Private Data<a class="headerlink" href="#private-data" title="Permalink to this heading"></a></h4>
+<ul class="simple">
+<li><p>Each thread has its own private copy</p></li>
+<li><p>Normally uninitialized at the beginning of parallel region</p></li>
+<li><p>Contents typically lost when parallel region finishes</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In a shared memory architecture, shared data resides in the main memory accessible by all processors, while each thread maintains its own private data copy.</p>
+</div>
+</section>
+</section>
+</section>
+<hr class="docutils" />
+<section id="controlling-data-sharing-in-fortran">
+<h2>Controlling Data Sharing in Fortran<a class="headerlink" href="#controlling-data-sharing-in-fortran" title="Permalink to this heading"></a></h2>
+<p>For data declared before the start of a parallel region:</p>
+<ul class="simple">
+<li><p>Use clause <code class="docutils literal notranslate"><span class="pre">shared</span></code> to declare a data structure as shared</p></li>
+<li><p>Use clause <code class="docutils literal notranslate"><span class="pre">private</span></code> to declare a data structure as private</p></li>
+</ul>
+<section id="syntax">
+<h3>Syntax<a class="headerlink" href="#syntax" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">a</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="n">b</span>
+
+<span class="c">!$omp parallel &amp;</span>
+<span class="c">!$omp shared(a) private(b)</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;result=&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">b</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<p>In this example:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span></code> is shared among all threads</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">b</span></code> is private to each thread</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="controlling-data-sharing-in-c">
+<h2>Controlling Data Sharing in C<a class="headerlink" href="#controlling-data-sharing-in-c" title="Permalink to this heading"></a></h2>
+<p>For data declared before the start of a parallel region:</p>
+<ul class="simple">
+<li><p>Use clause <code class="docutils literal notranslate"><span class="pre">shared</span></code> to declare a data structure as shared</p></li>
+<li><p>Use clause <code class="docutils literal notranslate"><span class="pre">private</span></code> to declare a data structure as private</p></li>
+</ul>
+<section id="id1">
+<h3>Syntax<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel \</span>
+<span class="cp">    shared(a) private(b)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In this example:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span></code> is shared among all threads</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">b</span></code> is private to each thread</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="private-data-characteristics">
+<h2>Private Data Characteristics<a class="headerlink" href="#private-data-characteristics" title="Permalink to this heading"></a></h2>
+<section id="typical-use-cases">
+<h3>Typical Use Cases<a class="headerlink" href="#typical-use-cases" title="Permalink to this heading"></a></h3>
+<p>Private data is typically used for control variables, including:</p>
+<ul class="simple">
+<li><p>Thread identification</p></li>
+<li><p>Loop indices</p></li>
+<li><p>Variables internal to the algorithm</p></li>
+</ul>
+</section>
+<section id="default-private-variables">
+<h3>Default Private Variables<a class="headerlink" href="#default-private-variables" title="Permalink to this heading"></a></h3>
+<p>Most variables declared inside a parallel region are private by default:</p>
+<ul class="simple">
+<li><p>Variables declared inside the block (C/C++)</p></li>
+<li><p>Variables in subroutine/function called from inside parallel region</p></li>
+</ul>
+<section id="exceptions">
+<h4>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this heading"></a></h4>
+<p>The following are <strong>NOT</strong> private by default:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">static</span></code> (C/C++) or <code class="docutils literal notranslate"><span class="pre">save</span></code> (Fortran) variables</p></li>
+<li><p>File scope variables (C/C++) or <code class="docutils literal notranslate"><span class="pre">COMMON</span></code> blocks</p></li>
+<li><p>Variables passed by reference inherit their data-sharing attribute</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>In Fortran, special care is needed with <code class="docutils literal notranslate"><span class="pre">COMMON</span></code> and <code class="docutils literal notranslate"><span class="pre">EQUIVALENCE</span></code> statements.</p>
+</div>
+</section>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-memory-movements-for-private-data-fortran">
+<h2>Example: Memory Movements for Private Data (Fortran)<a class="headerlink" href="#example-memory-movements-for-private-data-fortran" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">b</span>
+
+<span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+
+<span class="c">!$OMP parallel &amp;</span>
+<span class="c">!$OMP private(b)</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">3</span>
+<span class="c">!$OMP end parallel</span>
+
+<span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span>
+</pre></div>
+</div>
+<section id="memory-layout">
+<h3>Memory Layout<a class="headerlink" href="#memory-layout" title="Permalink to this heading"></a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Main Memory: b = 5
+
+Thread 0: b = 0 → b = 3
+Thread 1: b = 1 → b = 4
+Thread 2: b = 2 → b = 5
+Thread 3: b = 3 → b = 6
+
+Main Memory: b = 7
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each thread has its own copy of <code class="docutils literal notranslate"><span class="pre">b</span></code>, and changes do not affect the original value in main memory.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-memory-movements-for-private-data-c">
+<h2>Example: Memory Movements for Private Data (C)<a class="headerlink" href="#example-memory-movements-for-private-data-c" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+
+<span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel \</span>
+<span class="cp">    private(b)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="id2">
+<h3>Memory Layout<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Main Memory: b = 5
+
+Thread 0: b = 0 → b = 3
+Thread 1: b = 1 → b = 4
+Thread 2: b = 2 → b = 5
+Thread 3: b = 3 → b = 6
+
+Main Memory: b = 7
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each thread has its own copy of <code class="docutils literal notranslate"><span class="pre">b</span></code>, and changes do not affect the original value in main memory.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="shared-data-characteristics">
+<h2>Shared Data Characteristics<a class="headerlink" href="#shared-data-characteristics" title="Permalink to this heading"></a></h2>
+<section id="id3">
+<h3>Typical Use Cases<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Majority of the data in parallel programs</p></li>
+<li><p>Typically large data structures (e.g., arrays)</p></li>
+</ul>
+</section>
+<section id="properties">
+<h3>Properties<a class="headerlink" href="#properties" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Keeps its value on entry to parallel region</p></li>
+<li><p>Keeps its value on exit from parallel region</p></li>
+<li><p>Every thread can access (read and/or write) the data</p></li>
+</ul>
+</section>
+<section id="safety-considerations">
+<h3>Safety Considerations<a class="headerlink" href="#safety-considerations" title="Permalink to this heading"></a></h3>
+<p><strong>Safe scenario:</strong></p>
+<ul class="simple">
+<li><p>Multiple threads only read the data</p></li>
+</ul>
+<p><strong>Dangerous scenario:</strong></p>
+<ul class="simple">
+<li><p>Multiple threads access the same memory location</p></li>
+<li><p>At least one of these is a write access</p></li>
+<li><p>This easily results in a <strong>race condition</strong></p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-vector-initialization-fortran">
+<h2>Example: Vector Initialization (Fortran)<a class="headerlink" href="#example-vector-initialization-fortran" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">vleng</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">120</span>
+<span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">vleng</span><span class="p">),</span><span class="w"> </span><span class="n">myNum</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">fin</span><span class="p">,</span><span class="w"> </span><span class="n">i</span>
+
+<span class="c">!$omp parallel shared(vect) &amp;</span>
+<span class="c">!$omp private(myNum, start, fin, i)</span>
+<span class="w">    </span><span class="n">myNum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vleng</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">()</span>
+<span class="w">    </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">myNum</span>
+<span class="w">    </span><span class="n">fin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">myNum</span>
+
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">fin</span>
+<span class="w">        </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">i</span><span class="w">  </span><span class="c">! threads write different elements</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(v_i = 4i\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is safe because each thread writes to different elements of the shared array.</p>
+</div>
+</section>
+<hr class="docutils" />
+<section id="example-vector-initialization-c">
+<h2>Example: Vector Initialization (C)<a class="headerlink" href="#example-vector-initialization-c" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">vleng</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">120</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">vleng</span><span class="p">],</span><span class="w"> </span><span class="n">myNum</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">fin</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel shared(vect) \</span>
+<span class="cp">    private(myNum, start, fin, i)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">myNum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vleng</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">();</span>
+<span class="w">    </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">myNum</span><span class="p">;</span>
+<span class="w">    </span><span class="n">fin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">myNum</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">start</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">fin</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">i</span><span class="p">;</span><span class="w">  </span><span class="c1">// threads write different elements</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(v_i = 4i\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is safe because each thread writes to different elements of the shared array.</p>
+</div>
+</section>
+<hr class="docutils" />
+<section id="example-write-conflict-for-shared-data-fortran">
+<h2>Example: Write Conflict for Shared Data (Fortran)<a class="headerlink" href="#example-write-conflict-for-shared-data-fortran" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span>
+
+<span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+
+<span class="c">!$OMP parallel &amp;</span>
+<span class="c">!$OMP shared(a, b)</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;updated&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;my b:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">b</span>
+<span class="c">!$OMP end parallel</span>
+</pre></div>
+</div>
+<section id="memory-behavior">
+<h3>Memory Behavior<a class="headerlink" href="#memory-behavior" title="Permalink to this heading"></a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Main Memory: a = 5
+
+All threads read: a = 5
+
+Thread 0: b = 5
+Thread 1: b = 6
+Thread 2: b = 7
+Thread 3: b = 8
+
+Final b value: RANDOM (could be 5, 6, 7, or 8)
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<ul class="simple">
+<li><p>Final <code class="docutils literal notranslate"><span class="pre">b</span></code> value is random/unpredictable</p></li>
+<li><p>Individual threads might print <code class="docutils literal notranslate"><span class="pre">b</span></code> before it has its final value</p></li>
+<li><p>This is a <strong>race condition</strong></p></li>
+</ul>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-write-conflict-for-shared-data-c">
+<h2>Example: Write Conflict for Shared Data (C)<a class="headerlink" href="#example-write-conflict-for-shared-data-c" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+
+<span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel \</span>
+<span class="cp">    shared(a, b)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;updated</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;my b: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id4">
+<h3>Memory Behavior<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Main Memory: a = 5
+
+All threads read: a = 5
+
+Thread 0: b = 5
+Thread 1: b = 6
+Thread 2: b = 7
+Thread 3: b = 8
+
+Final b value: RANDOM (could be 5, 6, 7, or 8)
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<ul class="simple">
+<li><p>Final <code class="docutils literal notranslate"><span class="pre">b</span></code> value is random/unpredictable</p></li>
+<li><p>Individual threads might print <code class="docutils literal notranslate"><span class="pre">b</span></code> before it has its final value</p></li>
+<li><p>This is a <strong>race condition</strong></p></li>
+</ul>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="default-clause">
+<h2>Default Clause<a class="headerlink" href="#default-clause" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">default</span></code> clause can be used on a parallel or task construct to determine data sharing of implicitly determined variables.</p>
+<section id="id5">
+<h3>Syntax<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h3>
+<p><strong>In C:</strong></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">default</span><span class="p">(</span><span class="n">shared</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">none</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>In Fortran:</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span>default(shared | none | private | firstprivate)
+</pre></div>
+</div>
+</section>
+<section id="default-behavior">
+<h3>Default Behavior<a class="headerlink" href="#default-behavior" title="Permalink to this heading"></a></h3>
+<p>For parallel constructs, if no <code class="docutils literal notranslate"><span class="pre">default</span></code> clause is supplied, <code class="docutils literal notranslate"><span class="pre">default(shared)</span></code> applies.</p>
+</section>
+<section id="recommendation">
+<h3>Recommendation<a class="headerlink" href="#recommendation" title="Permalink to this heading"></a></h3>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Using <code class="docutils literal notranslate"><span class="pre">default(none)</span></code> is typically a good idea!</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">default(none)</span></code>, all variables accessed in the parallel region must be explicitly declared as <code class="docutils literal notranslate"><span class="pre">shared</span></code>, <code class="docutils literal notranslate"><span class="pre">private</span></code>, etc.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="fixing-data-races">
+<h2>Fixing Data Races<a class="headerlink" href="#fixing-data-races" title="Permalink to this heading"></a></h2>
+<section id="constructs-available">
+<h3>Constructs Available<a class="headerlink" href="#constructs-available" title="Permalink to this heading"></a></h3>
+<p>OpenMP provides several constructs to avoid data races:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">barrier</span></code> - synchronization point</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">critical</span></code> - mutual exclusion region</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">atomic</span></code> - lightweight protection for simple operations</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These constructs impact code performance, but we have no interest in “fast garbage”!</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="barrier-and-synchronization">
+<h2>Barrier and Synchronization<a class="headerlink" href="#barrier-and-synchronization" title="Permalink to this heading"></a></h2>
+<section id="the-barrier-construct">
+<h3>The Barrier Construct<a class="headerlink" href="#the-barrier-construct" title="Permalink to this heading"></a></h3>
+<p><strong>Fortran:</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp barrier</span>
+</pre></div>
+</div>
+<p><strong>C:</strong></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp barrier</span>
+</pre></div>
+</div>
+</section>
+<section id="behavior">
+<h3>Behavior<a class="headerlink" href="#behavior" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>All threads wait for the last one to arrive at the barrier</p></li>
+<li><p>Registers are flushed to the memory system</p></li>
+<li><p>All threads must have the barrier in their line of execution</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If not all threads reach the barrier, a <strong>deadlock</strong> will occur!</p>
+</div>
+</section>
+<section id="visual-representation">
+<h3>Visual Representation<a class="headerlink" href="#visual-representation" title="Permalink to this heading"></a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread 0: A ──────┐
+Thread 1: A ──────┤
+Thread 2: A ──────┼── BARRIER ──┬── B
+Thread 3: A ──────┘              ├── B
+                                  ├── B
+                                  └── B
+            Time ─────────────────────────&gt;
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-data-race-in-matrix-transpose-fortran">
+<h2>Example: Data Race in Matrix Transpose (Fortran)<a class="headerlink" href="#example-data-race-in-matrix-transpose-fortran" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp private(mysize, tid, i, j) shared(matrix, mtrans)</span>
+<span class="w">    </span><span class="n">tid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+<span class="w">    </span><span class="n">mysize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nsize</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">()</span>
+
+<span class="w">    </span><span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">tid</span><span class="o">*</span><span class="n">mysize</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">tid</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">mysize</span>
+<span class="w">        </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">nsize</span>
+<span class="w">            </span><span class="n">matrix</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="mf">0.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span>
+<span class="w">        </span><span class="k">enddo</span>
+<span class="k">    enddo</span>
+
+<span class="w">    </span><span class="c">!$omp barrier</span>
+
+<span class="w">    </span><span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">tid</span><span class="o">*</span><span class="n">mysize</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">tid</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">mysize</span>
+<span class="w">        </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">nsize</span>
+<span class="w">            </span><span class="n">mtrans</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="k">enddo</span>
+<span class="k">    enddo</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The barrier ensures that all threads complete writing to <code class="docutils literal notranslate"><span class="pre">matrix</span></code> before any thread begins reading from it for the transpose operation.</p>
+</div>
+</section>
+<hr class="docutils" />
+<section id="example-data-race-in-matrix-transpose-c">
+<h2>Example: Data Race in Matrix Transpose (C)<a class="headerlink" href="#example-data-race-in-matrix-transpose-c" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    private(mysize, tid, i, j) shared(matrix, mtrans)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">tid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">    </span><span class="n">mysize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nsize</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tid</span><span class="o">*</span><span class="n">mysize</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">tid</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">mysize</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nsize</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">            </span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1000.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cp">#pragma omp barrier</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tid</span><span class="o">*</span><span class="n">mysize</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">tid</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">mysize</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nsize</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">            </span><span class="n">mtrans</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The barrier ensures that all threads complete writing to <code class="docutils literal notranslate"><span class="pre">matrix</span></code> before any thread begins reading from it for the transpose operation.</p>
+</div>
+</section>
+<hr class="docutils" />
+<section id="critical-regions">
+<h2>Critical Regions<a class="headerlink" href="#critical-regions" title="Permalink to this heading"></a></h2>
+<section id="purpose">
+<h3>Purpose<a class="headerlink" href="#purpose" title="Permalink to this heading"></a></h3>
+<p>Critical regions protect updates of shared memory locations by ensuring only one thread executes the critical region at a time.</p>
+</section>
+<section id="syntax-in-c">
+<h3>Syntax in C<a class="headerlink" href="#syntax-in-c" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp critical (name)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">code</span><span class="o">-</span><span class="n">block</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="syntax-in-fortran">
+<h3>Syntax in Fortran<a class="headerlink" href="#syntax-in-fortran" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp critical (name)</span>
+<span class="w">    </span><span class="n">code</span><span class="o">-</span><span class="k">block</span>
+<span class="c">!$omp end critical (name)</span>
+</pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Properties<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Name is optional:</strong></p>
+<ul>
+<li><p>If named: only one thread in all regions with the same name</p></li>
+<li><p>If unnamed: only one thread in all unnamed regions</p></li>
+</ul>
+</li>
+<li><p>Implies a register flush at entrance and exit</p></li>
+<li><p>Useful to execute non-thread-safe functions</p></li>
+<li><p>Performance penalty due to serialization</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-use-of-critical-region-fortran">
+<h2>Example: Use of Critical Region (Fortran)<a class="headerlink" href="#example-use-of-critical-region-fortran" title="Permalink to this heading"></a></h2>
+<p>Computing a sum with critical section:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="nb">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0_dpr</span>
+
+<span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp shared(sum) private(tid, cont)</span>
+<span class="w">    </span><span class="n">tid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+<span class="w">    </span><span class="n">cont</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">func</span><span class="p">(</span><span class="n">tid</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c">!$omp critical (exp_up)</span>
+<span class="w">        </span><span class="nb">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sum</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cont</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">tid</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;: c=&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">cont</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot; s=&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">sum</span>
+<span class="w">    </span><span class="c">!$omp end critical (exp_up)</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sum_{k=0}^{n-1} e^k\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The critical region ensures that only one thread updates <code class="docutils literal notranslate"><span class="pre">sum</span></code> at a time, preventing race conditions.</p>
+</div>
+</section>
+<hr class="docutils" />
+<section id="example-use-of-critical-region-c">
+<h2>Example: Use of Critical Region (C)<a class="headerlink" href="#example-use-of-critical-region-c" title="Permalink to this heading"></a></h2>
+<p>Computing a sum with critical section:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    shared(sum) private(tid, cont)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">tid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">    </span><span class="n">cont</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">func</span><span class="p">(</span><span class="n">tid</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cp">#pragma omp critical (exp_up)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">cont</span><span class="p">;</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%i: c=%f s=%f</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">tid</span><span class="p">,</span><span class="w"> </span><span class="n">cont</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sum_{k=0}^{n-1} e^k\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The critical region ensures that only one thread updates <code class="docutils literal notranslate"><span class="pre">sum</span></code> at a time, preventing race conditions.</p>
+</div>
+</section>
+<hr class="docutils" />
+<section id="atomic-operations">
+<h2>Atomic Operations<a class="headerlink" href="#atomic-operations" title="Permalink to this heading"></a></h2>
+<section id="id7">
+<h3>Overview<a class="headerlink" href="#id7" title="Permalink to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">atomic</span></code> is a lightweight alternative to <code class="docutils literal notranslate"><span class="pre">critical</span></code> for simple cases.</p>
+</section>
+<section id="id8">
+<h3>Properties<a class="headerlink" href="#id8" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Works with simple statements only</p></li>
+<li><p>Can use special hardware instructions if they exist</p></li>
+<li><p>Flushes the “protected” variable on entry and exit</p></li>
+<li><p>Much more efficient than <code class="docutils literal notranslate"><span class="pre">critical</span></code> for simple operations</p></li>
+</ul>
+</section>
+<section id="versions-from-openmp-3-1">
+<h3>Versions (from OpenMP 3.1)<a class="headerlink" href="#versions-from-openmp-3-1" title="Permalink to this heading"></a></h3>
+<p>Four different versions:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">read</span></code> - atomic read operation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">write</span></code> - atomic write operation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">update</span></code> - atomic update operation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">capture</span></code> - atomic update with capture of old/new value</p></li>
+</ul>
+</section>
+<section id="openmp-4-0-enhancement">
+<h3>OpenMP 4.0 Enhancement<a class="headerlink" href="#openmp-4-0-enhancement" title="Permalink to this heading"></a></h3>
+<p>Adding <code class="docutils literal notranslate"><span class="pre">seq_cst</span></code> to atomic flushes all variables:</p>
+<ul class="simple">
+<li><p>Important for controlling instruction reordering</p></li>
+<li><p>Example use case: implementing a lock</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="atomic-read">
+<h2>Atomic Read<a class="headerlink" href="#atomic-read" title="Permalink to this heading"></a></h2>
+<p>Protects only the reading of a scalar intrinsic variable.</p>
+<section id="fortran-syntax">
+<h3>Fortran Syntax<a class="headerlink" href="#fortran-syntax" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp atomic read</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span>
+</pre></div>
+</div>
+</section>
+<section id="c-syntax">
+<h3>C Syntax<a class="headerlink" href="#c-syntax" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp atomic read</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="id9">
+<h3>Behavior<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Protects only the reading of scalar variable <code class="docutils literal notranslate"><span class="pre">x</span></code></p></li>
+<li><p>Flushes <code class="docutils literal notranslate"><span class="pre">x</span></code> on entry and exit</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="atomic-write">
+<h2>Atomic Write<a class="headerlink" href="#atomic-write" title="Permalink to this heading"></a></h2>
+<p>Protects only the writing of a scalar intrinsic variable.</p>
+<section id="id10">
+<h3>Fortran Syntax<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp atomic write</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span>
+</pre></div>
+</div>
+</section>
+<section id="id11">
+<h3>C Syntax<a class="headerlink" href="#id11" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp atomic write</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="example-expressions">
+<h3>Example Expressions<a class="headerlink" href="#example-expressions" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">;</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">func</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<ul class="simple">
+<li><p>Protects only the writing of <code class="docutils literal notranslate"><span class="pre">x</span></code></p></li>
+<li><p>No protection for evaluation of <code class="docutils literal notranslate"><span class="pre">expr</span></code> on the right-hand side</p></li>
+<li><p>Flushes <code class="docutils literal notranslate"><span class="pre">x</span></code> on entry and exit</p></li>
+</ul>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="atomic-update">
+<h2>Atomic Update<a class="headerlink" href="#atomic-update" title="Permalink to this heading"></a></h2>
+<section id="id12">
+<h3>Overview<a class="headerlink" href="#id12" title="Permalink to this heading"></a></h3>
+<p>Protects the update of a variable in simple arithmetic operations.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">atomic</span> <span class="pre">update</span></code> was the only atomic operation prior to OpenMP 3.1. The <code class="docutils literal notranslate"><span class="pre">update</span></code> keyword is optional for backward compatibility.</p>
+</div>
+</section>
+<section id="id13">
+<h3>Properties<a class="headerlink" href="#id13" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Only protects the update of the variable, not function calls on the right-hand side</p></li>
+<li><p>Works with simple statements only</p></li>
+<li><p>Can use special hardware instructions if available</p></li>
+<li><p>Flushes the updated variable on entry and exit</p></li>
+</ul>
+</section>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">func</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">func</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The evaluation of <code class="docutils literal notranslate"><span class="pre">func(a)</span></code> is NOT protected. Use <code class="docutils literal notranslate"><span class="pre">critical</span></code> if protection is needed!</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="atomic-update-fortran-statements">
+<h2>Atomic Update: Fortran Statements<a class="headerlink" href="#atomic-update-fortran-statements" title="Permalink to this heading"></a></h2>
+<section id="examples">
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp atomic update</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+
+<span class="c">!$omp atomic update</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The evaluation of <code class="docutils literal notranslate"><span class="pre">f(a)</span></code> is NOT protected. Use <code class="docutils literal notranslate"><span class="pre">critical</span></code> if needed!</p>
+</div>
+</section>
+<section id="allowed-operations">
+<h3>Allowed Operations<a class="headerlink" href="#allowed-operations" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">operator</span><span class="w"> </span><span class="n">expr</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="n">operator</span><span class="w"> </span><span class="n">x</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">intr_proc</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">expr_list</span><span class="p">)</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">intr_proc</span><span class="p">(</span><span class="n">expr_list</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span></code> is scalar, intrinsic type</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">operator</span></code> is one of: <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code>, <code class="docutils literal notranslate"><span class="pre">/</span></code>, <code class="docutils literal notranslate"><span class="pre">.AND.</span></code>, <code class="docutils literal notranslate"><span class="pre">.OR.</span></code>, <code class="docutils literal notranslate"><span class="pre">.EQV.</span></code>, <code class="docutils literal notranslate"><span class="pre">.NEQV.</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">intr_proc</span></code> is one of: <code class="docutils literal notranslate"><span class="pre">MAX</span></code>, <code class="docutils literal notranslate"><span class="pre">MIN</span></code>, <code class="docutils literal notranslate"><span class="pre">IAND</span></code>, <code class="docutils literal notranslate"><span class="pre">IOR</span></code>, <code class="docutils literal notranslate"><span class="pre">IEOR</span></code></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">update</span></code> keyword is optional for consistency with older OpenMP standards.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-vector-norm-fortran">
+<h2>Example: Vector Norm (Fortran)<a class="headerlink" href="#example-vector-norm-fortran" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0D0</span>
+
+<span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp shared(vect, norm) private(myNum, i, lNorm)</span>
+<span class="w">    </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0D0</span>
+<span class="w">    </span><span class="n">myNum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vleng</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">()</span><span class="w">  </span><span class="c">! local size</span>
+
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">myNum</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">(),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">            </span><span class="n">myNum</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">())</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="k">enddo</span>
+
+<span class="w">    </span><span class="c">!$omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">lNorm</span>
+<span class="c">!$omp end parallel</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i) \cdot v(i)}\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each thread computes a local sum (<code class="docutils literal notranslate"><span class="pre">lNorm</span></code>), then atomically adds it to the global <code class="docutils literal notranslate"><span class="pre">norm</span></code>.</p>
+</div>
+</section>
+<hr class="docutils" />
+<section id="atomic-update-c-statements">
+<h2>Atomic Update: C Statements<a class="headerlink" href="#atomic-update-c-statements" title="Permalink to this heading"></a></h2>
+<section id="id14">
+<h3>Examples<a class="headerlink" href="#id14" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp atomic update</span>
+<span class="n">x</span><span class="o">++</span><span class="p">;</span>
+
+<span class="cp">#pragma omp atomic update</span>
+<span class="n">x</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The evaluation of <code class="docutils literal notranslate"><span class="pre">f(a)</span></code> is NOT protected. Use <code class="docutils literal notranslate"><span class="pre">critical</span></code> if needed!</p>
+</div>
+</section>
+<section id="id15">
+<h3>Allowed Operations<a class="headerlink" href="#id15" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="p">;</span>
+<span class="n">x</span><span class="o">++</span><span class="p">;</span>
+<span class="o">++</span><span class="n">x</span><span class="p">;</span>
+<span class="n">x</span><span class="o">--</span><span class="p">;</span>
+<span class="o">--</span><span class="n">x</span><span class="p">;</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="w"> </span><span class="n">expr</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span></code> is lvalue, scalar</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binop</span></code> is one of: <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code>, <code class="docutils literal notranslate"><span class="pre">/</span></code>, <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">^</span></code>, <code class="docutils literal notranslate"><span class="pre">|</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">update</span></code> keyword is optional for consistency with older OpenMP standards.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-vector-norm-c">
+<h2>Example: Vector Norm (C)<a class="headerlink" href="#example-vector-norm-c" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    shared(vect, norm) private(myNum, i, lNorm)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">myNum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vleng</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">();</span><span class="w">  </span><span class="c1">// local size</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myNum</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">         </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">myNum</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">());</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+
+<span class="w">    </span><span class="cp">#pragma omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">lNorm</span><span class="p">;</span>
+<span class="p">}</span><span class="w">  </span><span class="c1">// synchronize at end parallel</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i) \cdot v(i)}\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each thread computes a local sum (<code class="docutils literal notranslate"><span class="pre">lNorm</span></code>), then atomically adds it to the global <code class="docutils literal notranslate"><span class="pre">norm</span></code>.</p>
+</div>
+</section>
+<hr class="docutils" />
+<section id="atomic-capture">
+<h2>Atomic Capture<a class="headerlink" href="#atomic-capture" title="Permalink to this heading"></a></h2>
+<section id="id16">
+<h3>Purpose<a class="headerlink" href="#id16" title="Permalink to this heading"></a></h3>
+<p>Atomic capture allows you to:</p>
+<ul class="simple">
+<li><p>Update a shared variable atomically</p></li>
+<li><p>Keep a thread-private copy of <strong>either</strong> (but not both):</p>
+<ul>
+<li><p>The old value before update</p></li>
+<li><p>The new value after update</p></li>
+</ul>
+</li>
+</ul>
+<p>Restrictions apply to the allowed statement forms.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="atomic-capture-c-statements">
+<h2>Atomic Capture: C Statements<a class="headerlink" href="#atomic-capture-c-statements" title="Permalink to this heading"></a></h2>
+<section id="id17">
+<h3>Syntax<a class="headerlink" href="#id17" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp atomic capture</span>
+<span class="n">statement_or_structured_block</span>
+</pre></div>
+</div>
+</section>
+<section id="allowed-statements-openmp-4-0">
+<h3>Allowed Statements (OpenMP 4.0)<a class="headerlink" href="#allowed-statements-openmp-4-0" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="o">++</span><span class="p">;</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="o">--</span><span class="p">;</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">++</span><span class="n">x</span><span class="p">;</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">--</span><span class="n">x</span><span class="p">;</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="p">;</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="w"> </span><span class="n">expr</span><span class="p">;</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="n">binop</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="allowed-structured-blocks">
+<h3>Allowed Structured Blocks<a class="headerlink" href="#allowed-structured-blocks" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="w"> </span><span class="n">expr</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="n">binop</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="w"> </span><span class="n">expr</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="n">binop</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="o">++</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="o">++</span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">x</span><span class="o">++</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="o">--</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="o">--</span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="o">--</span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">x</span><span class="o">--</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="atomic-capture-fortran-statements">
+<h2>Atomic Capture: Fortran Statements<a class="headerlink" href="#atomic-capture-fortran-statements" title="Permalink to this heading"></a></h2>
+<section id="syntax-form-1">
+<h3>Syntax Form 1<a class="headerlink" href="#syntax-form-1" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp atomic capture</span>
+<span class="w">    </span><span class="n">update</span><span class="o">-</span><span class="n">statement</span>
+<span class="w">    </span><span class="n">capture</span><span class="o">-</span><span class="n">statement</span>
+<span class="c">!$omp end atomic</span>
+</pre></div>
+</div>
+</section>
+<section id="syntax-form-2">
+<h3>Syntax Form 2<a class="headerlink" href="#syntax-form-2" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp atomic capture</span>
+<span class="w">    </span><span class="n">capture</span><span class="o">-</span><span class="n">statement</span>
+<span class="w">    </span><span class="n">update</span><span class="o">-</span><span class="n">statement</span>
+<span class="c">!$omp end atomic</span>
+</pre></div>
+</div>
+</section>
+<section id="allowed-update-statements">
+<h3>Allowed Update Statements<a class="headerlink" href="#allowed-update-statements" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">operator</span><span class="w"> </span><span class="n">expr</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="n">operator</span><span class="w"> </span><span class="n">x</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">intr_proc</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">expr_list</span><span class="p">)</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">intr_proc</span><span class="p">(</span><span class="n">expr_list</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="allowed-capture-statements">
+<h3>Allowed Capture Statements<a class="headerlink" href="#allowed-capture-statements" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this heading"></a></h2>
+<p>This guide covered the following OpenMP concepts:</p>
+<p><strong>Data Management:</strong></p>
+<ul class="simple">
+<li><p>Private data: each thread has its own copy</p></li>
+<li><p>Shared data: accessible by all threads</p></li>
+<li><p>Controlling data attributes with clauses</p></li>
+</ul>
+<p><strong>Preventing Race Conditions:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">barrier</span></code>: synchronization point for all threads</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">critical</span></code>: mutual exclusion for code regions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">atomic</span></code>: lightweight protection for simple operations</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">read</span></code>, <code class="docutils literal notranslate"><span class="pre">write</span></code>, <code class="docutils literal notranslate"><span class="pre">update</span></code>, <code class="docutils literal notranslate"><span class="pre">capture</span></code></p></li>
+</ul>
+</li>
+</ul>
+<p><strong>Parallelization Strategies:</strong></p>
+<ul class="simple">
+<li><p>Examples demonstrated various approaches to parallel data management</p></li>
+<li><p>Techniques for avoiding data races while maintaining performance</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, The contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Worksharing and Scheduling &mdash; OpenMP parallelism in scientific computing  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../" class="icon icon-home">
+            OpenMP parallelism in scientific computing
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Day 1</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hpc2n-intro/">Introduction to HPC2N</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup/">Introduction to Kebnekaise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../first-steps/">First Steps in OpenMP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../openmp-basics1/">Introduction to OpenMP (part 1)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../openmp-basics2/">Introduction to OpenMP (part 2)</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 2</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../motivation/">Introduction to task-based parallelism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../task-basics-1/">OpenMP task basics (part 1)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../task-basics-2/">OpenMP task basics (part 2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../task-basics-lu/">Example: LU factorization</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Miscellanous</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick-reference/">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/">Instructor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../">OpenMP parallelism in scientific computing</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Worksharing and Scheduling</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/hpc2n/OpenMP-parallelism-course/blob/master/docs/worksharing.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="worksharing-and-scheduling">
+<h1>Worksharing and Scheduling<a class="headerlink" href="#worksharing-and-scheduling" title="Permalink to this heading"></a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Pedro Ojeda &amp; Joachim Hein</p>
+</dd>
+<dt class="field-even">Institutions<span class="colon">:</span></dt>
+<dd class="field-even"><p>High Performance Computing Center North &amp; Lund University</p>
+</dd>
+</dl>
+<hr class="docutils" />
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>Worksharing constructs allow easy distribution of work onto threads:</p>
+<p><strong>Loop Construct:</strong></p>
+<ul class="simple">
+<li><p>Easy distribution of loops onto threads</p></li>
+<li><p>Avoiding load imbalance using the <code class="docutils literal notranslate"><span class="pre">schedule</span></code> clause</p></li>
+</ul>
+<p><strong>Workshare Construct (Fortran):</strong></p>
+<ul class="simple">
+<li><p>Parallelization of Fortran array syntax</p></li>
+</ul>
+<p><strong>Sections Construct:</strong></p>
+<ul class="simple">
+<li><p>Distributing independent code blocks</p></li>
+<li><p>Modern alternative: task construct</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="distributing-loops">
+<h2>Distributing Loops<a class="headerlink" href="#distributing-loops" title="Permalink to this heading"></a></h2>
+<section id="introduction-to-the-loop-construct">
+<h3>Introduction to the Loop Construct<a class="headerlink" href="#introduction-to-the-loop-construct" title="Permalink to this heading"></a></h3>
+<p>Distributing large loops is a typical target for OpenMP parallelization.</p>
+<section id="traditional-approach">
+<h4>Traditional Approach<a class="headerlink" href="#traditional-approach" title="Permalink to this heading"></a></h4>
+<p>As seen in previous lectures, loop distribution can be accomplished manually but requires management code:</p>
+<ul class="simple">
+<li><p>Number of iterations per thread (may be unequal)</p></li>
+<li><p>Starting index of current thread</p></li>
+<li><p>Final index of current thread</p></li>
+</ul>
+</section>
+<section id="openmp-loop-construct">
+<h4>OpenMP Loop Construct<a class="headerlink" href="#openmp-loop-construct" title="Permalink to this heading"></a></h4>
+<p>OpenMP offers the “loop construct” to ease loop parallelization:</p>
+<ul class="simple">
+<li><p>Convenience: reduces code complexity</p></li>
+<li><p>Maintainability: cleaner, more readable code</p></li>
+</ul>
+</section>
+</section>
+</section>
+<hr class="docutils" />
+<section id="the-loop-construct-features">
+<h2>The Loop Construct Features<a class="headerlink" href="#the-loop-construct-features" title="Permalink to this heading"></a></h2>
+<section id="key-properties">
+<h3>Key Properties<a class="headerlink" href="#key-properties" title="Permalink to this heading"></a></h3>
+<p>The loop construct:</p>
+<ul class="simple">
+<li><p>Distributes the following loop (C/C++/Fortran) onto threads</p></li>
+<li><p>Makes the iteration variable automatically private</p></li>
+<li><p>Determines automatically (without management code):</p>
+<ul>
+<li><p>Number of iterations per thread</p></li>
+<li><p>Start index of current thread</p></li>
+<li><p>Final index of current thread</p></li>
+</ul>
+</li>
+<li><p>Flushes registers to memory at exit, unless <code class="docutils literal notranslate"><span class="pre">nowait</span></code> is specified</p>
+<ul>
+<li><p><strong>Note:</strong> No flush on entry!</p></li>
+</ul>
+</li>
+<li><p>Offers mechanisms to balance the load for various situations</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="loop-construct-in-fortran">
+<h2>Loop Construct in Fortran<a class="headerlink" href="#loop-construct-in-fortran" title="Permalink to this heading"></a></h2>
+<section id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading"></a></h3>
+<p>Works on Fortran standard-compliant do-construct:</p>
+<ul class="simple">
+<li><p><strong>Not supported:</strong> <code class="docutils literal notranslate"><span class="pre">do</span> <span class="pre">while</span></code></p></li>
+<li><p><strong>Not supported:</strong> <code class="docutils literal notranslate"><span class="pre">do</span></code> without loop control</p></li>
+</ul>
+</section>
+<section id="syntax">
+<h3>Syntax<a class="headerlink" href="#syntax" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel &amp;</span>
+<span class="c">!$omp shared(…) &amp;</span>
+<span class="c">!$omp private(…)</span>
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">N</span>
+<span class="w">        </span><span class="n">loop</span><span class="o">-</span><span class="n">body</span>
+<span class="w">    </span><span class="k">end do</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">!$omp</span> <span class="pre">end</span> <span class="pre">do</span></code> is not required but optional.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-vector-norm-manual-loop-management-fortran">
+<h2>Example: Vector Norm - Manual Loop Management (Fortran)<a class="headerlink" href="#example-vector-norm-manual-loop-management-fortran" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0D0</span>
+
+<span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp shared(vect, norm) private(myNum, i, lNorm)</span>
+<span class="w">    </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0D0</span>
+<span class="w">    </span><span class="n">myNum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vleng</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">()</span><span class="w">  </span><span class="c">! local size</span>
+
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">myNum</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">(),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">            </span><span class="n">myNum</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">())</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="k">enddo</span>
+
+<span class="w">    </span><span class="c">!$omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">lNorm</span>
+<span class="c">!$omp end parallel</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i) \cdot v(i)}\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This version requires explicit calculation of loop bounds for each thread.</p>
+</div>
+</section>
+<hr class="docutils" />
+<section id="example-vector-norm-loop-construct-fortran">
+<h2>Example: Vector Norm - Loop Construct (Fortran)<a class="headerlink" href="#example-vector-norm-loop-construct-fortran" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0d0</span>
+
+<span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp shared(vect, norm) private(i, lNorm)</span>
+<span class="w">    </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0d0</span>
+
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">vleng</span><span class="w">  </span><span class="c">! same as serial case</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="k">enddo</span>
+
+<span class="w">    </span><span class="c">!$omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">lNorm</span>
+<span class="c">!$omp end parallel</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i) \cdot v(i)}\)</span></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The loop bounds are the same as in the serial case. OpenMP handles the distribution automatically.</p>
+</div>
+</section>
+<hr class="docutils" />
+<section id="loop-construct-in-c">
+<h2>Loop Construct in C<a class="headerlink" href="#loop-construct-in-c" title="Permalink to this heading"></a></h2>
+<section id="canonical-loop-requirements">
+<h3>Canonical Loop Requirements<a class="headerlink" href="#canonical-loop-requirements" title="Permalink to this heading"></a></h3>
+<p>The loop construct in C is limited to “canonical” loops:</p>
+<p><strong>First Argument (Initialization):</strong></p>
+<p>Assignment to:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></li>
+<li><p>pointer</p></li>
+<li><p>random-access-iterator-type (C++)</p></li>
+</ul>
+<p><strong>Second Argument (Condition):</strong></p>
+<p>Comparison using: <code class="docutils literal notranslate"><span class="pre">&lt;=</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code></p>
+<p><strong>Third Argument (Increment):</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">i++</span></code>, <code class="docutils literal notranslate"><span class="pre">++i</span></code>, <code class="docutils literal notranslate"><span class="pre">i--</span></code>, <code class="docutils literal notranslate"><span class="pre">--i</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">+=</span> <span class="pre">inc</span></code>, <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">-=</span> <span class="pre">inc</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">=</span> <span class="pre">i</span> <span class="pre">+</span> <span class="pre">inc</span></code>, <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">=</span> <span class="pre">inc</span> <span class="pre">+</span> <span class="pre">i</span></code>, <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">=</span> <span class="pre">i</span> <span class="pre">-</span> <span class="pre">inc</span></code></p></li>
+</ul>
+<p><strong>Additional Requirements:</strong></p>
+<p>All bounds and increments must be loop-invariant.</p>
+</section>
+<section id="id1">
+<h3>Syntax<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel \</span>
+<span class="cp">    shared(…) \</span>
+<span class="cp">    private(…)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">loop</span><span class="o">-</span><span class="n">body</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-vector-norm-manual-loop-management-c">
+<h2>Example: Vector Norm - Manual Loop Management (C)<a class="headerlink" href="#example-vector-norm-manual-loop-management-c" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    shared(vect, norm) private(myNum, i, lNorm)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">myNum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vleng</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">();</span><span class="w">  </span><span class="c1">// local size</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myNum</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">         </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">myNum</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">());</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+
+<span class="w">    </span><span class="cp">#pragma omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">lNorm</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i) \cdot v(i)}\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This version requires explicit calculation of loop bounds for each thread.</p>
+</div>
+</section>
+<hr class="docutils" />
+<section id="example-vector-norm-loop-construct-c">
+<h2>Example: Vector Norm - Loop Construct (C)<a class="headerlink" href="#example-vector-norm-loop-construct-c" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    shared(vect, norm) private(i, lNorm)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">vleng</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w">  </span><span class="c1">// same as serial case</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+
+<span class="w">    </span><span class="cp">#pragma omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">lNorm</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i) \cdot v(i)}\)</span></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The loop bounds are the same as in the serial case. OpenMP handles the distribution automatically.</p>
+</div>
+</section>
+<hr class="docutils" />
+<section id="parallel-loop-construct-in-fortran">
+<h2>Parallel Loop Construct in Fortran<a class="headerlink" href="#parallel-loop-construct-in-fortran" title="Permalink to this heading"></a></h2>
+<section id="shorthand-syntax">
+<h3>Shorthand Syntax<a class="headerlink" href="#shorthand-syntax" title="Permalink to this heading"></a></h3>
+<p>When a parallel region contains only a loop construct, you can use a shorthand:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel do</span>
+<span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">N</span>
+<span class="w">    </span><span class="n">loop</span><span class="o">-</span><span class="n">body</span>
+<span class="k">enddo</span><span class="w">  </span><span class="c">! parallel region ends here!</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">!$omp</span> <span class="pre">end</span> <span class="pre">parallel</span> <span class="pre">do</span></code> is not required (optional)</p></li>
+<li><p>Features of parallel region and normal loop construct apply similarly</p></li>
+</ul>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="parallel-loop-construct-in-c">
+<h2>Parallel Loop Construct in C<a class="headerlink" href="#parallel-loop-construct-in-c" title="Permalink to this heading"></a></h2>
+<section id="id2">
+<h3>Shorthand Syntax<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h3>
+<p>When a parallel region contains only a loop construct, you can use a shorthand:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel for</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">loop</span><span class="o">-</span><span class="n">body</span>
+<span class="p">}</span><span class="w">  </span><span class="c1">// parallel region &amp; loop construct end here!</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Features of parallel region and normal loop construct apply similarly.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="loop-reordering-and-data-dependency">
+<h2>Loop Reordering and Data Dependency<a class="headerlink" href="#loop-reordering-and-data-dependency" title="Permalink to this heading"></a></h2>
+<section id="order-of-execution">
+<h3>Order of Execution<a class="headerlink" href="#order-of-execution" title="Permalink to this heading"></a></h3>
+<p>In a parallel loop, iterations are executed in a different order from serial code.</p>
+</section>
+<section id="data-dependency-requirement">
+<h3>Data Dependency Requirement<a class="headerlink" href="#data-dependency-requirement" title="Permalink to this heading"></a></h3>
+<p>A correct result is only obtained if the current iteration is independent of previous iterations (no data dependency).</p>
+</section>
+<section id="handling-data-dependencies">
+<h3>Handling Data Dependencies<a class="headerlink" href="#handling-data-dependencies" title="Permalink to this heading"></a></h3>
+<p>If data dependency exists:</p>
+<ol class="arabic simple">
+<li><p>Modify/change the algorithm</p></li>
+<li><p>Serialize relevant part of the loop using special OpenMP features (covered later in course)</p></li>
+<li><p>Execute loop serially</p></li>
+</ol>
+</section>
+<section id="example-with-dependency">
+<h3>Example with Dependency<a class="headerlink" href="#example-with-dependency" title="Permalink to this heading"></a></h3>
+<p><strong>Problem (has dependency):</strong></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="mi">-1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><strong>Possible Fix (algorithm change):</strong></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Always verify that loop iterations are independent before parallelizing!</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="scheduling-loop-iterations">
+<h2>Scheduling Loop Iterations<a class="headerlink" href="#scheduling-loop-iterations" title="Permalink to this heading"></a></h2>
+<section id="work-per-loop-iteration">
+<h3>Work Per Loop Iteration<a class="headerlink" href="#work-per-loop-iteration" title="Permalink to this heading"></a></h3>
+<p>Previous examples assumed the same amount of work for each loop iteration. This is not always the case.</p>
+<section id="examples-of-uneven-work">
+<h4>Examples of Uneven Work<a class="headerlink" href="#examples-of-uneven-work" title="Permalink to this heading"></a></h4>
+<p><strong>Summing over triangular area:</strong></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="c1">// work here</span>
+</pre></div>
+</div>
+<p><strong>Loop body iterates until required accuracy is achieved</strong></p>
+</section>
+</section>
+<section id="load-imbalance-problem">
+<h3>Load Imbalance Problem<a class="headerlink" href="#load-imbalance-problem" title="Permalink to this heading"></a></h3>
+<p>Uneven work distribution often causes load imbalance:</p>
+<ul class="simple">
+<li><p>Some threads finish while others still work</p></li>
+<li><p>Results in <strong>poor performance</strong></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Dealing with such problems is typically easier in shared memory than in distributed memory programming.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="schedule-clause">
+<h2>Schedule Clause<a class="headerlink" href="#schedule-clause" title="Permalink to this heading"></a></h2>
+<section id="purpose">
+<h3>Purpose<a class="headerlink" href="#purpose" title="Permalink to this heading"></a></h3>
+<p>To help load balance in a loop construct, use the <code class="docutils literal notranslate"><span class="pre">schedule</span></code> clause:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">schedule</span><span class="p">(</span><span class="nb">kind</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="n">chunk_size</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="default-behavior">
+<h3>Default Behavior<a class="headerlink" href="#default-behavior" title="Permalink to this heading"></a></h3>
+<p>Default schedule is implementation-dependent (OpenMP 3.0).</p>
+</section>
+<section id="schedule-kinds">
+<h3>Schedule Kinds<a class="headerlink" href="#schedule-kinds" title="Permalink to this heading"></a></h3>
+<p>Choices for <code class="docutils literal notranslate"><span class="pre">kind</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">static</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dynamic</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">guided</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">auto</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">runtime</span></code></p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="static-scheduling">
+<h2>Static Scheduling<a class="headerlink" href="#static-scheduling" title="Permalink to this heading"></a></h2>
+<section id="how-it-works">
+<h3>How It Works<a class="headerlink" href="#how-it-works" title="Permalink to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p>Divide iteration count into chunks of equal size</p>
+<ul class="simple">
+<li><p>Last chunk may be smaller if needed</p></li>
+</ul>
+</li>
+<li><p>Thread assignment uses “round robin” distribution</p></li>
+</ol>
+</section>
+<section id="default-chunk-size">
+<h3>Default Chunk Size<a class="headerlink" href="#default-chunk-size" title="Permalink to this heading"></a></h3>
+<p>Default chunk size divides iteration count by number of threads.</p>
+</section>
+<section id="performance">
+<h3>Performance<a class="headerlink" href="#performance" title="Permalink to this heading"></a></h3>
+<p>Static scheduling has the <strong>least overhead</strong> compared to other schedules.</p>
+</section>
+<section id="visual-representation">
+<h3>Visual Representation<a class="headerlink" href="#visual-representation" title="Permalink to this heading"></a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Default static schedule (≈n/4 per thread):
+Thread 0: [===============]
+Thread 1: [===============]
+Thread 2: [===============]
+Thread 3: [===============]
+
+Static schedule with chunk size:
+T0 T1 T2 T3 T0 T1 T2 T3 T0 T1 T2 ...
+</pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-summation-over-triangular-area-static">
+<h2>Example: Summation Over Triangular Area (Static)<a class="headerlink" href="#example-summation-over-triangular-area-static" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel do &amp;</span>
+<span class="c">!$omp private(i, j) shared(a) &amp;</span>
+<span class="c">!$omp schedule(static, 100)</span>
+<span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1200</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1200</span>
+<span class="w">        </span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">func</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+<span class="w">        </span><span class="n">a</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="k">enddo</span>
+</pre></div>
+</div>
+<section id="performance-comparison">
+<h3>Performance Comparison<a class="headerlink" href="#performance-comparison" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Default static:</strong> maximum 7/16 of work area per thread</p></li>
+<li><p><strong>Static with chunk=100:</strong> maximum 5/16 of work area per thread</p></li>
+</ul>
+<section id="trade-offs">
+<h4>Trade-offs<a class="headerlink" href="#trade-offs" title="Permalink to this heading"></a></h4>
+<ul class="simple">
+<li><p><strong>Smaller chunks:</strong> better load balance</p></li>
+<li><p><strong>More chunks:</strong> larger overhead</p></li>
+</ul>
+</section>
+</section>
+</section>
+<hr class="docutils" />
+<section id="dynamic-scheduling">
+<h2>Dynamic Scheduling<a class="headerlink" href="#dynamic-scheduling" title="Permalink to this heading"></a></h2>
+<section id="id3">
+<h3>How It Works<a class="headerlink" href="#id3" title="Permalink to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p>Loop is split into work packages of <code class="docutils literal notranslate"><span class="pre">chunk_size</span></code> iterations</p></li>
+<li><p>Each thread requests a new work package once done with the current one</p></li>
+<li><p>Default <code class="docutils literal notranslate"><span class="pre">chunk_size</span></code>: 1 iteration</p></li>
+</ol>
+</section>
+<section id="when-to-use">
+<h3>When to Use<a class="headerlink" href="#when-to-use" title="Permalink to this heading"></a></h3>
+<p>Use dynamic scheduling when:</p>
+<ul class="simple">
+<li><p>Work per iteration varies significantly</p></li>
+<li><p>The pattern of work is unpredictable</p></li>
+</ul>
+</section>
+<section id="id4">
+<h3>Performance<a class="headerlink" href="#id4" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Better load balance than static (for uneven work)</p></li>
+<li><p>Higher overhead than static due to runtime work distribution</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-summation-over-triangular-area-dynamic">
+<h2>Example: Summation Over Triangular Area (Dynamic)<a class="headerlink" href="#example-summation-over-triangular-area-dynamic" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel do &amp;</span>
+<span class="c">!$omp private(i, j) shared(a) &amp;</span>
+<span class="c">!$omp schedule(dynamic, 100)</span>
+<span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1200</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1200</span>
+<span class="w">        </span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">func</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+<span class="w">        </span><span class="n">a</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="k">enddo</span>
+</pre></div>
+</div>
+<section id="id5">
+<h3>Performance Comparison<a class="headerlink" href="#id5" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Default static:</strong> maximum 7/16 of work area per thread</p></li>
+<li><p><strong>Dynamic with chunk=100:</strong> maximum ≈0.27 of work area per thread</p></li>
+</ul>
+<section id="id6">
+<h4>Trade-offs<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h4>
+<ul class="simple">
+<li><p><strong>Better balance</strong> than static scheduling</p></li>
+<li><p><strong>Larger overhead</strong> than static scheduling</p></li>
+</ul>
+</section>
+</section>
+</section>
+<hr class="docutils" />
+<section id="guided-scheduling">
+<h2>Guided Scheduling<a class="headerlink" href="#guided-scheduling" title="Permalink to this heading"></a></h2>
+<section id="id7">
+<h3>How It Works<a class="headerlink" href="#id7" title="Permalink to this heading"></a></h3>
+<p>Similar to dynamic, but with adaptive chunk sizes:</p>
+<ol class="arabic">
+<li><p>Threads request new work packages once done</p></li>
+<li><p>Work package size is proportional to:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>(number of unassigned iterations) / (number of threads)
+</pre></div>
+</div>
+</li>
+<li><p>Package size never smaller than <code class="docutils literal notranslate"><span class="pre">chunk_size</span></code> (unless last package)</p></li>
+<li><p>Default <code class="docutils literal notranslate"><span class="pre">chunk_size</span></code> = 1</p></li>
+</ol>
+</section>
+<section id="id8">
+<h3>Purpose<a class="headerlink" href="#id8" title="Permalink to this heading"></a></h3>
+<p>The idea is to <strong>prevent expensive work packages at the end</strong> of the loop.</p>
+</section>
+<section id="id9">
+<h3>Performance<a class="headerlink" href="#id9" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Starts with large chunks (low overhead)</p></li>
+<li><p>Gradually decreases chunk size (better balance toward the end)</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="schedules-auto-and-runtime">
+<h2>Schedules: Auto and Runtime<a class="headerlink" href="#schedules-auto-and-runtime" title="Permalink to this heading"></a></h2>
+<section id="auto-schedule">
+<h3>Auto Schedule<a class="headerlink" href="#auto-schedule" title="Permalink to this heading"></a></h3>
+<p>For <code class="docutils literal notranslate"><span class="pre">auto</span></code>, the implementation decides the scheduling strategy.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel do schedule(auto)</span>
+</pre></div>
+</div>
+</section>
+<section id="runtime-schedule">
+<h3>Runtime Schedule<a class="headerlink" href="#runtime-schedule" title="Permalink to this heading"></a></h3>
+<p>For <code class="docutils literal notranslate"><span class="pre">runtime</span></code>, the schedule can be controlled at runtime:</p>
+<p><strong>Method 1: Using Function (OpenMP 3.0)</strong></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">omp_set_schedule</span><span class="p">(</span><span class="n">omp_sched_static</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><strong>Method 2: Using Environment Variable</strong></p>
+<p>Bash:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">OMP_SCHEDULE</span><span class="o">=</span><span class="s2">&quot;guided,4&quot;</span>
+</pre></div>
+</div>
+<p>C-shell:</p>
+<div class="highlight-csh notranslate"><div class="highlight"><pre><span></span><span class="nb">setenv </span>OMP_SCHEDULE <span class="s2">&quot;guided,4&quot;</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Do not specify <code class="docutils literal notranslate"><span class="pre">chunk_size</span></code> with <code class="docutils literal notranslate"><span class="pre">auto</span></code> or <code class="docutils literal notranslate"><span class="pre">runtime</span></code> in the directive itself.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="multiple-loop-parallelization">
+<h2>Multiple Loop Parallelization<a class="headerlink" href="#multiple-loop-parallelization" title="Permalink to this heading"></a></h2>
+<section id="simple-example-with-nested-loops">
+<h3>Simple Example with Nested Loops<a class="headerlink" href="#simple-example-with-nested-loops" title="Permalink to this heading"></a></h3>
+<p>Consider this nested loop structure:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span>
+<span class="w">        </span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expensiveFunc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="k">enddo</span>
+</pre></div>
+</div>
+<p>There are <strong>three basic options</strong> to parallelize nested loops. Which one is best depends on the specific situation.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="option-1-distribute-outer-loop-fortran">
+<h2>Option 1: Distribute Outer Loop (Fortran)<a class="headerlink" href="#option-1-distribute-outer-loop-fortran" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel do</span>
+<span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span>
+<span class="w">        </span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expensiveFunc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="k">enddo</span>
+</pre></div>
+</div>
+<section id="characteristics">
+<h3>Characteristics<a class="headerlink" href="#characteristics" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Distributes the j-loop</p></li>
+<li><p>Maximally <strong>3 work packages</strong></p></li>
+</ul>
+</section>
+<section id="id10">
+<h3>When to Use<a class="headerlink" href="#id10" title="Permalink to this heading"></a></h3>
+<p>Use when the outer loop has sufficient iterations for good load balance.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="option-2-distribute-inner-loop-fortran">
+<h2>Option 2: Distribute Inner Loop (Fortran)<a class="headerlink" href="#option-2-distribute-inner-loop-fortran" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel private(j)</span>
+<span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span>
+<span class="w">        </span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expensiveFunc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="w">    </span><span class="c">!$omp end do</span>
+<span class="k">enddo</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<section id="id11">
+<h3>Characteristics<a class="headerlink" href="#id11" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Distributes the i-loop</p></li>
+<li><p>Now <strong>four work packages</strong></p></li>
+<li><p>Parallel region before j-loop provides better performance</p></li>
+<li><p>Requires <code class="docutils literal notranslate"><span class="pre">i</span></code> to be private (automatic for loop variable)</p></li>
+<li><p>Starts loop construct 3 times</p></li>
+<li><p>May cause more cache line conflicts when writing to <code class="docutils literal notranslate"><span class="pre">a</span></code></p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="option-3-collapse-clause-fortran">
+<h2>Option 3: Collapse Clause (Fortran)<a class="headerlink" href="#option-3-collapse-clause-fortran" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel</span>
+<span class="c">!$omp do collapse(2)</span>
+<span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span>
+<span class="w">        </span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expensiveFunc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="k">enddo</span>
+</pre></div>
+</div>
+<section id="id12">
+<h3>Characteristics<a class="headerlink" href="#id12" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">collapse</span></code> clause to specify number of loops to collapse</p></li>
+<li><p>Available since <strong>OpenMP 3.0</strong></p></li>
+<li><p>Distributes both loops by creating a single combined loop</p></li>
+<li><p>Schedules as specified (default in this case)</p></li>
+<li><p>Now: <strong>12 work packages</strong></p></li>
+<li><p>May cause more cache line conflicts when writing to <code class="docutils literal notranslate"><span class="pre">a</span></code></p></li>
+</ul>
+</section>
+<section id="benefits">
+<h3>Benefits<a class="headerlink" href="#benefits" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Maximum parallelism exposure</p></li>
+<li><p>Best for cases where individual loops have few iterations</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="option-1-distribute-outer-loop-c">
+<h2>Option 1: Distribute Outer Loop (C)<a class="headerlink" href="#option-1-distribute-outer-loop-c" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel for</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expensiveFunc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id13">
+<h3>Characteristics<a class="headerlink" href="#id13" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Distributes the i-loop</p></li>
+<li><p>Maximally <strong>3 work packages</strong></p></li>
+</ul>
+</section>
+<section id="id14">
+<h3>When to Use<a class="headerlink" href="#id14" title="Permalink to this heading"></a></h3>
+<p>Use when the outer loop has sufficient iterations for good load balance.</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="option-2-distribute-inner-loop-c">
+<h2>Option 2: Distribute Inner Loop (C)<a class="headerlink" href="#option-2-distribute-inner-loop-c" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="cp">#pragma omp for</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expensiveFunc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id15">
+<h3>Characteristics<a class="headerlink" href="#id15" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Distributes the j-loop</p></li>
+<li><p>Now <strong>four work packages</strong></p></li>
+<li><p>Parallel region before i-loop provides better performance</p></li>
+<li><p>Requires <code class="docutils literal notranslate"><span class="pre">i</span></code> to be private (automatic for loop variable)</p></li>
+<li><p>Starts loop construct 3 times</p></li>
+<li><p>May cause more cache line conflicts when writing to <code class="docutils literal notranslate"><span class="pre">a</span></code></p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="option-3-collapse-clause-c">
+<h2>Option 3: Collapse Clause (C)<a class="headerlink" href="#option-3-collapse-clause-c" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel</span>
+<span class="cp">#pragma omp for collapse(2)</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expensiveFunc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="id16">
+<h3>Characteristics<a class="headerlink" href="#id16" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">collapse</span></code> clause to specify number of loops to collapse</p></li>
+<li><p>Available since <strong>OpenMP 3.0</strong></p></li>
+<li><p>Distributes both loops by creating a single combined loop</p></li>
+<li><p>Schedules as specified (default in this case)</p></li>
+<li><p>Now: <strong>12 work packages</strong></p></li>
+<li><p>May cause more cache line conflicts when writing to <code class="docutils literal notranslate"><span class="pre">a</span></code></p></li>
+</ul>
+</section>
+<section id="id17">
+<h3>Benefits<a class="headerlink" href="#id17" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Maximum parallelism exposure</p></li>
+<li><p>Best for cases where individual loops have few iterations</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="workshare-in-fortran">
+<h2>Workshare in Fortran<a class="headerlink" href="#workshare-in-fortran" title="Permalink to this heading"></a></h2>
+<section id="workshare-construct">
+<h3>Workshare Construct<a class="headerlink" href="#workshare-construct" title="Permalink to this heading"></a></h3>
+<p>OpenMP provides the <code class="docutils literal notranslate"><span class="pre">workshare</span></code> construct specifically for Fortran.</p>
+<section id="supported-constructs">
+<h4>Supported Constructs<a class="headerlink" href="#supported-constructs" title="Permalink to this heading"></a></h4>
+<p>This allows distribution of:</p>
+<ul>
+<li><p><strong>Fortran array syntax</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">a</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">:</span><span class="n">m</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">:</span><span class="n">m</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">:</span><span class="n">m</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Fortran statements:</strong> <code class="docutils literal notranslate"><span class="pre">FORALL</span></code>, <code class="docutils literal notranslate"><span class="pre">WHERE</span></code></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This construct is <strong>Fortran-only</strong> and has no C/C++ equivalent.</p>
+</div>
+</section>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-workshare">
+<h2>Example: Workshare<a class="headerlink" href="#example-workshare" title="Permalink to this heading"></a></h2>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$OMP PARALLEL SHARED(n, a, b, c)</span>
+<span class="c">!$OMP WORKSHARE</span>
+<span class="w">    </span><span class="n">b</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="n">c</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">    </span><span class="n">a</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span>
+<span class="c">!$OMP END WORKSHARE</span>
+<span class="c">!$OMP END PARALLEL</span>
+</pre></div>
+</div>
+<section id="behavior">
+<h3>Behavior<a class="headerlink" href="#behavior" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>OpenMP ensures there is no data race</p></li>
+<li><p>Arrays <code class="docutils literal notranslate"><span class="pre">b</span></code> and <code class="docutils literal notranslate"><span class="pre">c</span></code> are ready before assignment to <code class="docutils literal notranslate"><span class="pre">a</span></code></p></li>
+<li><p>Can include user-defined functions if declared <code class="docutils literal notranslate"><span class="pre">ELEMENTAL</span></code></p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="scalar-assignment-in-workshare">
+<h2>Scalar Assignment in Workshare<a class="headerlink" href="#scalar-assignment-in-workshare" title="Permalink to this heading"></a></h2>
+<section id="shared-scalar-legal">
+<h3>Shared Scalar (Legal)<a class="headerlink" href="#shared-scalar-legal" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">REAL</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">AA</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">),</span><span class="w"> </span><span class="n">BB</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">),</span><span class="w"> </span><span class="n">CC</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">),</span><span class="w"> </span><span class="n">DD</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">)</span>
+<span class="kt">INTEGER</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">SHR</span>
+
+<span class="c">!$OMP PARALLEL SHARED(SHR)</span>
+<span class="c">!$OMP WORKSHARE</span>
+<span class="w">    </span><span class="n">AA</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">BB</span>
+<span class="w">    </span><span class="n">SHR</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="n">CC</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DD</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">SHR</span>
+<span class="c">!$OMP END WORKSHARE</span>
+<span class="c">!$OMP END PARALLEL</span>
+</pre></div>
+</div>
+<p>This is <strong>legal OpenMP</strong>. A single thread performs the scalar assignment to <code class="docutils literal notranslate"><span class="pre">SHR</span></code>.</p>
+</section>
+<section id="private-scalar-illegal">
+<h3>Private Scalar (Illegal!)<a class="headerlink" href="#private-scalar-illegal" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">REAL</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">AA</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">),</span><span class="w"> </span><span class="n">BB</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">),</span><span class="w"> </span><span class="n">CC</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">),</span><span class="w"> </span><span class="n">DD</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="n">N</span><span class="p">)</span>
+<span class="kt">INTEGER</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">PRI</span>
+
+<span class="c">!$OMP PARALLEL PRIVATE(PRI)</span>
+<span class="c">!$OMP WORKSHARE</span>
+<span class="w">    </span><span class="n">AA</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">BB</span>
+<span class="w">    </span><span class="n">PRI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="n">CC</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DD</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">PRI</span>
+<span class="c">!$OMP END WORKSHARE</span>
+<span class="c">!$OMP END PARALLEL</span>
+</pre></div>
+</div>
+<div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>This is <strong>ILLEGAL</strong>!</p>
+<ul class="simple">
+<li><p>Single thread performs scalar assignment to <code class="docutils literal notranslate"><span class="pre">PRI</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PRI</span></code> is undefined on other threads</p></li>
+</ul>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="sections">
+<h2>Sections<a class="headerlink" href="#sections" title="Permalink to this heading"></a></h2>
+<section id="sections-construct">
+<h3>Sections Construct<a class="headerlink" href="#sections-construct" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">sections</span></code> construct allows parallelization when code blocks can be executed independently.</p>
+<section id="use-cases">
+<h4>Use Cases<a class="headerlink" href="#use-cases" title="Permalink to this heading"></a></h4>
+<ul class="simple">
+<li><p>Initialization of multiple data structures</p></li>
+<li><p>Different tasks executing different code</p></li>
+</ul>
+</section>
+<section id="considerations">
+<h4>Considerations<a class="headerlink" href="#considerations" title="Permalink to this heading"></a></h4>
+<p><strong>Mismatch between blocks and threads:</strong></p>
+<ul class="simple">
+<li><p>Individual threads might execute multiple code blocks</p></li>
+<li><p>Not every thread necessarily gets a code block</p></li>
+</ul>
+<p><strong>Danger of load imbalance:</strong></p>
+<ul class="simple">
+<li><p>Code blocks may have different amounts of work</p></li>
+<li><p>Mismatch between number of blocks and number of threads</p></li>
+</ul>
+</section>
+<section id="real-world-application">
+<h4>Real-World Application<a class="headerlink" href="#real-world-application" title="Permalink to this heading"></a></h4>
+<p>Example from research: “Acceleration of Semiempirical QM/MM methods,” JCTC, 13, 3525-3536 (2017)</p>
+</section>
+</section>
+</section>
+<hr class="docutils" />
+<section id="example-sections-construct-c">
+<h2>Example: Sections Construct (C)<a class="headerlink" href="#example-sections-construct-c" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel shared(a, b, N, M)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp sections</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="cp">#pragma omp section</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">                </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="cp">#pragma omp section</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">M</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">                </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">initBmatrix</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<section id="alternative-parallel-sections">
+<h3>Alternative: Parallel Sections<a class="headerlink" href="#alternative-parallel-sections" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel sections shared(a, b, N, M)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp section</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">            </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cp">#pragma omp section</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">M</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">            </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">initBmatrix</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">parallel</span> <span class="pre">sections</span></code> directive combines the <code class="docutils literal notranslate"><span class="pre">parallel</span></code> and <code class="docutils literal notranslate"><span class="pre">sections</span></code> directives for convenience.</p>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this heading"></a></h2>
+<p>This guide covered the following OpenMP worksharing constructs:</p>
+<section id="id18">
+<h3>OpenMP Loop Construct<a class="headerlink" href="#id18" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Easy distribution of standard <code class="docutils literal notranslate"><span class="pre">do</span></code>/<code class="docutils literal notranslate"><span class="pre">for</span></code> loops</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">schedule</span></code> clause deals with many cases of load imbalance</p></li>
+<li><p>Schedule types: <code class="docutils literal notranslate"><span class="pre">static</span></code>, <code class="docutils literal notranslate"><span class="pre">dynamic</span></code>, <code class="docutils literal notranslate"><span class="pre">guided</span></code>, <code class="docutils literal notranslate"><span class="pre">auto</span></code>, <code class="docutils literal notranslate"><span class="pre">runtime</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">collapse</span></code> clause for nested loops (OpenMP 3.0+)</p></li>
+</ul>
+</section>
+<section id="openmp-workshare-construct-fortran">
+<h3>OpenMP Workshare Construct (Fortran)<a class="headerlink" href="#openmp-workshare-construct-fortran" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Distributes Fortran array syntax statements</p></li>
+<li><p>Supports <code class="docutils literal notranslate"><span class="pre">FORALL</span></code> and <code class="docutils literal notranslate"><span class="pre">WHERE</span></code></p></li>
+<li><p>Handles user-defined <code class="docutils literal notranslate"><span class="pre">ELEMENTAL</span></code> functions</p></li>
+</ul>
+</section>
+<section id="openmp-sections-construct">
+<h3>OpenMP Sections Construct<a class="headerlink" href="#openmp-sections-construct" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Distributes independent code blocks on different threads</p></li>
+<li><p>Useful for heterogeneous parallel tasks</p></li>
+<li><p>Consider load balance issues</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="id19">
+<h2>Worksharing and Scheduling<a class="headerlink" href="#id19" title="Permalink to this heading"></a></h2>
+<p><strong>Authors:</strong> Pedro Ojeda &amp; Joachim Hein
+<strong>Institutions:</strong> High Performance Computing Center North (HPC2N), Umeå University, and Lund University</p>
+<section id="id20">
+<h3>Overview<a class="headerlink" href="#id20" title="Permalink to this heading"></a></h3>
+<p>Worksharing constructs in OpenMP allow easy distribution of work onto threads.</p>
+<p><strong>Main constructs:</strong></p>
+<ul class="simple">
+<li><p><strong>Loop construct</strong> — Distribute loop iterations among threads and manage load imbalance using the <code class="docutils literal notranslate"><span class="pre">schedule</span></code> clause.</p></li>
+<li><p><strong>Workshare construct</strong> — Parallelize Fortran array syntax.</p></li>
+<li><p><strong>Sections construct</strong> — Distribute independent code blocks.</p></li>
+<li><p><strong>Modern alternative:</strong> <code class="docutils literal notranslate"><span class="pre">task</span></code> construct for dynamic workloads.</p></li>
+</ul>
+</section>
+<section id="loop-construct">
+<h3>Loop Construct<a class="headerlink" href="#loop-construct" title="Permalink to this heading"></a></h3>
+<p>Distributes loop iterations across threads automatically.
+OpenMP determines for each thread:</p>
+<ul class="simple">
+<li><p>Number of iterations</p></li>
+<li><p>Starting and ending indices</p></li>
+</ul>
+<p>Registers are flushed to memory at loop exit unless <code class="docutils literal notranslate"><span class="pre">nowait</span></code> is used.</p>
+<section id="example-fortran">
+<h4>Example (Fortran)<a class="headerlink" href="#example-fortran" title="Permalink to this heading"></a></h4>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel shared(vect, norm) private(i, lNorm)</span>
+<span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0d0</span>
+<span class="c">!$omp do</span>
+<span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">N</span>
+<span class="w">    </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="k">end do</span>
+<span class="c">!$omp atomic update</span>
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">lNorm</span>
+<span class="c">!$omp end parallel</span>
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="example-c">
+<h4>Example (C)<a class="headerlink" href="#example-c" title="Permalink to this heading"></a></h4>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel shared(vect, norm) private(i, lNorm)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="cp">#pragma omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">lNorm</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="parallel-loop-constructs">
+<h4>Parallel Loop Constructs<a class="headerlink" href="#parallel-loop-constructs" title="Permalink to this heading"></a></h4>
+<p>Shorthand syntax if the parallel region is only for the loop:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel do</span>
+<span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">N</span>
+<span class="w">    </span><span class="n">loop_body</span>
+<span class="k">end do</span>
+</pre></div>
+</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel for</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="n">loop_body</span><span class="p">;</span>
+</pre></div>
+</div>
+</section>
+<section id="loop-dependencies">
+<h4>Loop Dependencies<a class="headerlink" href="#loop-dependencies" title="Permalink to this heading"></a></h4>
+<p>Iterations are executed in potentially different order from serial execution.
+If iterations depend on previous results, correctness issues arise.</p>
+<p><strong>Solutions:</strong></p>
+<ul class="simple">
+<li><p>Redesign the algorithm.</p></li>
+<li><p>Serialize dependent parts using OpenMP synchronization features.</p></li>
+<li><p>Run the loop serially.</p></li>
+</ul>
+</section>
+</section>
+<section id="id21">
+<h3>Scheduling Loop Iterations<a class="headerlink" href="#id21" title="Permalink to this heading"></a></h3>
+<p>Uneven workload across loop iterations can cause <strong>load imbalance</strong>.</p>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">schedule</span></code> clause to control how iterations are distributed:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp do schedule(kind, [chunk_size])</span>
+</pre></div>
+</div>
+<p>Supported <code class="docutils literal notranslate"><span class="pre">kind</span></code> values:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">static</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dynamic</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">guided</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">auto</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">runtime</span></code></p></li>
+</ul>
+<section id="id22">
+<h4>Static Scheduling<a class="headerlink" href="#id22" title="Permalink to this heading"></a></h4>
+<p>Divides iterations into equal chunks (default behavior).
+Least overhead, but may cause imbalance if iterations have variable work.</p>
+</section>
+<section id="id23">
+<h4>Dynamic Scheduling<a class="headerlink" href="#id23" title="Permalink to this heading"></a></h4>
+<p>Threads dynamically request new chunks after finishing their current work.
+Better balance, higher overhead.</p>
+</section>
+<section id="id24">
+<h4>Guided Scheduling<a class="headerlink" href="#id24" title="Permalink to this heading"></a></h4>
+<p>Similar to dynamic scheduling but with decreasing chunk sizes for better performance near the end of the loop.</p>
+</section>
+<section id="runtime-and-auto-scheduling">
+<h4>Runtime and Auto Scheduling<a class="headerlink" href="#runtime-and-auto-scheduling" title="Permalink to this heading"></a></h4>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">runtime</span></code> — Controlled by environment variable <code class="docutils literal notranslate"><span class="pre">OMP_SCHEDULE</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">auto</span></code> — Left to the implementation to decide.</p></li>
+</ul>
+</section>
+</section>
+<section id="nested-loops-and-collapse">
+<h3>Nested Loops and Collapse<a class="headerlink" href="#nested-loops-and-collapse" title="Permalink to this heading"></a></h3>
+<p>For nested loops, OpenMP can collapse loops into a single iteration space:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel</span>
+<span class="c">!$omp do collapse(2)</span>
+<span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span>
+<span class="w">        </span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expensiveFunc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+<span class="w">    </span><span class="k">end do</span>
+<span class="k">end do</span>
+</pre></div>
+</div>
+</section>
+<section id="id25">
+<h3>Workshare in Fortran<a class="headerlink" href="#id25" title="Permalink to this heading"></a></h3>
+<p>Fortran provides <code class="docutils literal notranslate"><span class="pre">workshare</span></code> to parallelize array syntax operations:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel shared(n, a, b, c)</span>
+<span class="c">!$omp workshare</span>
+<span class="w">    </span><span class="n">b</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="n">c</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">    </span><span class="n">a</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span>
+<span class="c">!$omp end workshare</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<p><strong>Notes:</strong></p>
+<ul class="simple">
+<li><p>All threads wait at <code class="docutils literal notranslate"><span class="pre">end</span> <span class="pre">workshare</span></code>.</p></li>
+<li><p>Only scalar assignments to shared variables are allowed.</p></li>
+</ul>
+</section>
+<section id="id26">
+<h3>Sections Construct<a class="headerlink" href="#id26" title="Permalink to this heading"></a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">sections</span></code> when different code blocks can be executed independently.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel sections shared(a, b, N, M)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp section</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cp">#pragma omp section</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">M</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">initBmatrix</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Caution:</strong> Possible load imbalance if blocks take different time or number of threads ≠ number of sections.</p>
+</section>
+<section id="id27">
+<h3>Summary<a class="headerlink" href="#id27" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">loop</span></code> construct simplifies parallelization of standard loops.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">schedule</span></code> clause handles load imbalance.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">workshare</span></code> parallelizes Fortran array expressions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sections</span></code> distributes independent code blocks.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">collapse</span></code> allows nested loop flattening.</p></li>
+</ul>
+<p>OpenMP’s worksharing constructs form the foundation of shared-memory parallelism for structured workloads.</p>
+</section>
+</section>
+</section>
+<section id="openmp-worksharing-and-scheduling">
+<h1>OpenMP Worksharing and Scheduling<a class="headerlink" href="#openmp-worksharing-and-scheduling" title="Permalink to this heading"></a></h1>
+<section id="id28">
+<h2>Overview<a class="headerlink" href="#id28" title="Permalink to this heading"></a></h2>
+<p>OpenMP provides several worksharing constructs to distribute work across threads:</p>
+<ul class="simple">
+<li><p><strong>Loop construct</strong>: Easy distribution of loops onto threads</p></li>
+<li><p><strong>Workshare construct</strong>: Parallelization of Fortran array syntax</p></li>
+<li><p><strong>Sections construct</strong>: Distributing independent code blocks</p></li>
+</ul>
+</section>
+<section id="id29">
+<h2>Distributing Loops<a class="headerlink" href="#id29" title="Permalink to this heading"></a></h2>
+<section id="id30">
+<h3>Loop Construct<a class="headerlink" href="#id30" title="Permalink to this heading"></a></h3>
+<p>The loop construct distributes loop iterations across threads automatically:</p>
+<ul class="simple">
+<li><p>Iteration variable is automatically private</p></li>
+<li><p>Determines iterations per thread, start index, and final index</p></li>
+<li><p>Registers are flushed to memory at exit (unless <code class="docutils literal notranslate"><span class="pre">nowait</span></code> is used)</p></li>
+<li><p>No flush on entry</p></li>
+</ul>
+<section id="fortran-syntax">
+<h4>Fortran Syntax<a class="headerlink" href="#fortran-syntax" title="Permalink to this heading"></a></h4>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel shared(...) private(...)</span>
+<span class="c">!$omp do</span>
+<span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">N</span>
+<span class="w">   </span><span class="c">! loop body</span>
+<span class="k">end do</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+</section>
+<section id="c-c-syntax">
+<h4>C/C++ Syntax<a class="headerlink" href="#c-c-syntax" title="Permalink to this heading"></a></h4>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel shared(...) private(...)</span>
+<span class="p">{</span>
+<span class="w">   </span><span class="cp">#pragma omp for</span>
+<span class="w">   </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="c1">// loop body</span>
+<span class="w">   </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="parallel-loop-construct">
+<h3>Parallel Loop Construct<a class="headerlink" href="#parallel-loop-construct" title="Permalink to this heading"></a></h3>
+<p>Shorthand when a parallel region contains only a loop construct:</p>
+<section id="fortran">
+<h4>Fortran:<a class="headerlink" href="#fortran" title="Permalink to this heading"></a></h4>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel do</span>
+<span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">N</span>
+<span class="w">   </span><span class="c">! loop body</span>
+<span class="k">end do</span>
+</pre></div>
+</div>
+</section>
+<section id="c-c">
+<h4>C/C++:<a class="headerlink" href="#c-c" title="Permalink to this heading"></a></h4>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel for</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="c1">// loop body</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="data-dependency-considerations">
+<h3>Data Dependency Considerations<a class="headerlink" href="#data-dependency-considerations" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>In parallel loops, iterations execute in different order from serial code</p></li>
+<li><p>Correct results only if iterations are independent</p></li>
+<li><p>If data dependency exists:
+- Modify/change algorithm
+- Serialize relevant parts using OpenMP features
+- Execute loop serially</p></li>
+</ul>
+</section>
+</section>
+<section id="id31">
+<h2>Scheduling Loop Iterations<a class="headerlink" href="#id31" title="Permalink to this heading"></a></h2>
+<section id="id32">
+<h3>Schedule Clause<a class="headerlink" href="#id32" title="Permalink to this heading"></a></h3>
+<p>Use the schedule clause to handle load imbalance:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">schedule</span><span class="p">(</span><span class="n">kind</span><span class="w"> </span><span class="p">[,</span><span class="w"> </span><span class="n">chunk_size</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="available-schedule-types">
+<h3>Available Schedule Types<a class="headerlink" href="#available-schedule-types" title="Permalink to this heading"></a></h3>
+<section id="id33">
+<h4>Static Scheduling<a class="headerlink" href="#id33" title="Permalink to this heading"></a></h4>
+<ul class="simple">
+<li><p>Divides iterations into equal-sized chunks</p></li>
+<li><p>Round-robin thread assignment</p></li>
+<li><p>Least overhead</p></li>
+<li><p>Default: divide iterations by number of threads</p></li>
+</ul>
+</section>
+<section id="id34">
+<h4>Dynamic Scheduling<a class="headerlink" href="#id34" title="Permalink to this heading"></a></h4>
+<ul class="simple">
+<li><p>Loop split into work packages of <code class="docutils literal notranslate"><span class="pre">chunk_size</span></code> iterations</p></li>
+<li><p>Threads request new packages when done</p></li>
+<li><p>Default <code class="docutils literal notranslate"><span class="pre">chunk_size</span></code>: 1 iteration</p></li>
+</ul>
+</section>
+<section id="id35">
+<h4>Guided Scheduling<a class="headerlink" href="#id35" title="Permalink to this heading"></a></h4>
+<ul class="simple">
+<li><p>Similar to dynamic scheduling</p></li>
+<li><p>Work package size proportional to unassigned iterations/number of threads</p></li>
+<li><p>Never smaller than <code class="docutils literal notranslate"><span class="pre">chunk_size</span></code> (except last package)</p></li>
+<li><p>Default <code class="docutils literal notranslate"><span class="pre">chunk_size</span></code>: 1</p></li>
+</ul>
+</section>
+<section id="auto-and-runtime-scheduling">
+<h4>Auto and Runtime Scheduling<a class="headerlink" href="#auto-and-runtime-scheduling" title="Permalink to this heading"></a></h4>
+<ul class="simple">
+<li><p><strong>auto</strong>: Implementation decides schedule</p></li>
+<li><p><strong>runtime</strong>: Schedule controlled at runtime via:
+- <code class="docutils literal notranslate"><span class="pre">omp_set_schedule()</span></code> function
+- <code class="docutils literal notranslate"><span class="pre">OMP_SCHEDULE</span></code> environment variable</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="id36">
+<h2>Multiple Loop Parallelization<a class="headerlink" href="#id36" title="Permalink to this heading"></a></h2>
+<section id="options-for-nested-loops">
+<h3>Options for Nested Loops<a class="headerlink" href="#options-for-nested-loops" title="Permalink to this heading"></a></h3>
+<ol class="arabic simple">
+<li><p><strong>Distribute outer loop</strong>: Limited to number of outer iterations</p></li>
+<li><p><strong>Distribute inner loop</strong>: More work packages, potential cache conflicts</p></li>
+<li><p><strong>Use collapse clause</strong>: Combines loops into single iteration space</p></li>
+</ol>
+</section>
+<section id="collapse-clause">
+<h3>Collapse Clause<a class="headerlink" href="#collapse-clause" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Specifies number of loops to collapse into single iteration space</p></li>
+<li><p>Available in OpenMP 3.0 and later</p></li>
+</ul>
+<section id="fortran-example">
+<h4>Fortran Example:<a class="headerlink" href="#fortran-example" title="Permalink to this heading"></a></h4>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel</span>
+<span class="c">!$omp do collapse(2)</span>
+<span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span>
+<span class="w">   </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span>
+<span class="w">      </span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expensiveFunc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span>
+<span class="w">   </span><span class="k">end do</span>
+<span class="k">end do</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+</section>
+<section id="c-c-example">
+<h4>C/C++ Example:<a class="headerlink" href="#c-c-example" title="Permalink to this heading"></a></h4>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel</span>
+<span class="cp">#pragma omp for collapse(2)</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">   </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expensiveFunc</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">);</span>
+<span class="w">   </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="id37">
+<h2>Workshare in Fortran<a class="headerlink" href="#id37" title="Permalink to this heading"></a></h2>
+<p>The workshare construct distributes:</p>
+<ul class="simple">
+<li><p>Fortran array syntax</p></li>
+<li><p>FORALL statements</p></li>
+<li><p>WHERE statements</p></li>
+</ul>
+<section id="example">
+<h3>Example:<a class="headerlink" href="#example" title="Permalink to this heading"></a></h3>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$OMP PARALLEL SHARED(n, a, b, c)</span>
+<span class="c">!$OMP WORKSHARE</span>
+<span class="w">   </span><span class="n">b</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">   </span><span class="n">c</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">c</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">   </span><span class="n">a</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">c</span><span class="p">(</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">)</span>
+<span class="c">!$OMP END WORKSHARE</span>
+<span class="c">!$OMP END PARALLEL</span>
+</pre></div>
+</div>
+</section>
+<section id="important-notes">
+<h3>Important Notes:<a class="headerlink" href="#important-notes" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Scalar assignment to shared variables is legal</p></li>
+<li><p>Scalar assignment to private variables in workshare is ILLEGAL</p></li>
+<li><p>User-defined functions must be declared ELEMENTAL</p></li>
+</ul>
+</section>
+</section>
+<section id="id38">
+<h2>Sections Construct<a class="headerlink" href="#id38" title="Permalink to this heading"></a></h2>
+<p>The sections construct allows parallel execution of independent code blocks.</p>
+<section id="basic-syntax">
+<h3>Basic Syntax:<a class="headerlink" href="#basic-syntax" title="Permalink to this heading"></a></h3>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel sections shared(a, b, N, M)</span>
+<span class="p">{</span>
+<span class="w">   </span><span class="cp">#pragma omp section</span>
+<span class="w">   </span><span class="p">{</span>
+<span class="w">      </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">N</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">         </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="w">   </span><span class="p">}</span>
+<span class="w">   </span><span class="cp">#pragma omp section</span>
+<span class="w">   </span><span class="p">{</span>
+<span class="w">      </span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">M</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">         </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">initBmatrix</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">M</span><span class="p">);</span>
+<span class="w">   </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="id39">
+<h3>Considerations:<a class="headerlink" href="#id39" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p>Mismatch possible between code blocks and threads</p></li>
+<li><p>Potential load imbalance if blocks have different workloads</p></li>
+<li><p>Useful for initializing multiple data structures</p></li>
+</ul>
+</section>
+</section>
+<section id="id40">
+<h2>Summary<a class="headerlink" href="#id40" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><strong>Loop construct</strong>: Easy distribution of standard loops with schedule clause for load balancing</p></li>
+<li><p><strong>Workshare construct</strong>: Distribution of Fortran array syntax statements</p></li>
+<li><p><strong>Sections construct</strong>: Distribution of independent code blocks across threads</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, The contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
