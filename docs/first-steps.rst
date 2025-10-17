@@ -40,7 +40,7 @@ In shared memory architecture, threads placed on several processing elements man
 
 .. figure:: img/sm_2.png
     :align: center
-    :scale: 50%
+    :scale: 30%
 
 
 **Advantages:**
@@ -104,7 +104,7 @@ Different parallel regions can have different numbers of threads.
 
 .. figure:: img/parallel_construct.png
     :align: center
-    :scale: 50%
+    :scale: 30%
 
 
 **OpenMP: Directive Based**
