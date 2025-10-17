@@ -3,9 +3,9 @@ OpenMP parallelism in scientific computing
 
 :Abstract: The purpose of the course is to learn when a code could benefit from task-based parallelism, and how to apply it. A task-based algorithm comprises of a set of self-contained tasks that have well-defined inputs and outputs. This differs from the common practice of organizing an implementation into subroutines in that a task-based implementation does not call the associated computation kernels directly, instead it is the role of a runtime system to schedule the task to various computational resources, such as CPU cores and GPUs. One of the main benefits of this approach is that the underlying parallelism is exposed automatically as the runtime system gradually traverses the resulting task graph.
 
-:Content: The course mainly focuses on the task-pragmas implemented in the newer incarnations of OpenMP. Other task-based runtime systems, e.g., StarPU, and GPU offloading are briefly discussed.
+:Content: The course mainly focuses on the task-pragmas implemented in the newer incarnations of OpenMP. 
 
-:Format: The course will be three half-days and comprises of lectures and hands-on sessions. This is an online-only course (Zoom).
+:Format: Onsite course.
 
 :Audience: ...
 
@@ -15,13 +15,11 @@ OpenMP parallelism in scientific computing
 
 :Instructors: Pedro Ojeda-May (pedro.ojeda-may@umu.se)
 
-:Original author: Mirko Myllykoski.
-
 :Recordings: ...
 
 :Registration: ...
 
-:Acknowledgment: This material was orignally created by Mirko Myllykoski (mirkom@cs.umu.se), and later modified.
+:Acknowledgment: This material is based on the course created by Mirko Myllykoski (mirkom@cs.umu.se), and the OpenMP course by Joachim Hein (Lund University).
 
 .. prereq::
 
@@ -53,15 +51,6 @@ OpenMP parallelism in scientific computing
    task-basics-1
    task-basics-2
    task-basics-lu
-
-.. toctree::
-   :caption: Day 3
-   :maxdepth: 1
-   
-   two-sided-algorithms
-   starpu1
-   starpu2
-   starpu-lu
 
 .. toctree::
    :caption: Miscellanous

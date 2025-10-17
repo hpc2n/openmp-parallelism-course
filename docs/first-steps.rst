@@ -1,30 +1,21 @@
-=======================
 First Steps in OpenMP
-=======================
+---------------------
 
-:Authors:
-    - Joachim Hein (LUNARC & Centre of Mathematical Sciences, Lund University)
-    - Pedro Ojeda May (HPC2N, Umeå University)
 
-----
+.. objectives::
+    - Parallel and serial regions
+    - Master thread and teams of threads
+    - Directives and library functions
+    - Controlling the number of threads
+    - Timing OpenMP codes
 
-Introduction
-============
 
-This guide covers the fundamental concepts of OpenMP programming:
-
-- Parallel and serial regions
-- Master thread and teams of threads
-- Directives and library functions
-- Controlling the number of threads
-- Timing OpenMP codes
-
-----
 
 Shared Memory Programming
-==========================
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Shared memory programming is widely deployed in scientific computing due to the prevalence of multicore processors and multithreaded processing cores.
+Shared memory programming is widely deployed in scientific computing due to the prevalence of multicore processors and 
+multithreaded processing cores.
 
 Historical Context
 ------------------
@@ -42,12 +33,15 @@ There are several ways to program shared memory systems:
 - **OpenMP** (C, C++, Fortran)
 - **Threaded languages** (e.g., Java)
 
-----
 
 Shared Memory Architecture
-===========================
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In shared memory architecture, threads placed on several processing elements manipulate the same shared memory space.
+
+.. figure:: img/sm_2.png
+    :align: center
+    :scale: 75%
 
 Key Characteristics
 -------------------

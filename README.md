@@ -1,23 +1,23 @@
 OpenMP-based parallelism in scientific computing
 ==============================================
 
-**Abstract:** The purpose of the course is to learn when a code could benefit from task-based parallelism, and how to apply it. A task-based algorithm is comprised of a set of self-contained tasks that have well-defined inputs and outputs. This differs from the common practice of organizing an implementation into subroutines in that a task-based implementation does not call the associated computation kernels directly, instead it is the role of a runtime system to schedule the tasks to various computational resources, such as CPU cores and GPUs. One of the main benefits of this approach is that the underlying parallelism is exposed automatically as the runtime system gradually traverses the resulting task graph.
+**Abstract:** The purpose of the course is to learn how one can parallelize a serial code using OpenMP.
 
-**Content:** The course mainly focuses on the task-pragmas implemented in the newer incarnations of OpenMP. Other task-based runtime systems, e.g., StarPU, and GPU offloading are briefly discussed.
+**Content:** The course mainly focuses on the task-pragmas implemented in the newer incarnations of OpenMP. 
 
 **Format:** The course will be three half-days and comprised of lectures and hands-on sessions. This is an online-only course (Zoom).
 
-**Audience:** This HPC2N course is part of the PRACE Training courses. It is open for academics and people who work at industry in PRACE member countries.
+**Audience:** UMU course. 
 
-**Date and Time:** 2021-05-{10,11,12}, 9:00-12:00
+**Date and Time:** 2025-05-{10,11,12}, 9:00-12:00
 
-**Location:** Online through Zoom
+**Location:** Onsite
 
-**Instructors:** Mirko Myllykoski (mirkom@cs.umu.se)
+**Instructors:** Pedro Ojeda-May (pedro.ojeda-may@umu.se)
 
-**Helpers:** Birgitte Brydsö, Pedro Ojeda-May
+**Helpers:** Per Sehlstedt
 
-**Original author:** Mirko Myllykoski (spring 2021)
+**Authors:** Pedro Ojeda-May
 
 **Prerequisites:**
 
@@ -26,10 +26,8 @@ OpenMP-based parallelism in scientific computing
  - Basic Linux skills.
  - Basic knowledge of OpenMP is beneficial but not required.
 
-**Materials:** https://hpc2n.github.io/Task-based-parallelism/branch/master/
+**Materials:** https://github.com/hpc2n/openmp-parallelism-course
 
-**Recordings:** https://www.youtube.com/playlist?list=PL6jMHLEmPVLyVIp67mW1cRj0xbL-6iFMY
+**Recordings previous course:** https://www.youtube.com/playlist?list=PL6jMHLEmPVLyVIp67mW1cRj0xbL-6iFMY
 
-**Registration:** https://www.hpc2n.umu.se/events/courses/task-based-parallelism-spring-2021
-
-**Acknowledgment:** This material was orignally created by Mirko Myllykoski (mirkom@cs.umu.se), for the "Task-based parallelism course" and later modified. 
+**Acknowledgment:** This material is based on the OpenMP course created by Joachim Hein (Lund University) and Mirko Myllykoski (mirkom@cs.umu.se), for the "Task-based parallelism course". 
