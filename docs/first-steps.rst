@@ -17,15 +17,14 @@ Shared Memory Programming
 Shared memory programming is widely deployed in scientific computing due to the prevalence of multicore processors and 
 multithreaded processing cores.
 
-Historical Context
-------------------
+**Historical Context**
+
 
 - Shared memory hardware was very expensive 20 years ago
 - Inexpensive these days
 - Contemporary laptops have between 2 and 8 cores
 
-Programming Options
--------------------
+**Programming Options**
 
 There are several ways to program shared memory systems:
 
@@ -43,8 +42,6 @@ In shared memory architecture, threads placed on several processing elements man
     :align: center
     :scale: 75%
 
-Key Characteristics
--------------------
 
 **Advantages:**
 
@@ -58,7 +55,7 @@ Key Characteristics
 - Read/write to shared memory has typically higher cost than manipulating registers/cache
 - This creates communication overhead
 
-----
+
 
 OpenMP Resources
 ================
