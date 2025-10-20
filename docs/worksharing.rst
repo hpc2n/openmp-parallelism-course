@@ -1,14 +1,6 @@
-===============================
 Worksharing and Scheduling
-===============================
+--------------------------
 
-:Authors: Pedro Ojeda & Joachim Hein
-:Institutions: High Performance Computing Center North & Lund University
-
-----
-
-Overview
-========
 
 Worksharing constructs allow easy distribution of work onto threads:
 
@@ -26,18 +18,15 @@ Worksharing constructs allow easy distribution of work onto threads:
 - Distributing independent code blocks
 - Modern alternative: task construct
 
-----
+
 
 Distributing Loops
-==================
+^^^^^^^^^^^^^^^^^^
 
-Introduction to the Loop Construct
------------------------------------
 
 Distributing large loops is a typical target for OpenMP parallelization.
 
-Traditional Approach
-~~~~~~~~~~~~~~~~~~~~
+*Traditional Approach*
 
 As seen in previous lectures, loop distribution can be accomplished manually but requires management code:
 
@@ -45,21 +34,15 @@ As seen in previous lectures, loop distribution can be accomplished manually but
 - Starting index of current thread
 - Final index of current thread
 
-OpenMP Loop Construct
-~~~~~~~~~~~~~~~~~~~~~
+**OpenMP Loop Construct**
 
 OpenMP offers the "loop construct" to ease loop parallelization:
 
 - Convenience: reduces code complexity
 - Maintainability: cleaner, more readable code
 
-----
 
-The Loop Construct Features
-============================
-
-Key Properties
---------------
+*The Loop Construct Features*
 
 The loop construct:
 
@@ -77,21 +60,14 @@ The loop construct:
 
 - Offers mechanisms to balance the load for various situations
 
-----
 
-Loop Construct in Fortran
-==========================
-
-Requirements
-------------
+*Loop Construct in Fortran*
 
 Works on Fortran standard-compliant do-construct:
 
 - **Not supported:** ``do while``
 - **Not supported:** ``do`` without loop control
 
-Syntax
-------
 
 .. code-block:: fortran
 
@@ -107,10 +83,8 @@ Syntax
 .. note::
    ``!$omp end do`` is not required but optional.
 
-----
 
-Example: Vector Norm - Manual Loop Management (Fortran)
-========================================================
+*Example: Vector Norm - Manual Loop Management (Fortran)*
 
 .. code-block:: fortran
 
@@ -137,10 +111,8 @@ Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
 .. note::
    This version requires explicit calculation of loop bounds for each thread.
 
-----
 
-Example: Vector Norm - Loop Construct (Fortran)
-================================================
+*Example: Vector Norm - Loop Construct (Fortran)*
 
 .. code-block:: fortran
 
@@ -166,13 +138,8 @@ Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
 .. important::
    The loop bounds are the same as in the serial case. OpenMP handles the distribution automatically.
 
-----
 
-Loop Construct in C
-====================
-
-Canonical Loop Requirements
-----------------------------
+*Loop Construct in C*
 
 The loop construct in C is limited to "canonical" loops:
 
@@ -198,8 +165,6 @@ Comparison using: ``<=``, ``<``, ``>``, ``>=``
 
 All bounds and increments must be loop-invariant.
 
-Syntax
-------
 
 .. code-block:: c
 
@@ -214,10 +179,8 @@ Syntax
         }
     }
 
-----
 
-Example: Vector Norm - Manual Loop Management (C)
-==================================================
+*Example: Vector Norm - Manual Loop Management (C)*
 
 .. code-block:: c
 
@@ -244,10 +207,9 @@ Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
 .. note::
    This version requires explicit calculation of loop bounds for each thread.
 
-----
 
-Example: Vector Norm - Loop Construct (C)
-==========================================
+
+*Example: Vector Norm - Loop Construct (C)*
 
 .. code-block:: c
 
@@ -273,13 +235,11 @@ Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
 .. important::
    The loop bounds are the same as in the serial case. OpenMP handles the distribution automatically.
 
-----
 
-Parallel Loop Construct in Fortran
-===================================
+Parallel Loop Construct 
+^^^^^^^^^^^^^^^^^^^^^^^
 
-Shorthand Syntax
-----------------
+*Parallel Loop Construct in Fortran*
 
 When a parallel region contains only a loop construct, you can use a shorthand:
 
@@ -294,13 +254,10 @@ When a parallel region contains only a loop construct, you can use a shorthand:
    - ``!$omp end parallel do`` is not required (optional)
    - Features of parallel region and normal loop construct apply similarly
 
-----
 
-Parallel Loop Construct in C
-=============================
 
-Shorthand Syntax
-----------------
+*Parallel Loop Construct in C*
+
 
 When a parallel region contains only a loop construct, you can use a shorthand:
 
@@ -315,23 +272,22 @@ When a parallel region contains only a loop construct, you can use a shorthand:
 .. note::
    Features of parallel region and normal loop construct apply similarly.
 
-----
 
-Loop Reordering and Data Dependency
-====================================
 
-Order of Execution
-------------------
+**Loop Reordering and Data Dependency**
+
+*Order of Execution*
+
 
 In a parallel loop, iterations are executed in a different order from serial code.
 
-Data Dependency Requirement
----------------------------
+*Data Dependency Requirement*
+
 
 A correct result is only obtained if the current iteration is independent of previous iterations (no data dependency).
 
-Handling Data Dependencies
---------------------------
+*Handling Data Dependencies*
+
 
 If data dependency exists:
 
@@ -339,8 +295,8 @@ If data dependency exists:
 2. Serialize relevant part of the loop using special OpenMP features (covered later in course)
 3. Execute loop serially
 
-Example with Dependency
------------------------
+*Example with Dependency*
+
 
 **Problem (has dependency):**
 
@@ -360,18 +316,16 @@ Example with Dependency
 .. warning::
    Always verify that loop iterations are independent before parallelizing!
 
-----
+
 
 Scheduling Loop Iterations
-===========================
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Work Per Loop Iteration
------------------------
+*Work Per Loop Iteration*
 
 Previous examples assumed the same amount of work for each loop iteration. This is not always the case.
 
-Examples of Uneven Work
-~~~~~~~~~~~~~~~~~~~~~~~
+*Examples of Uneven Work*
 
 **Summing over triangular area:**
 
@@ -383,8 +337,7 @@ Examples of Uneven Work
 
 **Loop body iterates until required accuracy is achieved**
 
-Load Imbalance Problem
-----------------------
+*Load Imbalance Problem*
 
 Uneven work distribution often causes load imbalance:
 
@@ -394,13 +347,10 @@ Uneven work distribution often causes load imbalance:
 .. note::
    Dealing with such problems is typically easier in shared memory than in distributed memory programming.
 
-----
 
-Schedule Clause
-===============
 
-Purpose
--------
+**Schedule Clause**
+
 
 To help load balance in a loop construct, use the ``schedule`` clause:
 
@@ -408,13 +358,11 @@ To help load balance in a loop construct, use the ``schedule`` clause:
 
     schedule(kind, [chunk_size])
 
-Default Behavior
-----------------
+*Default Behavior*
 
 Default schedule is implementation-dependent (OpenMP 3.0).
 
-Schedule Kinds
---------------
+*Schedule Kinds*
 
 Choices for ``kind``:
 
@@ -424,13 +372,9 @@ Choices for ``kind``:
 - ``auto``
 - ``runtime``
 
-----
 
-Static Scheduling
-=================
+*Static Scheduling*
 
-How It Works
-------------
 
 1. Divide iteration count into chunks of equal size
    
@@ -438,18 +382,15 @@ How It Works
 
 2. Thread assignment uses "round robin" distribution
 
-Default Chunk Size
-------------------
+*Default Chunk Size*
 
 Default chunk size divides iteration count by number of threads.
 
-Performance
------------
+*Performance*
 
 Static scheduling has the **least overhead** compared to other schedules.
 
-Visual Representation
----------------------
+*Visual Representation*
 
 .. code-block:: text
 
@@ -462,10 +403,10 @@ Visual Representation
     Static schedule with chunk size:
     T0 T1 T2 T3 T0 T1 T2 T3 T0 T1 T2 ...
 
-----
 
-Example: Summation Over Triangular Area (Static)
-=================================================
+
+*Example: Summation Over Triangular Area (Static)*
+
 
 .. code-block:: fortran
 
@@ -479,48 +420,39 @@ Example: Summation Over Triangular Area (Static)
         enddo
     enddo
 
-Performance Comparison
-----------------------
+*Performance Comparison*
 
 - **Default static:** maximum 7/16 of work area per thread
 - **Static with chunk=100:** maximum 5/16 of work area per thread
 
-Trade-offs
-~~~~~~~~~~
+*Trade-offs*
 
 - **Smaller chunks:** better load balance
 - **More chunks:** larger overhead
 
-----
 
-Dynamic Scheduling
-==================
 
-How It Works
-------------
+**Dynamic Scheduling**
+
 
 1. Loop is split into work packages of ``chunk_size`` iterations
 2. Each thread requests a new work package once done with the current one
 3. Default ``chunk_size``: 1 iteration
 
-When to Use
------------
+*When to Use*
 
 Use dynamic scheduling when:
 
 - Work per iteration varies significantly
 - The pattern of work is unpredictable
 
-Performance
------------
+*Performance*
 
 - Better load balance than static (for uneven work)
 - Higher overhead than static due to runtime work distribution
 
-----
 
-Example: Summation Over Triangular Area (Dynamic)
-==================================================
+*Example: Summation Over Triangular Area (Dynamic)*
 
 .. code-block:: fortran
 
@@ -534,25 +466,19 @@ Example: Summation Over Triangular Area (Dynamic)
         enddo
     enddo
 
-Performance Comparison
-----------------------
+*Performance Comparison*
 
 - **Default static:** maximum 7/16 of work area per thread
 - **Dynamic with chunk=100:** maximum ≈0.27 of work area per thread
 
-Trade-offs
-~~~~~~~~~~
+*Trade-offs*
 
 - **Better balance** than static scheduling
 - **Larger overhead** than static scheduling
 
-----
 
-Guided Scheduling
-=================
+**Guided Scheduling**
 
-How It Works
-------------
 
 Similar to dynamic, but with adaptive chunk sizes:
 
@@ -566,24 +492,21 @@ Similar to dynamic, but with adaptive chunk sizes:
 3. Package size never smaller than ``chunk_size`` (unless last package)
 4. Default ``chunk_size`` = 1
 
-Purpose
--------
+*Purpose*
 
 The idea is to **prevent expensive work packages at the end** of the loop.
 
-Performance
------------
+*Performance*
 
 - Starts with large chunks (low overhead)
 - Gradually decreases chunk size (better balance toward the end)
 
-----
 
-Schedules: Auto and Runtime
-============================
+**Schedules: Auto and Runtime**
 
-Auto Schedule
--------------
+
+*Auto Schedule*
+
 
 For ``auto``, the implementation decides the scheduling strategy.
 
@@ -591,8 +514,7 @@ For ``auto``, the implementation decides the scheduling strategy.
 
     !$omp parallel do schedule(auto)
 
-Runtime Schedule
-----------------
+*Runtime Schedule*
 
 For ``runtime``, the schedule can be controlled at runtime:
 
@@ -619,13 +541,12 @@ C-shell:
 .. warning::
    Do not specify ``chunk_size`` with ``auto`` or ``runtime`` in the directive itself.
 
-----
+
 
 Multiple Loop Parallelization
-==============================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Simple Example with Nested Loops
----------------------------------
 
 Consider this nested loop structure:
 
@@ -639,10 +560,9 @@ Consider this nested loop structure:
 
 There are **three basic options** to parallelize nested loops. Which one is best depends on the specific situation.
 
-----
 
-Option 1: Distribute Outer Loop (Fortran)
-==========================================
+*Option 1: Distribute Outer Loop (Fortran)*
+
 
 .. code-block:: fortran
 
@@ -653,21 +573,16 @@ Option 1: Distribute Outer Loop (Fortran)
         enddo
     enddo
 
-Characteristics
----------------
 
 - Distributes the j-loop
 - Maximally **3 work packages**
 
-When to Use
------------
+*When to Use*
 
 Use when the outer loop has sufficient iterations for good load balance.
 
-----
 
-Option 2: Distribute Inner Loop (Fortran)
-==========================================
+*Option 2: Distribute Inner Loop (Fortran)*
 
 .. code-block:: fortran
 
@@ -681,8 +596,7 @@ Option 2: Distribute Inner Loop (Fortran)
     enddo
     !$omp end parallel
 
-Characteristics
----------------
+
 
 - Distributes the i-loop
 - Now **four work packages**
@@ -691,10 +605,9 @@ Characteristics
 - Starts loop construct 3 times
 - May cause more cache line conflicts when writing to ``a``
 
-----
 
-Option 3: Collapse Clause (Fortran)
-====================================
+
+*Option 3: Collapse Clause (Fortran)*
 
 .. code-block:: fortran
 
@@ -706,8 +619,7 @@ Option 3: Collapse Clause (Fortran)
         enddo
     enddo
 
-Characteristics
----------------
+
 
 - Use ``collapse`` clause to specify number of loops to collapse
 - Available since **OpenMP 3.0**
@@ -716,16 +628,13 @@ Characteristics
 - Now: **12 work packages**
 - May cause more cache line conflicts when writing to ``a``
 
-Benefits
---------
+*Benefits*
 
 - Maximum parallelism exposure
 - Best for cases where individual loops have few iterations
 
-----
 
-Option 1: Distribute Outer Loop (C)
-====================================
+*Option 1: Distribute Outer Loop (C)*
 
 .. code-block:: c
 
@@ -738,21 +647,16 @@ Option 1: Distribute Outer Loop (C)
         }
     }
 
-Characteristics
----------------
 
 - Distributes the i-loop
 - Maximally **3 work packages**
 
-When to Use
------------
+*When to Use*
 
 Use when the outer loop has sufficient iterations for good load balance.
 
-----
 
-Option 2: Distribute Inner Loop (C)
-====================================
+*Option 2: Distribute Inner Loop (C)*
 
 .. code-block:: c
 
@@ -768,8 +672,6 @@ Option 2: Distribute Inner Loop (C)
         }
     }
 
-Characteristics
----------------
 
 - Distributes the j-loop
 - Now **four work packages**
@@ -778,10 +680,9 @@ Characteristics
 - Starts loop construct 3 times
 - May cause more cache line conflicts when writing to ``a``
 
-----
 
-Option 3: Collapse Clause (C)
-==============================
+*Option 3: Collapse Clause (C)*
+
 
 .. code-block:: c
 
@@ -795,8 +696,7 @@ Option 3: Collapse Clause (C)
         }
     }
 
-Characteristics
----------------
+
 
 - Use ``collapse`` clause to specify number of loops to collapse
 - Available since **OpenMP 3.0**
@@ -805,24 +705,22 @@ Characteristics
 - Now: **12 work packages**
 - May cause more cache line conflicts when writing to ``a``
 
-Benefits
---------
+*Benefits*
+
 
 - Maximum parallelism exposure
 - Best for cases where individual loops have few iterations
 
-----
+
 
 Workshare in Fortran
-====================
+^^^^^^^^^^^^^^^^^^^^
 
-Workshare Construct
--------------------
+*Workshare Construct*
 
 OpenMP provides the ``workshare`` construct specifically for Fortran.
 
-Supported Constructs
-~~~~~~~~~~~~~~~~~~~~
+*Supported Constructs*
 
 This allows distribution of:
 
@@ -837,10 +735,10 @@ This allows distribution of:
 .. note::
    This construct is **Fortran-only** and has no C/C++ equivalent.
 
-----
 
-Example: Workshare
-==================
+
+*Example: Workshare*
+
 
 .. code-block:: fortran
 
@@ -852,20 +750,17 @@ Example: Workshare
     !$OMP END WORKSHARE
     !$OMP END PARALLEL
 
-Behavior
---------
+
 
 - OpenMP ensures there is no data race
 - Arrays ``b`` and ``c`` are ready before assignment to ``a``
 - Can include user-defined functions if declared ``ELEMENTAL``
 
-----
 
-Scalar Assignment in Workshare
-===============================
+
+*Scalar Assignment in Workshare*
 
 Shared Scalar (Legal)
----------------------
 
 .. code-block:: fortran
 
@@ -882,8 +777,8 @@ Shared Scalar (Legal)
 
 This is **legal OpenMP**. A single thread performs the scalar assignment to ``SHR``.
 
-Private Scalar (Illegal!)
---------------------------
+*Private Scalar (Illegal!)*
+
 
 .. code-block:: fortran
 
@@ -904,24 +799,21 @@ Private Scalar (Illegal!)
    - Single thread performs scalar assignment to ``PRI``
    - ``PRI`` is undefined on other threads
 
-----
+
 
 Sections
-========
+^^^^^^^^
 
-Sections Construct
-------------------
+
+*Sections Construct*
 
 The ``sections`` construct allows parallelization when code blocks can be executed independently.
 
-Use Cases
-~~~~~~~~~
 
 - Initialization of multiple data structures
 - Different tasks executing different code
 
-Considerations
-~~~~~~~~~~~~~~
+*Considerations*
 
 **Mismatch between blocks and threads:**
 
@@ -938,10 +830,8 @@ Real-World Application
 
 Example from research: "Acceleration of Semiempirical QM/MM methods," JCTC, 13, 3525-3536 (2017)
 
-----
 
-Example: Sections Construct (C)
-================================
+*Example: Sections Construct (C)*
 
 .. code-block:: c
 
@@ -963,8 +853,7 @@ Example: Sections Construct (C)
         }
     }
 
-Alternative: Parallel Sections
-------------------------------
+*Alternative: Parallel Sections*
 
 .. code-block:: c
 
@@ -986,474 +875,30 @@ Alternative: Parallel Sections
 .. note::
    The ``parallel sections`` directive combines the ``parallel`` and ``sections`` directives for convenience.
 
-----
+
 
 Summary
-=======
+^^^^^^^
 
 This guide covered the following OpenMP worksharing constructs:
 
-OpenMP Loop Construct
----------------------
+**OpenMP Loop Construct**
+
 
 - Easy distribution of standard ``do``/``for`` loops
 - The ``schedule`` clause deals with many cases of load imbalance
 - Schedule types: ``static``, ``dynamic``, ``guided``, ``auto``, ``runtime``
 - ``collapse`` clause for nested loops (OpenMP 3.0+)
 
-OpenMP Workshare Construct (Fortran)
--------------------------------------
+*OpenMP Workshare Construct (Fortran)*
 
 - Distributes Fortran array syntax statements
 - Supports ``FORALL`` and ``WHERE``
 - Handles user-defined ``ELEMENTAL`` functions
 
-OpenMP Sections Construct
---------------------------
+*OpenMP Sections Construct*
+
 
 - Distributes independent code blocks on different threads
 - Useful for heterogeneous parallel tasks
 - Consider load balance issues
-
---------
-
-Worksharing and Scheduling
-==========================
-
-**Authors:** Pedro Ojeda & Joachim Hein  
-**Institutions:** High Performance Computing Center North (HPC2N), Umeå University, and Lund University  
-
-Overview
----------
-
-Worksharing constructs in OpenMP allow easy distribution of work onto threads.
-
-**Main constructs:**
-
-- **Loop construct** — Distribute loop iterations among threads and manage load imbalance using the ``schedule`` clause.
-- **Workshare construct** — Parallelize Fortran array syntax.
-- **Sections construct** — Distribute independent code blocks.
-- **Modern alternative:** ``task`` construct for dynamic workloads.
-
-Loop Construct
----------------
-
-Distributes loop iterations across threads automatically.  
-OpenMP determines for each thread:
-
-- Number of iterations  
-- Starting and ending indices  
-
-Registers are flushed to memory at loop exit unless ``nowait`` is used.
-
-Example (Fortran)
-~~~~~~~~~~~~~~~~~
-
-.. code-block:: fortran
-
-    !$omp parallel shared(vect, norm) private(i, lNorm)
-    lNorm = 0.0d0
-    !$omp do
-    do i = 1, N
-        lNorm = lNorm + vect(i) * vect(i)
-    end do
-    !$omp atomic update
-    norm = norm + lNorm
-    !$omp end parallel
-    norm = sqrt(norm)
-
-Example (C)
-~~~~~~~~~~~
-
-.. code-block:: c
-
-    #pragma omp parallel shared(vect, norm) private(i, lNorm)
-    {
-        lNorm = 0.0;
-        #pragma omp for
-        for (i = 0; i < N; i++)
-            lNorm += vect[i] * vect[i];
-        #pragma omp atomic update
-        norm += lNorm;
-    }
-    norm = sqrt(norm);
-
-Parallel Loop Constructs
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Shorthand syntax if the parallel region is only for the loop:
-
-.. code-block:: fortran
-
-    !$omp parallel do
-    do i = 1, N
-        loop_body
-    end do
-
-.. code-block:: c
-
-    #pragma omp parallel for
-    for (int i = 0; i < N; i++)
-        loop_body;
-
-Loop Dependencies
-~~~~~~~~~~~~~~~~~
-
-Iterations are executed in potentially different order from serial execution.
-If iterations depend on previous results, correctness issues arise.
-
-**Solutions:**
-
-- Redesign the algorithm.
-- Serialize dependent parts using OpenMP synchronization features.
-- Run the loop serially.
-
-Scheduling Loop Iterations
---------------------------
-
-Uneven workload across loop iterations can cause **load imbalance**.
-
-Use the ``schedule`` clause to control how iterations are distributed:
-
-.. code-block:: fortran
-
-    !$omp do schedule(kind, [chunk_size])
-
-Supported ``kind`` values:
-
-- ``static``
-- ``dynamic``
-- ``guided``
-- ``auto``
-- ``runtime``
-
-Static Scheduling
-~~~~~~~~~~~~~~~~~
-
-Divides iterations into equal chunks (default behavior).  
-Least overhead, but may cause imbalance if iterations have variable work.
-
-Dynamic Scheduling
-~~~~~~~~~~~~~~~~~~
-
-Threads dynamically request new chunks after finishing their current work.  
-Better balance, higher overhead.
-
-Guided Scheduling
-~~~~~~~~~~~~~~~~~
-
-Similar to dynamic scheduling but with decreasing chunk sizes for better performance near the end of the loop.
-
-Runtime and Auto Scheduling
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- ``runtime`` — Controlled by environment variable ``OMP_SCHEDULE``.
-- ``auto`` — Left to the implementation to decide.
-
-Nested Loops and Collapse
---------------------------
-
-For nested loops, OpenMP can collapse loops into a single iteration space:
-
-.. code-block:: fortran
-
-    !$omp parallel
-    !$omp do collapse(2)
-    do j = 1, 3
-        do i = 1, 4
-            a(i,j) = expensiveFunc(i,j)
-        end do
-    end do
-
-Workshare in Fortran
----------------------
-
-Fortran provides ``workshare`` to parallelize array syntax operations:
-
-.. code-block:: fortran
-
-    !$omp parallel shared(n, a, b, c)
-    !$omp workshare
-        b(1:n) = b(1:n) + 1
-        c(1:n) = c(1:n) + 2
-        a(1:n) = b(1:n) + c(1:n)
-    !$omp end workshare
-    !$omp end parallel
-
-**Notes:**
-
-- All threads wait at ``end workshare``.
-- Only scalar assignments to shared variables are allowed.
-
-Sections Construct
--------------------
-
-Use ``sections`` when different code blocks can be executed independently.
-
-.. code-block:: c
-
-    #pragma omp parallel sections shared(a, b, N, M)
-    {
-        #pragma omp section
-        for (int i = 0; i < N; i++) a[i] = i;
-
-        #pragma omp section
-        for (int j = 0; j < M; j++) b[j] = initBmatrix(j, M);
-    }
-
-**Caution:** Possible load imbalance if blocks take different time or number of threads ≠ number of sections.
-
-Summary
---------
-
-- ``loop`` construct simplifies parallelization of standard loops.  
-- ``schedule`` clause handles load imbalance.  
-- ``workshare`` parallelizes Fortran array expressions.  
-- ``sections`` distributes independent code blocks.  
-- ``collapse`` allows nested loop flattening.  
-
-OpenMP’s worksharing constructs form the foundation of shared-memory parallelism for structured workloads.
-
-
-===============================
-OpenMP Worksharing and Scheduling
-===============================
-
-Overview
-========
-
-OpenMP provides several worksharing constructs to distribute work across threads:
-
-- **Loop construct**: Easy distribution of loops onto threads
-- **Workshare construct**: Parallelization of Fortran array syntax
-- **Sections construct**: Distributing independent code blocks
-
-Distributing Loops
-==================
-
-Loop Construct
---------------
-
-The loop construct distributes loop iterations across threads automatically:
-
-- Iteration variable is automatically private
-- Determines iterations per thread, start index, and final index
-- Registers are flushed to memory at exit (unless ``nowait`` is used)
-- No flush on entry
-
-Fortran Syntax
-~~~~~~~~~~~~~~
-
-.. code-block:: fortran
-
-   !$omp parallel shared(...) private(...)
-   !$omp do
-   do i = 1, N
-      ! loop body
-   end do
-   !$omp end parallel
-
-C/C++ Syntax
-~~~~~~~~~~~~
-
-.. code-block:: c
-
-   #pragma omp parallel shared(...) private(...)
-   {
-      #pragma omp for
-      for (int i = 0; i < N; i++) {
-         // loop body
-      }
-   }
-
-Parallel Loop Construct
------------------------
-
-Shorthand when a parallel region contains only a loop construct:
-
-Fortran:
-~~~~~~~~
-
-.. code-block:: fortran
-
-   !$omp parallel do
-   do i = 1, N
-      ! loop body
-   end do
-
-C/C++:
-~~~~~~
-
-.. code-block:: c
-
-   #pragma omp parallel for
-   for (int i = 0; i < N; i++) {
-      // loop body
-   }
-
-Data Dependency Considerations
-------------------------------
-
-- In parallel loops, iterations execute in different order from serial code
-- Correct results only if iterations are independent
-- If data dependency exists:
-  - Modify/change algorithm
-  - Serialize relevant parts using OpenMP features
-  - Execute loop serially
-
-Scheduling Loop Iterations
-==========================
-
-Schedule Clause
----------------
-
-Use the schedule clause to handle load imbalance:
-
-.. code-block:: c
-
-   schedule(kind [, chunk_size])
-
-Available Schedule Types
-------------------------
-
-Static Scheduling
-~~~~~~~~~~~~~~~~~
-
-- Divides iterations into equal-sized chunks
-- Round-robin thread assignment
-- Least overhead
-- Default: divide iterations by number of threads
-
-Dynamic Scheduling
-~~~~~~~~~~~~~~~~~~
-
-- Loop split into work packages of ``chunk_size`` iterations
-- Threads request new packages when done
-- Default ``chunk_size``: 1 iteration
-
-Guided Scheduling
-~~~~~~~~~~~~~~~~~
-
-- Similar to dynamic scheduling
-- Work package size proportional to unassigned iterations/number of threads
-- Never smaller than ``chunk_size`` (except last package)
-- Default ``chunk_size``: 1
-
-Auto and Runtime Scheduling
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- **auto**: Implementation decides schedule
-- **runtime**: Schedule controlled at runtime via:
-  - ``omp_set_schedule()`` function
-  - ``OMP_SCHEDULE`` environment variable
-
-Multiple Loop Parallelization
-=============================
-
-Options for Nested Loops
-------------------------
-
-1. **Distribute outer loop**: Limited to number of outer iterations
-2. **Distribute inner loop**: More work packages, potential cache conflicts
-3. **Use collapse clause**: Combines loops into single iteration space
-
-Collapse Clause
----------------
-
-- Specifies number of loops to collapse into single iteration space
-- Available in OpenMP 3.0 and later
-
-Fortran Example:
-~~~~~~~~~~~~~~~~
-
-.. code-block:: fortran
-
-   !$omp parallel
-   !$omp do collapse(2)
-   do j = 1, 3
-      do i = 1, 4
-         a(i,j) = expensiveFunc(i,j)
-      end do
-   end do
-   !$omp end parallel
-
-C/C++ Example:
-~~~~~~~~~~~~~~
-
-.. code-block:: c
-
-   #pragma omp parallel
-   #pragma omp for collapse(2)
-   for (int i = 0; i < 3; i++) {
-      for (int j = 0; j < 4; j++) {
-         a[i][j] = expensiveFunc(i,j);
-      }
-   }
-
-Workshare in Fortran
-====================
-
-The workshare construct distributes:
-
-- Fortran array syntax
-- FORALL statements
-- WHERE statements
-
-Example:
---------
-
-.. code-block:: fortran
-
-   !$OMP PARALLEL SHARED(n, a, b, c)
-   !$OMP WORKSHARE
-      b(1:n) = b(1:n) + 1
-      c(1:n) = c(1:n) + 2
-      a(1:n) = b(1:n) + c(1:n)
-   !$OMP END WORKSHARE
-   !$OMP END PARALLEL
-
-Important Notes:
-----------------
-
-- Scalar assignment to shared variables is legal
-- Scalar assignment to private variables in workshare is ILLEGAL
-- User-defined functions must be declared ELEMENTAL
-
-Sections Construct
-==================
-
-The sections construct allows parallel execution of independent code blocks.
-
-Basic Syntax:
--------------
-
-.. code-block:: c
-
-   #pragma omp parallel sections shared(a, b, N, M)
-   {
-      #pragma omp section
-      {
-         for(int i = 0; i < N; i++)
-            a[i] = i;
-      }
-      #pragma omp section
-      {
-         for(int i = 0; i < M; i++)
-            b[i] = initBmatrix(i,M);
-      }
-   }
-
-Considerations:
----------------
-
-- Mismatch possible between code blocks and threads
-- Potential load imbalance if blocks have different workloads
-- Useful for initializing multiple data structures
-
-Summary
-=======
-
-- **Loop construct**: Easy distribution of standard loops with schedule clause for load balancing
-- **Workshare construct**: Distribution of Fortran array syntax statements
-- **Sections construct**: Distribution of independent code blocks across threads
-
