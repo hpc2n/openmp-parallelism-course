@@ -112,23 +112,6 @@ Different parallel regions can have different numbers of threads.
 
 OpenMP is based on compiler directives that control parallel execution.
 
-In C and C++, an OpenMP pragma has the following form:
-
-.. code-block:: c
-
-    #pragma omp directive-name [clause[ [,] clause] ... ] new-line
-
-A compiler typically supports several types of pragmas, not just OpenMP pragmas.
-Therefore, all OpenMP pragmas begin with the keywords :code:`#pragma omp`.
-The :code:`directive-name` placeholder specifies the used OpenMP construct (e.g. :code:`parallel`) and a pragma is always followed by a new line.
-Typically, a pragma affects the user code that follows it but some OpenMP pragmas are *stand-alone*.
-You can span a pragma across multiple lines by using a backslash (:code:`\\`) immediately followed by a new line:
-
-.. code-block:: c
-
-    #pragma omp directive-name \
-        [clause[ [,] \
-        clause] ... ] new-line
 
 
 - **In Fortran:** Directives are special comments
