@@ -1,14 +1,5 @@
-============================
 Data for Parallel Regions
-============================
-
-:Author: Joachim Hein
-:Institution: Lund University
-
-----
-
-Overview
-========
+-------------------------
 
 This guide covers:
 
@@ -22,45 +13,43 @@ This guide covers:
 
 - Basic constructs to avoid data races
 
-----
+
 
 Shared & Private Data
-=====================
+^^^^^^^^^^^^^^^^^^^^^
 
-Private and Shared Data Concepts
----------------------------------
+**Private and Shared Data Concepts**
+
 
 In a parallel region, data can be either shared or private.
 
-Shared Data
-~~~~~~~~~~~
+*Shared Data*
+
 
 - Every thread can access the same memory location (potential for conflict)
 - Value remains unchanged on entry to parallel region
 - Value survives after end of parallel region
 
-Private Data
-~~~~~~~~~~~~
+*Private Data*
+
 
 - Each thread has its own private copy
 - Normally uninitialized at the beginning of parallel region
 - Contents typically lost when parallel region finishes
 
 .. note::
-   In a shared memory architecture, shared data resides in the main memory accessible by all processors, while each thread maintains its own private data copy.
+   In a shared memory architecture, shared data resides in the main memory accessible by all processors, while 
+   each thread maintains its own private data copy.
 
-----
 
-Controlling Data Sharing in Fortran
-====================================
+
+*Controlling Data Sharing in Fortran*
 
 For data declared before the start of a parallel region:
 
 - Use clause ``shared`` to declare a data structure as shared
 - Use clause ``private`` to declare a data structure as private
 
-Syntax
-------
 
 .. code-block:: fortran
 
@@ -77,18 +66,16 @@ In this example:
 - ``a`` is shared among all threads
 - ``b`` is private to each thread
 
-----
 
-Controlling Data Sharing in C
-==============================
+
+*Controlling Data Sharing in C*
+
 
 For data declared before the start of a parallel region:
 
 - Use clause ``shared`` to declare a data structure as shared
 - Use clause ``private`` to declare a data structure as private
 
-Syntax
-------
 
 .. code-block:: c
 
@@ -107,13 +94,10 @@ In this example:
 - ``a`` is shared among all threads
 - ``b`` is private to each thread
 
-----
 
-Private Data Characteristics
-=============================
 
-Typical Use Cases
------------------
+Private Data
+^^^^^^^^^^^^
 
 Private data is typically used for control variables, including:
 
@@ -121,16 +105,15 @@ Private data is typically used for control variables, including:
 - Loop indices
 - Variables internal to the algorithm
 
-Default Private Variables
--------------------------
+*Default Private Variables*
 
 Most variables declared inside a parallel region are private by default:
 
 - Variables declared inside the block (C/C++)
 - Variables in subroutine/function called from inside parallel region
 
-Exceptions
-~~~~~~~~~~
+*Exceptions*
+
 
 The following are **NOT** private by default:
 
@@ -141,10 +124,9 @@ The following are **NOT** private by default:
 .. warning::
    In Fortran, special care is needed with ``COMMON`` and ``EQUIVALENCE`` statements.
 
-----
 
-Example: Memory Movements for Private Data (Fortran)
-=====================================================
+
+*Example: Memory Movements for Private Data (Fortran)*
 
 .. code-block:: fortran
 
@@ -160,8 +142,7 @@ Example: Memory Movements for Private Data (Fortran)
     
     b = 7
 
-Memory Layout
--------------
+*Memory Layout*
 
 .. code-block:: text
 
@@ -177,10 +158,9 @@ Memory Layout
 .. note::
    Each thread has its own copy of ``b``, and changes do not affect the original value in main memory.
 
-----
 
-Example: Memory Movements for Private Data (C)
-===============================================
+
+*Example: Memory Movements for Private Data (C)*
 
 .. code-block:: c
 
@@ -197,8 +177,7 @@ Example: Memory Movements for Private Data (C)
     
     b = 7;
 
-Memory Layout
--------------
+*Memory Layout*
 
 .. code-block:: text
 
@@ -214,26 +193,21 @@ Memory Layout
 .. note::
    Each thread has its own copy of ``b``, and changes do not affect the original value in main memory.
 
-----
 
-Shared Data Characteristics
-============================
 
-Typical Use Cases
------------------
+**Shared Data**
+
 
 - Majority of the data in parallel programs
 - Typically large data structures (e.g., arrays)
 
-Properties
-----------
+*Properties*
 
 - Keeps its value on entry to parallel region
 - Keeps its value on exit from parallel region
 - Every thread can access (read and/or write) the data
 
-Safety Considerations
----------------------
+*Safety Considerations*
 
 **Safe scenario:**
 
@@ -245,10 +219,9 @@ Safety Considerations
 - At least one of these is a write access
 - This easily results in a **race condition**
 
-----
 
-Example: Vector Initialization (Fortran)
-=========================================
+*Example: Vector Initialization (Fortran)*
+
 
 .. code-block:: fortran
 
@@ -271,10 +244,9 @@ Mathematical notation: :math:`v_i = 4i`
 .. note::
    This is safe because each thread writes to different elements of the shared array.
 
-----
 
-Example: Vector Initialization (C)
-===================================
+
+*Example: Vector Initialization (C)*
 
 .. code-block:: c
 
@@ -297,10 +269,9 @@ Mathematical notation: :math:`v_i = 4i`
 .. note::
    This is safe because each thread writes to different elements of the shared array.
 
-----
 
-Example: Write Conflict for Shared Data (Fortran)
-==================================================
+
+*Example: Write Conflict for Shared Data (Fortran)*
 
 .. code-block:: fortran
 
@@ -315,8 +286,7 @@ Example: Write Conflict for Shared Data (Fortran)
         print *, "my b:", b
     !$OMP end parallel
 
-Memory Behavior
----------------
+*Memory Behavior*
 
 .. code-block:: text
 
@@ -336,10 +306,8 @@ Memory Behavior
    - Individual threads might print ``b`` before it has its final value
    - This is a **race condition**
 
-----
 
-Example: Write Conflict for Shared Data (C)
-============================================
+*Example: Write Conflict for Shared Data (C)*
 
 .. code-block:: c
 
@@ -355,8 +323,7 @@ Example: Write Conflict for Shared Data (C)
         printf("my b: %i\n", b);
     }
 
-Memory Behavior
----------------
+*Memory Behavior*
 
 .. code-block:: text
 
@@ -376,15 +343,13 @@ Memory Behavior
    - Individual threads might print ``b`` before it has its final value
    - This is a **race condition**
 
-----
+
 
 Default Clause
-==============
+^^^^^^^^^^^^^^
 
 The ``default`` clause can be used on a parallel or task construct to determine data sharing of implicitly determined variables.
 
-Syntax
-------
 
 **In C:**
 
@@ -398,26 +363,22 @@ Syntax
 
     default(shared | none | private | firstprivate)
 
-Default Behavior
-----------------
+
 
 For parallel constructs, if no ``default`` clause is supplied, ``default(shared)`` applies.
 
-Recommendation
---------------
+*Recommendation*
 
 .. important::
    Using ``default(none)`` is typically a good idea!
    
    With ``default(none)``, all variables accessed in the parallel region must be explicitly declared as ``shared``, ``private``, etc.
 
-----
+
 
 Fixing Data Races
-=================
+^^^^^^^^^^^^^^^^^
 
-Constructs Available
---------------------
 
 OpenMP provides several constructs to avoid data races:
 
@@ -428,13 +389,12 @@ OpenMP provides several constructs to avoid data races:
 .. note::
    These constructs impact code performance, but we have no interest in "fast garbage"!
 
-----
+
 
 Barrier and Synchronization
-============================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Barrier Construct
----------------------
+**The Barrier Construct**
 
 **Fortran:**
 
@@ -448,8 +408,7 @@ The Barrier Construct
 
     #pragma omp barrier
 
-Behavior
---------
+*Behavior*
 
 - All threads wait for the last one to arrive at the barrier
 - Registers are flushed to the memory system
@@ -458,23 +417,21 @@ Behavior
 .. warning::
    If not all threads reach the barrier, a **deadlock** will occur!
 
-Visual Representation
----------------------
+*Visual Representation*
 
 .. code-block:: text
 
     Thread 0: A ──────┐
     Thread 1: A ──────┤
-    Thread 2: A ──────┼── BARRIER ──┬── B
-    Thread 3: A ──────┘              ├── B
+    Thread 2: A ──────┼── BARRIER ──┬──   B
+    Thread 3: A ──────┘              ├──  B
                                       ├── B
                                       └── B
                 Time ─────────────────────────>
 
-----
 
-Example: Data Race in Matrix Transpose (Fortran)
-=================================================
+
+*Example: Data Race in Matrix Transpose (Fortran)*
 
 .. code-block:: fortran
 
@@ -501,10 +458,9 @@ Example: Data Race in Matrix Transpose (Fortran)
 .. note::
    The barrier ensures that all threads complete writing to ``matrix`` before any thread begins reading from it for the transpose operation.
 
-----
 
-Example: Data Race in Matrix Transpose (C)
-===========================================
+
+*Example: Data Race in Matrix Transpose (C)*
 
 .. code-block:: c
 
@@ -528,18 +484,15 @@ Example: Data Race in Matrix Transpose (C)
 .. note::
    The barrier ensures that all threads complete writing to ``matrix`` before any thread begins reading from it for the transpose operation.
 
-----
 
-Critical Regions
-================
 
-Purpose
--------
+**Critical Regions**
+
+
 
 Critical regions protect updates of shared memory locations by ensuring only one thread executes the critical region at a time.
 
-Syntax in C
------------
+*Syntax in C*
 
 .. code-block:: c
 
@@ -548,8 +501,8 @@ Syntax in C
         code-block
     }
 
-Syntax in Fortran
------------------
+*Syntax in Fortran*
+
 
 .. code-block:: fortran
 
@@ -557,8 +510,7 @@ Syntax in Fortran
         code-block
     !$omp end critical (name)
 
-Properties
-----------
+
 
 - **Name is optional:**
   
@@ -569,10 +521,9 @@ Properties
 - Useful to execute non-thread-safe functions
 - Performance penalty due to serialization
 
-----
 
-Example: Use of Critical Region (Fortran)
-==========================================
+
+*Example: Use of Critical Region (Fortran)*
 
 Computing a sum with critical section:
 
@@ -596,10 +547,9 @@ Mathematical notation: :math:`\sum_{k=0}^{n-1} e^k`
 .. note::
    The critical region ensures that only one thread updates ``sum`` at a time, preventing race conditions.
 
-----
 
-Example: Use of Critical Region (C)
-====================================
+
+*Example: Use of Critical Region (C)*
 
 Computing a sum with critical section:
 
@@ -627,24 +577,19 @@ Mathematical notation: :math:`\sum_{k=0}^{n-1} e^k`
 
 ----
 
-Atomic Operations
-=================
+**Atomic Operations**
 
-Overview
---------
 
 ``atomic`` is a lightweight alternative to ``critical`` for simple cases.
 
-Properties
-----------
+
 
 - Works with simple statements only
 - Can use special hardware instructions if they exist
 - Flushes the "protected" variable on entry and exit
 - Much more efficient than ``critical`` for simple operations
 
-Versions (from OpenMP 3.1)
----------------------------
+*Versions (from OpenMP 3.1)*
 
 Four different versions:
 
@@ -653,68 +598,60 @@ Four different versions:
 - ``update`` - atomic update operation
 - ``capture`` - atomic update with capture of old/new value
 
-OpenMP 4.0 Enhancement
-----------------------
+*OpenMP 4.0 Enhancement*
 
 Adding ``seq_cst`` to atomic flushes all variables:
 
 - Important for controlling instruction reordering
 - Example use case: implementing a lock
 
-----
 
-Atomic Read
-===========
+
+*Atomic Read*
+
 
 Protects only the reading of a scalar intrinsic variable.
 
-Fortran Syntax
---------------
+*Fortran Syntax*
 
 .. code-block:: fortran
 
     !$omp atomic read
     v = x
 
-C Syntax
---------
+*C Syntax*
 
 .. code-block:: c
 
     #pragma omp atomic read
     v = x;
 
-Behavior
---------
+
 
 - Protects only the reading of scalar variable ``x``
 - Flushes ``x`` on entry and exit
 
-----
 
-Atomic Write
-============
+
+*Atomic Write*
 
 Protects only the writing of a scalar intrinsic variable.
 
-Fortran Syntax
---------------
+*Fortran Syntax*
 
 .. code-block:: fortran
 
     !$omp atomic write
     x = expr
 
-C Syntax
---------
+*C Syntax*
 
 .. code-block:: c
 
     #pragma omp atomic write
     x = expr;
 
-Example Expressions
--------------------
+*Example Expressions*
 
 .. code-block:: c
 
@@ -727,29 +664,24 @@ Example Expressions
    - No protection for evaluation of ``expr`` on the right-hand side
    - Flushes ``x`` on entry and exit
 
-----
 
-Atomic Update
-=============
 
-Overview
---------
+*Atomic Update*
+
 
 Protects the update of a variable in simple arithmetic operations.
 
 .. note::
    ``atomic update`` was the only atomic operation prior to OpenMP 3.1. The ``update`` keyword is optional for backward compatibility.
 
-Properties
-----------
+
 
 - Only protects the update of the variable, not function calls on the right-hand side
 - Works with simple statements only
 - Can use special hardware instructions if available
 - Flushes the updated variable on entry and exit
 
-Example
--------
+*Example*
 
 .. code-block:: c
 
@@ -759,13 +691,11 @@ Example
 .. warning::
    The evaluation of ``func(a)`` is NOT protected. Use ``critical`` if protection is needed!
 
-----
 
-Atomic Update: Fortran Statements
-==================================
 
-Examples
---------
+*Atomic Update: Fortran Statements*
+
+*Examples*
 
 .. code-block:: fortran
 
@@ -778,8 +708,7 @@ Examples
 .. warning::
    The evaluation of ``f(a)`` is NOT protected. Use ``critical`` if needed!
 
-Allowed Operations
-------------------
+*Allowed Operations*
 
 .. code-block:: fortran
 
@@ -797,10 +726,9 @@ Where:
 .. note::
    The ``update`` keyword is optional for consistency with older OpenMP standards.
 
-----
 
-Example: Vector Norm (Fortran)
-===============================
+
+*Example: Vector Norm (Fortran)*
 
 .. code-block:: fortran
 
@@ -827,13 +755,11 @@ Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
 .. note::
    Each thread computes a local sum (``lNorm``), then atomically adds it to the global ``norm``.
 
-----
 
-Atomic Update: C Statements
-============================
 
-Examples
---------
+*Atomic Update: C Statements*
+
+*Examples*
 
 .. code-block:: c
 
@@ -846,8 +772,7 @@ Examples
 .. warning::
    The evaluation of ``f(a)`` is NOT protected. Use ``critical`` if needed!
 
-Allowed Operations
-------------------
+*Allowed Operations*
 
 .. code-block:: c
 
@@ -866,10 +791,9 @@ Where:
 .. note::
    The ``update`` keyword is optional for consistency with older OpenMP standards.
 
-----
 
-Example: Vector Norm (C)
-=========================
+
+*Example: Vector Norm (C)*
 
 .. code-block:: c
 
@@ -896,13 +820,9 @@ Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
 .. note::
    Each thread computes a local sum (``lNorm``), then atomically adds it to the global ``norm``.
 
-----
 
-Atomic Capture
-==============
 
-Purpose
--------
+*Atomic Capture*
 
 Atomic capture allows you to:
 
@@ -914,21 +834,17 @@ Atomic capture allows you to:
 
 Restrictions apply to the allowed statement forms.
 
-----
 
-Atomic Capture: C Statements
-=============================
 
-Syntax
-------
+*Atomic Capture: C Statements*
+
 
 .. code-block:: c
 
     #pragma omp atomic capture
     statement_or_structured_block
 
-Allowed Statements (OpenMP 4.0)
---------------------------------
+*Allowed Statements (OpenMP 4.0)*
 
 .. code-block:: c
 
@@ -940,8 +856,7 @@ Allowed Statements (OpenMP 4.0)
     v = x = x binop expr;
     v = x = expr binop x;
 
-Allowed Structured Blocks
---------------------------
+*Allowed Structured Blocks*
 
 .. code-block:: c
 
@@ -961,13 +876,11 @@ Allowed Structured Blocks
     {--x; v = x;}
     {x--; v = x;}
 
-----
 
-Atomic Capture: Fortran Statements
-===================================
 
-Syntax Form 1
--------------
+*Atomic Capture: Fortran Statements*
+
+*Syntax Form 1*
 
 .. code-block:: fortran
 
@@ -976,8 +889,7 @@ Syntax Form 1
         capture-statement
     !$omp end atomic
 
-Syntax Form 2
--------------
+*Syntax Form 2*
 
 .. code-block:: fortran
 
@@ -986,8 +898,7 @@ Syntax Form 2
         update-statement
     !$omp end atomic
 
-Allowed Update Statements
---------------------------
+*Allowed Update Statements*
 
 .. code-block:: fortran
 
@@ -996,17 +907,16 @@ Allowed Update Statements
     x = intr_proc(x, expr_list)
     x = intr_proc(expr_list, x)
 
-Allowed Capture Statements
----------------------------
+*Allowed Capture Statements*
 
 .. code-block:: fortran
 
     v = x
 
-----
+
 
 Summary
-=======
+^^^^^^^
 
 This guide covered the following OpenMP concepts:
 
