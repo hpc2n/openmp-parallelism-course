@@ -1,46 +1,36 @@
-========================
 More on Private Data
-========================
+--------------------
 
-:Authors: Pedro Ojeda & Joachim Hein
-:Institutions: High Performance Computing Center North & Lund University
 
-----
+.. objectives::
 
-Outline
-=======
+    This guide covers special versions of private data:
 
-This guide covers special versions of private data:
+    - ``firstprivate`` - initialization of private variables
+    - ``lastprivate`` - capturing values from last iteration
+    - ``reduction`` - parallel reductions (sums, products, etc.)
+    - ``threadprivate`` - privatizing global storage
+    - User-defined reductions (OpenMP 4.0+)
 
-- ``firstprivate`` - initialization of private variables
-- ``lastprivate`` - capturing values from last iteration
-- ``reduction`` - parallel reductions (sums, products, etc.)
-- ``threadprivate`` - privatizing global storage
-- User-defined reductions (OpenMP 4.0+)
-
-----
 
 Private and Shared Data: Review
-================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In a parallel region, data can be either shared or private.
 
-Shared Data
------------
+**Shared Data**
 
 - Value unchanged on entry to parallel region
 - Survives after end of parallel region
 
-Private Data
-------------
+**Private Data**
 
 - Each thread has its own private copy
 - Normally uninitialized at beginning of parallel region
 - Contents typically lost when parallel region finishes
 - **However:** Connection to values before/after is often needed
 
-Memory Layout
--------------
+*Memory Layout*
 
 .. code-block:: text
 
@@ -51,26 +41,23 @@ Memory Layout
     Thread 2: [Private T2]
     Thread 3: [Private T3]
 
-----
+
 
 Clause: firstprivate
-====================
+^^^^^^^^^^^^^^^^^^^^
 
-Problem
--------
+*Problem*
 
 Private variables are not initialized by default.
 
-Solution: firstprivate Clause
-------------------------------
+*Solution: firstprivate Clause*
 
 The ``firstprivate`` clause:
 
 - Declares variable(s) as private
 - Initializes each private copy with the value prior to the construct
 
-Fortran Example
----------------
+*Fortran Example*
 
 .. code-block:: fortran
 
@@ -82,8 +69,7 @@ Fortran Example
         print *, lsum
     !$omp end parallel
 
-C Example
----------
+*C Example*
 
 .. code-block:: c
 
@@ -96,8 +82,7 @@ C Example
         printf("%i\n", lsum);
     }
 
-Expected Output
----------------
+*Expected Output*
 
 With 4 threads:
 
@@ -108,13 +93,11 @@ With 4 threads:
     Thread 2: 12
     Thread 3: 13
 
-----
 
-Example: Vector Norm with private
-==================================
 
-Fortran Version
----------------
+*Example: Vector Norm with private*
+
+*Fortran Version*
 
 .. code-block:: fortran
 
@@ -135,8 +118,7 @@ Fortran Version
     
     norm = sqrt(norm)
 
-C Version
----------
+*C Version*
 
 .. code-block:: c
 
@@ -162,13 +144,10 @@ Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
 .. note::
    ``lNorm`` must be explicitly initialized to 0.0 inside the parallel region.
 
-----
 
-Example: Vector Norm with firstprivate
-=======================================
+*Example: Vector Norm with firstprivate*
 
-Fortran Version
----------------
+*Fortran Version*
 
 .. code-block:: fortran
 
@@ -188,8 +167,7 @@ Fortran Version
     
     norm = sqrt(norm)
 
-C Version
----------
+*C Version*
 
 .. code-block:: c
 
@@ -214,13 +192,11 @@ Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
 .. important::
    With ``firstprivate``, ``lNorm`` is automatically initialized to 0.0 from the master thread's value.
 
-----
 
 Clause: lastprivate
-===================
+^^^^^^^^^^^^^^^^^^^
 
-Purpose
--------
+*Purpose*
 
 The ``lastprivate`` clause:
 
@@ -229,13 +205,11 @@ The ``lastprivate`` clause:
 - At the end: assigns value from last iteration or section
 - Undefined if not set in last iteration/section
 
-Combined Usage
---------------
+*Combined Usage*
 
 Variables can be both ``firstprivate`` **and** ``lastprivate``.
 
-Fortran Example
----------------
+*Fortran Example*
 
 .. code-block:: fortran
 
@@ -251,8 +225,7 @@ Fortran Example
     print *, "a=", a
     ! This prints: a=101
 
-C Example
----------
+*C Example*
 
 .. code-block:: c
 
@@ -272,13 +245,10 @@ C Example
 .. note::
    The value from the sequentially last iteration is assigned back to the original variable.
 
-----
 
 Reduction Variables
-===================
+^^^^^^^^^^^^^^^^^^^
 
-Common Need
------------
 
 Reductions of private variables are frequently needed:
 
@@ -286,13 +256,11 @@ Reductions of private variables are frequently needed:
 - Scalar products
 - Sum, product, minimum, maximum operations
 
-Previous Approach
------------------
+*Previous Approach*
 
 We've done this before (e.g., vector norm example) using ``atomic`` to protect the update.
 
-Better Approach: Reduction Clause
-----------------------------------
+*Better Approach: Reduction Clause*
 
 For a reduction, we specify:
 
@@ -300,20 +268,15 @@ For a reduction, we specify:
 - **One or more variables**
 - A construct can have more than one reduction
 
-----
 
-Behavior of Reduction
-=====================
+*Behavior of Reduction*
 
-Basic Syntax
-------------
 
 .. code-block:: fortran
 
     reduction(operator : variable_list)
 
-How It Works
-------------
+*How It Works*
 
 **Variables specified in reduction:**
 
@@ -325,10 +288,9 @@ How It Works
    - Using the specified operator for combining values
    - New combined value is available after the construct
 
-----
 
-Example: Memory Movements for Reduction (C)
-============================================
+
+*Example: Memory Movements for Reduction (C)*
 
 .. code-block:: c
 
@@ -343,8 +305,7 @@ Example: Memory Movements for Reduction (C)
     
     printf("%i\n", b);
 
-Memory Behavior
----------------
+*Memory Behavior*
 
 .. code-block:: text
 
@@ -362,10 +323,9 @@ Output: ``11``
 .. note::
    Each thread's private copy is initialized to 0 (identity for addition), then combined at the end.
 
-----
 
-Example: Memory Movements for Reduction (Fortran)
-==================================================
+*Example: Memory Movements for Reduction (Fortran)*
+
 
 .. code-block:: fortran
 
@@ -380,8 +340,7 @@ Example: Memory Movements for Reduction (Fortran)
     
     print *, b
 
-Memory Behavior
----------------
+*Memory Behavior*
 
 .. code-block:: text
 
@@ -399,13 +358,11 @@ Output: ``11``
 .. note::
    Each thread's private copy is initialized to 0 (identity for addition), then combined at the end.
 
-----
 
-Example: Vector Norm with atomic update
-========================================
 
-Fortran Version
----------------
+*Example: Vector Norm with atomic update*
+
+*Fortran Version*
 
 .. code-block:: fortran
 
@@ -425,8 +382,7 @@ Fortran Version
     
     norm = sqrt(norm)  ! master copy
 
-C Version
----------
+*C Version*
 
 .. code-block:: c
 
@@ -448,13 +404,11 @@ C Version
 
 Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
 
-----
 
-Example: Vector Norm with reduction
-====================================
 
-Fortran Version
----------------
+*Example: Vector Norm with reduction*
+
+*Fortran Version*
 
 .. code-block:: fortran
 
@@ -471,8 +425,7 @@ Fortran Version
     
     norm = sqrt(norm)  ! master copy
 
-C Version
----------
+*C Version*
 
 .. code-block:: c
 
@@ -494,13 +447,10 @@ Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
 .. important::
    No need for ``lNorm`` variable or ``atomic`` directive. The reduction clause handles everything automatically.
 
-----
 
-Example: Vector Norm with reduction (Simplified)
-=================================================
+*Example: Vector Norm with reduction (Simplified)*
 
-Fortran Version
----------------
+*Fortran Version*
 
 .. code-block:: fortran
 
@@ -515,8 +465,7 @@ Fortran Version
     
     norm = sqrt(norm)  ! master copy
 
-C Version
----------
+*C Version*
 
 .. code-block:: c
 
@@ -534,10 +483,8 @@ Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
 .. note::
    Using ``parallel do``/``parallel for`` makes the code even more concise.
 
-----
 
-Supported Operators: Fortran (OpenMP 3.0)
-==========================================
+*Supported Operators: Fortran (OpenMP 3.0)*
 
 .. list-table::
    :header-rows: 1
@@ -583,10 +530,8 @@ Supported Operators: Fortran (OpenMP 3.0)
      - ``ieor``
      - 0
 
-----
 
-Supported Operators: C (OpenMP 3.0)
-====================================
+*Supported Operators: C (OpenMP 3.0)*
 
 .. list-table::
    :header-rows: 1
@@ -620,13 +565,11 @@ Supported Operators: C (OpenMP 3.0)
      - ``||``
      - 0
 
-----
 
-Restrictions on Reduction
-==========================
+*Restrictions on Reduction*
 
 Important Limitations
----------------------
+
 
 **C/C++:**
 
@@ -639,8 +582,7 @@ Important Limitations
 - Must not be deallocated during construct
 - No Fortran pointers or assumed-size arrays
 
-Order of Execution
-------------------
+*Order of Execution*
 
 .. warning::
    No order of threads is specified!
@@ -649,64 +591,50 @@ Order of Execution
    - This is common in parallel computing
    - This is technically a race condition, which is typically tolerated
 
-OpenMP 4.0 Enhancement
-----------------------
+*OpenMP 4.0 Enhancement*
 
 OpenMP 4.0 allows you to declare your own custom reductions.
 
-----
 
 User-Defined Reductions
-=======================
+^^^^^^^^^^^^^^^^^^^^^^^
 
-Purpose
--------
 
 Allows definition of custom reduction operations.
 
-Use Cases
----------
+*Use Cases*
 
 Particularly useful with derived data types:
 
 - **C/C++:** ``struct``
 - **Fortran:** ``type``
 
-Requirements
-------------
+*Requirements*
 
 You need to provide:
 
 1. **Combiner:** Combines thread-private results to final result
 2. **Initializer:** Initializes private contributions at outset
 
-----
 
-Case Study: Maximum Value and Its Position
-===========================================
-
-Problem Statement
------------------
+*Case Study: Maximum Value and Its Position*
 
 Given a large array:
 
 - Determine the maximum value
 - Find the location (index) of the maximum in the array
 
-Parallelization Strategy
-------------------------
+Parallelization Strategy:
 
 1. Assign a portion of array to each thread
 2. Each thread determines maximum and position in its part
 3. Use user-defined reduction to determine final result
 
-----
 
-User-Defined Reduction in Fortran
-==================================
+*User-Defined Reduction in Fortran*
 
 Step 1: Define the Data Type
------------------------------
+
 
 .. code-block:: fortran
 
@@ -716,7 +644,7 @@ Step 1: Define the Data Type
     end type
 
 Step 2: Declare the Reduction
-------------------------------
+
 
 .. code-block:: fortran
 
@@ -724,31 +652,22 @@ Step 2: Declare the Reduction
     !$omp mx_combine(omp_out, omp_in)) &
     !$omp initializer(mx_init(omp_priv, omp_orig))
 
-Properties
-----------
 
 - The operation can be triggered by the name ``maxloc``
 - Utilizes subroutine ``mx_combine`` and ``mx_init``
 - Acts on objects of type ``mx_s``
 
-----
 
-The Initializer in Fortran
-===========================
-
-Purpose
--------
+*The Initializer in Fortran*
 
 Can be a subroutine or assignment statement (here: subroutine).
 
-Special Variables
------------------
+Special Variables:
 
 - ``omp_priv``: reference to variable to be initialized
 - ``omp_orig``: reference to original variable prior to construct
 
-Example Implementation
-----------------------
+*Example Implementation*
 
 Initialize from value prior to construct:
 
@@ -762,24 +681,19 @@ Initialize from value prior to construct:
         priv%index = orig%index
     end subroutine mx_init
 
-----
 
-The Combiner in Fortran
-========================
 
-Purpose
--------
+*The Combiner in Fortran*
+
 
 Can be a subroutine or assignment statement (here: subroutine).
 
-Special Variables
------------------
+Special Variables:
 
 - ``omp_in``: reference to contribution from thread
 - ``omp_out``: reference to combined result
 
-Example Implementation
-----------------------
+*Example Implementation*
 
 Replace if contribution is larger:
 
@@ -795,10 +709,8 @@ Replace if contribution is larger:
         endif
     end subroutine mx_combine
 
-----
 
-Using User-Defined Reduction in Fortran
-========================================
+*Using User-Defined Reduction in Fortran*
 
 .. code-block:: fortran
 
@@ -813,20 +725,17 @@ Using User-Defined Reduction in Fortran
         endif
     enddo
 
-Benefits
---------
+
 
 - Easily readable code
 - Similar to what one would do in serial programming
 - Abstracts away the parallel complexity
 
-----
 
-User-Defined Reduction in C
-============================
+*User-Defined Reduction in C*
 
 Step 1: Define the Data Type
------------------------------
+
 
 .. code-block:: c
 
@@ -836,7 +745,7 @@ Step 1: Define the Data Type
     };
 
 Step 2: Declare the Reduction
-------------------------------
+
 
 .. code-block:: c
 
@@ -844,31 +753,24 @@ Step 2: Declare the Reduction
         struct mx_s: mx_combine(&omp_out, &omp_in)) \
         initializer(mx_init(&omp_priv, &omp_orig))
 
-Properties
-----------
+
 
 - The operation can be triggered by the name ``maxloc``
 - Utilizes functions ``mx_combine`` and ``mx_init``
 - Acts on objects of type ``struct mx_s``
 
-----
 
-The Initializer in C
-=====================
+*The Initializer in C*
 
-Purpose
--------
 
 An expression (here: implemented with a function).
 
-Special Variables
------------------
+Special Variables:
 
 - ``omp_priv``: reference to variable to be initialized
 - ``omp_orig``: reference to original variable prior to construct
 
-Example Implementation
-----------------------
+*Example Implementation*
 
 Initialize from value prior to construct:
 
@@ -880,24 +782,18 @@ Initialize from value prior to construct:
         priv->index = orig->index;
     }
 
-----
 
-The Combiner in C
-=================
 
-Purpose
--------
+*The Combiner in C*
 
 An expression (here: implemented with a function).
 
-Special Variables
------------------
+Special Variables:
 
 - ``omp_in``: reference to contribution from thread
 - ``omp_out``: reference to combined result
 
-Example Implementation
-----------------------
+*Example Implementation*
 
 Replace if contribution is larger:
 
@@ -911,10 +807,10 @@ Replace if contribution is larger:
         }
     }
 
-----
 
-Using User-Defined Reduction in C
-==================================
+
+*Using User-Defined Reduction in C*
+
 
 .. code-block:: c
 
@@ -930,20 +826,17 @@ Using User-Defined Reduction in C
         }
     }
 
-Benefits
---------
 
 - Easily readable code
 - Similar to what one would do in serial programming
 - Abstracts away the parallel complexity
 
-----
 
-Declaring a Reduction Operation: Syntax Summary
-================================================
+
+*Declaring a Reduction Operation: Syntax Summary*
 
 C Syntax
---------
+
 
 .. code-block:: c
 
@@ -951,33 +844,30 @@ C Syntax
         typename-list : combiner) [initializer-clause] new-line
 
 Fortran Syntax
---------------
+
 
 .. code-block:: fortran
 
     !$omp declare reduction(reduction-identifier : &
     !$omp type-list : combiner) [initializer-clause]
 
-Components
-----------
+*Components*
 
 - **reduction-identifier:** Name for your reduction
 - **typename-list/type-list:** Data types the reduction applies to
 - **combiner:** Function/subroutine to combine values
 - **initializer-clause:** Optional initialization specification
 
-----
+
 
 Dealing with Global Storage
-============================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Default Behavior
-----------------
 
 By default, global storage is shared among all threads.
 
-Examples of Global Storage
----------------------------
+*Examples of Global Storage*
+
 
 **C/C++:**
 
@@ -990,23 +880,15 @@ Examples of Global Storage
 - Module data
 - Variables with ``save`` attribute
 
-Problem
--------
 
 This default behavior is not always what is needed.
 
-----
 
 Directive: threadprivate in C
-==============================
-
-Purpose
--------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``threadprivate`` directive makes global storage private to each thread.
 
-Syntax
-------
 
 .. code-block:: c
 
@@ -1025,14 +907,11 @@ Syntax
         return 0;
     }
 
-Behavior
---------
 
 - Each thread gets a private copy
 - Outside parallel region: modifications affect master's copy
 
-Example Output
---------------
+*Example Output*
 
 With 4 threads:
 
@@ -1043,18 +922,15 @@ With 4 threads:
     Thread 2: 1
     Thread 3: 1
 
-----
+
 
 Directive: threadprivate in Fortran
-====================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Purpose
--------
 
 The ``threadprivate`` directive makes global storage private to each thread.
 
-Syntax
-------
+
 
 .. code-block:: fortran
 
@@ -1073,14 +949,13 @@ Syntax
         !$omp end parallel
     end program example
 
-Behavior
---------
+
 
 - Each thread gets a private copy
 - Outside parallel region: modifications affect master's copy
 
-Example Output
---------------
+*Example Output*
+
 
 With 4 threads:
 
@@ -1091,18 +966,16 @@ With 4 threads:
     Thread 2: 1
     Thread 3: 1
 
-----
+
 
 Clause: copyin
-==============
+^^^^^^^^^^^^^^
 
-Purpose
--------
 
 The ``copyin`` clause initializes threadprivate data from the master thread.
 
 C Example
----------
+
 
 .. code-block:: c
 
@@ -1123,7 +996,7 @@ C Example
     }
 
 Fortran Example
----------------
+
 
 .. code-block:: fortran
 
@@ -1142,18 +1015,16 @@ Fortran Example
         !$omp end parallel
     end program example
 
-Output
-------
+*Output*
 
 With 4 threads, **all** threads print: ``4``
 
-----
+
 
 More on threadprivate
-=====================
+^^^^^^^^^^^^^^^^^^^^^
 
-Data Persistence
-----------------
+*Data Persistence*
 
 ``threadprivate`` data remains unchanged between parallel regions if:
 
@@ -1163,8 +1034,7 @@ Data Persistence
    
    - Use function ``omp_set_dynamic`` to control this
 
-Fortran COMMON Blocks
-----------------------
+*Fortran COMMON Blocks*
 
 In Fortran, you can make a ``COMMON`` block threadprivate:
 
@@ -1174,30 +1044,28 @@ In Fortran, you can make a ``COMMON`` block threadprivate:
     COMMON /abccom/ a, b, c
     !$OMP threadprivate(/abccom/)
 
-----
+
 
 Summary
-=======
+^^^^^^^
 
 This guide covered special private variables in OpenMP:
 
-Special Private Variable Types
--------------------------------
+*Special Private Variable Types*
 
 - **firstprivate:** Initialization of private variables from master thread
 - **lastprivate:** Set value of private variable to value of last loop iteration or last section at end of construct
 - **reduction:** Calculating sums, products, etc. in parallel
 - **threadprivate:** Privatize global storage
 
-User-Defined Reductions
-------------------------
+*User-Defined Reductions*
+
 
 - Available in OpenMP 4.0+
 - Useful for complex data types
 - Requires combiner and initializer functions
 
-When to Use Standard Constructs
---------------------------------
+*When to Use Standard Constructs*
 
 The above constructs handle standard situations. For special cases, use:
 
