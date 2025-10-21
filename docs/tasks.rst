@@ -1,17 +1,11 @@
-====================
 The Task Directive
-====================
-
-:Author: Joachim Hein
-:Institution: LUNARC & Centre of Mathematics, Lund University
-
-----
+------------------
 
 Beyond Regular Loops
-====================
+
 
 Regular vs. Irregular Structures
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **So far we've discussed regular structures:**
 
@@ -29,28 +23,22 @@ Regular vs. Irregular Structures
 .. note::
    Depending on the details, irregular structures might still be parallelizable using tasks.
 
-----
+
 
 The Task Construct
-==================
+^^^^^^^^^^^^^^^^^^
 
-Overview
---------
 
 The task construct provides a flexible way to express parallelism for irregular problems.
 
-Key Concept
-~~~~~~~~~~~
+*Key Concept*
 
 Tasks allow you to create units of work that can be executed by any thread in the team, now or later.
 
-----
 
-The Task Directive in Fortran
-==============================
+*The Task Directive in Fortran*
 
 Syntax
-------
 
 .. code-block:: fortran
 
@@ -58,34 +46,26 @@ Syntax
         code body
     !$omp end task
 
-What It Does
-------------
+*What It Does*
 
 Creates an "explicit task" from:
 
 - Code body
 - Data environment at that point
-
-Placement
-~~~~~~~~~
-
 - Place inside a parallel region
 
-Execution
-~~~~~~~~~
+*Execution*
 
 The task may execute:
 
 - **When:** Now or later
 - **By whom:** Encountering thread or other thread
 
-----
 
-The Task Directive in C
-========================
+
+*The Task Directive in C*
 
 Syntax
-------
 
 .. code-block:: c
 
@@ -94,34 +74,26 @@ Syntax
         code body
     }
 
-What It Does
-------------
+*What It Does*
 
 Creates an "explicit task" from:
 
 - Code body
 - Data environment at that point
-
-Placement
-~~~~~~~~~
-
 - Place inside a parallel region
 
-Execution
-~~~~~~~~~
+*Execution*
 
 The task may execute:
 
 - **When:** Now or later
 - **By whom:** Encountering thread or other thread
 
-----
 
 Allowed Data Sharing Attributes for Tasks
-==========================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Available Attributes
---------------------
+*Available Attributes*
 
 **private:**
 
@@ -142,15 +114,14 @@ Available Attributes
 - **Fortran:** ``shared | private | firstprivate | none``
 - **C:** ``shared | none``
 
-----
+
 
 Data Sharing Without a default Clause
-======================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When no ``default`` is declared on a task directive:
 
-Default Rules
--------------
+*Default Rules*
 
 **If variable is shared by all implicit tasks in the current team:**
 
@@ -160,16 +131,14 @@ Variable is: ``shared``
 
 Variable is: ``firstprivate``
 
-Recommendation
---------------
+*Recommendation*
 
 .. important::
    Use ``default(none)`` to be explicit about data sharing!
 
-----
 
-Example: Task Execution Flow
-=============================
+
+*Example: Task Execution Flow*
 
 Consider this code:
 
@@ -181,8 +150,7 @@ Consider this code:
     !$omp end task
     code block 3
 
-Thread Encountering This Code
-------------------------------
+*Thread Encountering This Code*
 
 1. **Executes** "code block 1"
 2. **Creates a task** for "code block 2"
@@ -194,20 +162,17 @@ Thread Encountering This Code
 
 4. **At some point:** Has to execute code block 3
 
-No Control Over
----------------
+*No Control Over*
 
 .. warning::
    - Who executes code block 2
    - When code block 2 is finished
 
-----
 
 Controlling When Tasks Finish
-==============================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-taskwait Directive
-------------------
+*taskwait Directive*
 
 .. code-block:: fortran
 
@@ -218,8 +183,7 @@ taskwait Directive
 - Ensures child tasks have completed
 - **Does not** consider grandchildren, etc.
 
-barrier Directive
------------------
+*barrier Directive*
 
 .. code-block:: fortran
 
@@ -232,18 +196,16 @@ barrier Directive
 .. note::
    Instead of waiting, a thread can execute tasks generated elsewhere.
 
-----
+
 
 Allowing Suspension of Current Task
-====================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-taskyield Construct
--------------------
+*taskyield Construct*
 
 At a ``taskyield`` construct, the current task can be suspended to execute a different task.
 
 Syntax
-------
 
 **Fortran:**
 
@@ -257,28 +219,21 @@ Syntax
 
     #pragma omp taskyield
 
-Use Case
---------
+*Use Case*
 
 Allows the runtime to schedule other tasks while waiting for resources or dependencies.
 
-----
+
 
 taskgroup: Controlling Descendant Tasks (OpenMP 4.0)
-=====================================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Purpose
--------
 
 A ``taskgroup`` construct defines a region with an implied task scheduling point at the end.
 
-Behavior
---------
-
 Current task is suspended until **all descendant tasks** (including grandchildren, etc.) have completed.
 
-Fortran Syntax
---------------
+*Fortran Syntax*
 
 .. code-block:: fortran
 
@@ -291,8 +246,7 @@ Fortran Syntax
     !$omp end taskgroup  ! Waits for all tasks, including
                           ! tasks generated in processing
 
-C Syntax
---------
+*C Syntax*
 
 .. code-block:: c
 
@@ -308,21 +262,19 @@ C Syntax
     }  // Waits for all tasks, including
        // tasks generated in processing
 
-----
+
 
 Controlling Task Creation
-==========================
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The Overhead Problem
---------------------
+*The Overhead Problem*
 
 Creating a task encounters significant overhead:
 
 - Requires significant work inside the task to pay off
 - Too many small tasks can hurt performance
 
-Solution: if Clause
--------------------
+*Solution: if Clause*
 
 Use the ``if`` clause to control task creation:
 
@@ -332,35 +284,25 @@ Use the ``if`` clause to control task creation:
         ...
     !$OMP end task
 
-Behavior
-~~~~~~~~
 
 If the expression evaluates to ``.false.``:
 
 - Encountering thread executes code body directly (included task)
 - No task creation overhead
 
-----
 
 Final Tasks
-===========
-
-Purpose
--------
+^^^^^^^^^^^
 
 A task can carry a ``final`` clause to control task generation in descendants.
 
-Syntax
-------
+*Syntax*
 
 .. code-block:: fortran
 
     !$OMP task final(level .gt. 30) ...
         ...
     !$OMP end task
-
-Behavior
---------
 
 If the expression evaluates to ``.true.``:
 
@@ -369,23 +311,16 @@ If the expression evaluates to ``.true.``:
   - **Included** (executed immediately by encountering thread)
   - **Final** (they also cannot generate new tasks)
 
-Use Case
---------
+*Use Case*
 
 Prevents excessive task creation in deep recursion by serializing once a certain depth is reached.
 
-----
-
 Mergeable Tasks
-===============
-
-Purpose
--------
+^^^^^^^^^^^^^^^
 
 A task can be declared as ``mergeable`` for optimization.
 
-Syntax
-------
+*Syntax*
 
 .. code-block:: fortran
 
@@ -395,31 +330,22 @@ Syntax
 
     #pragma omp task mergeable ...
 
-Behavior
---------
 
 For an undeferred or included task, the implementation may:
 
 - Use the data environment of the generating task (including internal control variables)
 - Optimize by merging task execution
 
-Use Case
---------
+*Use Case*
 
 Often used with ``final`` clause for optimization at deep recursion levels.
 
-----
-
 Task Scheduling Points
-======================
-
-Definition
-----------
+^^^^^^^^^^^^^^^^^^^^^^
 
 Threads may switch to a different task at a **task scheduling point**.
 
-Task Scheduling Points Are
----------------------------
+*Task Scheduling Points Are*
 
 1. Immediately after generation of an explicit task
 2. After point of completion of a task
@@ -427,8 +353,7 @@ Task Scheduling Points Are
 4. At ``barrier`` (explicit or implicit)
 5. At the end of ``taskgroup``
 
-Untied Tasks (Advanced)
------------------------
+**Untied Tasks (Advanced)**
 
 .. warning::
    Untied tasks (not covered in this course) may switch at any point.
@@ -436,15 +361,10 @@ Untied Tasks (Advanced)
    - Be careful with ``critical`` regions and locks
    - Example: task may switch out of critical region → **deadlock!**
 
-----
 
-Case Study 1: Recursive Fibonacci
-==================================
+*Case Study 1: Recursive Fibonacci*
 
-Fibonacci Numbers
------------------
-
-Mathematical series:
+Fibonacci Numbers Mathematical series:
 
 .. math::
 
@@ -457,10 +377,8 @@ First numbers in series: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, ...
 .. note::
    Recursive implementation: not efficient for computation, but good for demonstrating task parallelism!
 
-----
 
-Serial Fibonacci Implementation (Fortran)
-=========================================
+*Serial Fibonacci Implementation (Fortran)*
 
 .. code-block:: fortran
 
@@ -477,8 +395,7 @@ Serial Fibonacci Implementation (Fortran)
         endif
     end function recursive_fib
 
-Recursion Tree
---------------
+*Recursion Tree*
 
 .. code-block:: text
 
@@ -490,13 +407,10 @@ Recursion Tree
            / \    / \  / \  / \
          ...  ... ... ... ... ...
 
-----
 
-Parallel Version: Attempt 1 (Fortran)
-======================================
+*Parallel Version: Attempt 1 (Fortran)*
 
 Adding One Task
----------------
 
 .. code-block:: fortran
 
@@ -515,19 +429,18 @@ Adding One Task
         endif
     end function recursive_fib
 
-Data Sharing
-~~~~~~~~~~~~
+*Data Sharing*
+
 
 - ``sub1`` is ``shared`` - declared inside function, must share to return result
 - ``in`` is ``firstprivate`` - initialized at task creation
 
-----
 
-Parallel Version: Attempt 2 (Fortran)
-======================================
+
+*Parallel Version: Attempt 2 (Fortran)*
 
 Adding Second Task
-------------------
+
 
 .. code-block:: fortran
 
@@ -551,13 +464,11 @@ Adding Second Task
 .. danger::
    **Problem:** Need to have ``sub1`` and ``sub2`` ready before computing ``fibnum``!
 
-----
 
-Parallel Version: Final Solution (Fortran)
-===========================================
+
+*Parallel Version: Final Solution (Fortran)*
 
 Adding taskwait
----------------
 
 .. code-block:: fortran
 
@@ -579,19 +490,15 @@ Adding taskwait
         endif
     end function recursive_fib
 
-Solution
-~~~~~~~~
+*Solution*
 
 - ``taskwait`` waits for the 2 tasks above
 - Recursion takes care of grandchildren automatically
 
-----
 
-Calling the Parallel Fibonacci
-===============================
+*Calling the Parallel Fibonacci*
 
 Original Serial Code
---------------------
 
 .. code-block:: fortran
 
@@ -606,10 +513,9 @@ Original Serial Code
         print *, "Fibonacci number", input, " is:", fibres
     end program fibonacci
 
-----
 
-Attempt: Starting Parallel Region
-==================================
+
+*Attempt: Starting Parallel Region*
 
 .. code-block:: fortran
 
@@ -629,10 +535,8 @@ Attempt: Starting Parallel Region
 .. danger::
    **Problem:** Each thread starts Fibonacci calculation! Multiple redundant computations.
 
-----
 
-Solution: Using single Construct
-=================================
+*Solution: Using single Construct*
 
 .. code-block:: fortran
 
@@ -654,20 +558,19 @@ Solution: Using single Construct
 .. note::
    ``single`` ensures only one thread starts the recursion, but all threads can help execute tasks.
 
-----
 
-Performance: Fibonacci Number 40
-=================================
+
+*Performance: Fibonacci Number 40*
 
 Benchmark Setup
----------------
+
 
 **Hardware:** Intel E5-2650 v3
 **Test:** Computing Fibonacci(40)
 **Compilers:** gfortran 6.3, ifort 17.1
 
 Results Summary
----------------
+
 
 .. code-block:: text
 
@@ -682,8 +585,7 @@ Results Summary
          └─────┴─────┴─────┴─────┴─────
             1     2     5    10    20  Cores
 
-Key Observations
-----------------
+*Key Observations*
 
 Both compilers show similar patterns:
 
@@ -693,13 +595,10 @@ Both compilers show similar patterns:
 - **Problem:** Too little work per task
 - **Solution:** Limit the number of tasks created
 
-----
 
-Discussion: Fibonacci Performance
-==================================
+*Discussion: Fibonacci Performance*
 
 Key Findings
-------------
 
 **Task Overhead:**
 
@@ -713,7 +612,6 @@ Key Findings
 3. **Balance:** Between parallelism and overhead
 
 Hardware Details
-----------------
 
 **Test System:**
 
@@ -726,13 +624,10 @@ Hardware Details
 - **gfortran:** Version 6.3 with thread binding
 - **Intel ifort:** Version 17.1 with thread binding
 
-----
 
-Case Study 2: Self-Refining Recursive Integrator
-=================================================
+*Case Study 2: Self-Refining Recursive Integrator*
 
 Mesh Refinement Concept
------------------------
 
 Codes employing irregular grids benefit from dynamic grid refinement/coarsening:
 
@@ -741,15 +636,13 @@ Codes employing irregular grids benefit from dynamic grid refinement/coarsening:
 - Refine grid where eddy develops
 - Coarsen when eddy vanishes
 
-Case Study Application
-----------------------
+*Case Study Application*
 
 Self-refining integrator for 1D function.
 
-----
 
 Basic Algorithm
-===============
+^^^^^^^^^^^^^^^
 
 Integration with Adaptive Refinement
 -------------------------------------
