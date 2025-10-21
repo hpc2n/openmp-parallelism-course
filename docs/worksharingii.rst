@@ -678,8 +678,7 @@ Results
     -------    -------------------
     4-8        0.6 - 1.3 μs
 
-Performance Chart
------------------
+**Performance Chart**
 
 .. code-block:: text
 
