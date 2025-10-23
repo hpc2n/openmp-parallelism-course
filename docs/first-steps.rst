@@ -341,13 +341,13 @@ The number of threads started by a parallel construct can be controlled in sever
 3. Clause on Parallel Construct (Highest Priority)
 
 
-**Fortran:**
+*Fortran:*
 
 .. code-block:: fortran
 
     !$omp parallel num_threads(n)
 
-**C:**
+*C:*
 
 .. code-block:: c
 
@@ -380,6 +380,8 @@ In a parallel region with n threads, thread IDs range from 0 to n-1.
 .. figure:: img/parallel_construct2.png
     :align: center
     :scale: 30%
+
+----
 
 **Example: Printing Thread Numbers**
 
@@ -440,7 +442,6 @@ Sample Output (8 threads)
 **Use Case: Task Farm Using Thread Numbers**
 
 
-
 You have three serial programs and want to run them on different threads.
 
 
@@ -480,7 +481,6 @@ New main program:
     End program farm
 
 *C Implementation*
-
 
 
 .. code-block:: c
