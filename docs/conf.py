@@ -32,18 +32,9 @@ conf_py_path = '/docs/' # with leading and trailing slash
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx_lesson",
-    "sphinx.ext.githubpages",
-    "sphinx_rtd_theme_ext_color_contrast",
-    "sphinxemoji.sphinxemoji",                                                                                                                                                                                             
-    'sphinx_prompt',
-    'sphinxcontrib.plantuml',
-    'sphinx.ext.graphviz',
-    'sphinxcontrib.mermaid',
-    'sphinx_copybutton',
-    'jupyter_sphinx',
-    'sphinx_design'
- 
+extensions = [
+    # githubpages just adds a .nojekyll file
+    'sphinx.ext.githubpages',
 ]
 
 # Settings for myst_nb:
