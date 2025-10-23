@@ -914,6 +914,94 @@ Restrictions apply to the allowed statement forms.
 
     v = x
 
+.. challenge::
+
+    Monitor the race condition in the following code:   
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=4 
+        // gcc -O3 -march=native -fopenmp -o test.x 3-codestructure-openmp.c -lm 
+        #include <stdio.h>
+        #ifdef _OPENMP
+        #include <omp.h>
+        #endif
+
+        int main()
+        {
+
+        int var1, var2, var3;   // Three variables
+        var1 = 1;
+        var2 = 2;
+        var3 = 3;
+
+        #pragma omp parallel private(var1,var2) shared(var3)
+            {
+            
+        #ifdef _OPENMP
+            printf("var1 =  %i , var2 = %i , var3 = %i \n",var1,var2,var3);
+            var1 = 10;
+            var2 = 20;
+            var3 = 30;    // RACE CONDITION!!
+        #else
+            printf("Serial code!\n");
+        #endif
+            }
+        
+            printf("var1 =  %i , var2 = %i , var3 = %i \n");
+
+        return 0;
+        }
+
+.. challenge::
+
+    Repair the race condition in the previous code for *var3* and set this variable with the number of threads available.
+    
+.. solution::
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=4 
+        // gcc -O3 -march=native -fopenmp -o test.x 3-codestructure-openmp.c -lm 
+        #include <stdio.h>
+        #ifdef _OPENMP
+        #include <omp.h>
+        #endif
+
+        int main()
+        {
+
+        int var1, var2, var3;   // Three variables
+        var1 = 1;
+        var2 = 2;
+        var3 = 3;
+
+        #pragma omp parallel private(var1,var2) shared(var3)
+            {
+            
+        #ifdef _OPENMP
+            printf("var1 =  %i , var2 = %i , var3 = %i \n",var1,var2,var3);
+            var1 = 10;
+            var2 = 20;
+            #pragma omp atomic write
+            var3 = omp_get_thread_num();    // RACE CONDITION REPAIRED!!
+            printf("In parallel region var1 =  %i , var2 = %i , var3 = %i \n",var1,var2,var3);
+        #else
+            printf("Serial code!\n");
+        #endif
+            }
+        
+            printf("var1 =  %i , var2 = %i , var3 = %i \n");
+
+        return 0;
+        }
+
 
 
 Summary
