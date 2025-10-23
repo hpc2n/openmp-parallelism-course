@@ -34,6 +34,7 @@ conf_py_path = '/docs/' # with leading and trailing slash
 # ones.
 extensions = [
     # githubpages just adds a .nojekyll file
+    'sphinx-lesson',
     'sphinx.ext.githubpages',
 ]
 
