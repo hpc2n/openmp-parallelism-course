@@ -1,6 +1,5 @@
-sphinx
+Sphinx
 sphinx_rtd_theme
-sphinx-design
-readthedocs-sphinx-search
+sphinx_rtd_theme_ext_color_contrast
+myst_nb
 sphinx-lesson
-sphinx-prompt
