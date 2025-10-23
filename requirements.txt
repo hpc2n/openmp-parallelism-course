@@ -4,17 +4,3 @@ sphinx-design
 readthedocs-sphinx-search
 sphinx-lesson
 sphinx-prompt
-sphinx_rtd_theme_ext_color_contrast
-myst_nb
-sphinxemoji
-sphinx-copybutton
-sphinxcontrib-mermaid
-sphinxcontrib-plantuml
-jupyter
-jupyter_sphinx
-numpy
-matplotlib
-pandas
-seaborn
-scipy
-numba
