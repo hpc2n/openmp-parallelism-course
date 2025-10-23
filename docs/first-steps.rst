@@ -618,6 +618,69 @@ Compiler Flags
    Some features of newer standards may be available depending on compiler version.
 
 
+.. challenge::
+
+    Compile and run the following *hello wold* example on the cluster:   
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss/2023b
+        // gcc -O3 -march=native -fopenmp -o test.x 1a-hello-openmp.c -lm 
+        #include <stdio.h>
+
+        int main()
+        {
+
+        #pragma omp parallel num_threads(4)
+        {
+        #ifdef _OPENMP // Macro for OpenMP
+            printf("Hello, you are using OpenMP! \n");
+        #else
+            printf("Hello from serial!\n");
+        #endif
+        }
+
+        return 0;
+        }
+
+.. challenge::
+
+    Query the threads' IDs and number of threads:   
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 2a-runtime-openmp.c -lm 
+        #include <stdio.h>
+        #ifdef _OPENMP
+        #include <omp.h>   // This header contains the querying functions
+        #endif
+
+        int main()
+        {
+
+        int threadID;   // Thread ID
+        int numThreads; // Number of threads
+        #pragma omp parallel
+            {
+        #ifdef _OPENMP
+            threadID = omp_get_thread_num();
+            numThreads = omp_get_num_threads();
+            printf("I am thread %i of %i\n", threadID, numThreads);
+        #else
+            printf("Hello from serial!\n");
+        #endif
+            }
+        
+        return 0;
+        }
+
+
 
 Summary
 ^^^^^^^

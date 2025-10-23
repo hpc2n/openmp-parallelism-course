@@ -1,17 +1,17 @@
 Data for Parallel Regions
--------------------------
+=========================
 
-This guide covers:
+.. objectives::
+    
+    - **Data:**
 
-**Data:**
+      - What is private data
+      - What is shared data
+      - How to control which is which
 
-- What is private data
-- What is shared data
-- How to control which is which
+    - **Race conditions:**
 
-**Race conditions:**
-
-- Basic constructs to avoid data races
+      - Basic constructs to avoid data races
 
 
 
