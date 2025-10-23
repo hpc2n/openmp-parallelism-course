@@ -41,6 +41,11 @@ In a parallel region, data can be either shared or private.
    In a shared memory architecture, shared data resides in the main memory accessible by all processors, while 
    each thread maintains its own private data copy.
 
+.. figure:: img/sm_3.png
+    :align: center
+    :scale: 30%
+
+----
 
 
 *Controlling Data Sharing in Fortran*
