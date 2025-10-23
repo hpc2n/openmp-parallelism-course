@@ -107,6 +107,7 @@ Different parallel regions can have different numbers of threads.
     :align: center
     :scale: 30%
 
+----
 
 **OpenMP: Directive Based**
 
