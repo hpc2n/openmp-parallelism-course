@@ -1,8 +1,9 @@
 First Steps in OpenMP
----------------------
+=====================
 
 
 .. objectives::
+    
     - Parallel and serial regions
     - Master thread and teams of threads
     - Directives and library functions
