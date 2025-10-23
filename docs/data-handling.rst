@@ -959,7 +959,7 @@ Restrictions apply to the allowed statement forms.
 .. challenge::
 
     Repair the race condition in the previous code for *var3* and set this variable with the number of threads available.
-    
+
 .. solution::
 
     .. code-block:: c
@@ -1000,6 +1000,41 @@ Restrictions apply to the allowed statement forms.
             printf("var1 =  %i , var2 = %i , var3 = %i \n");
 
         return 0;
+        }
+
+.. challenge::
+
+    Use the *atomic* operation to update a variable *counter* that counts the available number of threads in a parallel region.
+
+.. solution::
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 10a-atomic-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        int main() {
+            int counter = 0;  // Shared variable to be updated by threads
+
+            #pragma omp parallel num_threads(4)
+            {
+                int thread_id = omp_get_thread_num();
+
+                // safely increment the counter with the atomic 
+                #pragma omp atomic
+                counter++;
+
+                printf("Thread %d incremented counter to %d\n", thread_id, counter);
+            }
+
+            printf("Counter value: %d\n", counter);
+
+            return 0;
         }
 
 
