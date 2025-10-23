@@ -20,7 +20,7 @@
 #project = 'Task-based parallelism in scientific computing'
 project = 'OpenMP parallelism in scientific computing'
 copyright = '2021, The contributors'
-author = 'Mirko Myllykoski'
+author = 'Pedro Ojeda, Joachim Hein, and Mirko Myllykoski'
 github_user = 'hpc2n'
 #github_repo_name = 'Task-based-parallelism-course'  # auto-detected from dirname if blank
 github_repo_name = 'OpenMP-parallelism-course'  # auto-detected from dirname if blank
@@ -35,6 +35,7 @@ conf_py_path = '/docs/' # with leading and trailing slash
 extensions = [
     # githubpages just adds a .nojekyll file
     'sphinx.ext.githubpages',
+    'sphinx_lesson',
 ]
 
 # Settings for myst_nb:
