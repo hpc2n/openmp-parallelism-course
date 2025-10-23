@@ -35,7 +35,7 @@ conf_py_path = '/docs/' # with leading and trailing slash
 extensions = [
     # githubpages just adds a .nojekyll file
     'sphinx.ext.githubpages',
-    'sphinx_lesson',
+    'sphinx_lesson'
 ]
 
 # Settings for myst_nb:
