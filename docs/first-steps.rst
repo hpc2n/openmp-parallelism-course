@@ -43,6 +43,7 @@ In shared memory architecture, threads placed on several processing elements man
     :align: center
     :scale: 30%
 
+----
 
 **Advantages:**
 

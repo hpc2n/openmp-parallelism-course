@@ -145,7 +145,6 @@ The following are **NOT** private by default:
         b = b + 3
     !$OMP end parallel
     
-    b = 7
 
 *Memory Layout*
 
@@ -158,7 +157,7 @@ The following are **NOT** private by default:
     Thread 2: b = 2 → b = 5
     Thread 3: b = 3 → b = 6
     
-    Main Memory: b = 7
+    Main Memory: b = 5
 
 .. note::
    Each thread has its own copy of ``b``, and changes do not affect the original value in main memory.
@@ -180,7 +179,7 @@ The following are **NOT** private by default:
         b += 3;
     }
     
-    b = 7;
+
 
 *Memory Layout*
 
@@ -193,7 +192,7 @@ The following are **NOT** private by default:
     Thread 2: b = 2 → b = 5
     Thread 3: b = 3 → b = 6
     
-    Main Memory: b = 7
+    Main Memory: b = 5
 
 .. note::
    Each thread has its own copy of ``b``, and changes do not affect the original value in main memory.
@@ -369,7 +368,6 @@ The ``default`` clause can be used on a parallel or task construct to determine 
     default(shared | none | private | firstprivate)
 
 
-
 For parallel constructs, if no ``default`` clause is supplied, ``default(shared)`` applies.
 
 *Recommendation*
@@ -426,13 +424,11 @@ Barrier and Synchronization
 
 .. code-block:: text
 
-    Thread 0: A ──────┐
-    Thread 1: A ──────┤
-    Thread 2: A ──────┼── BARRIER ──┬──   B
-    Thread 3: A ──────┘              ├──  B
-                                      ├── B
-                                      └── B
-                Time ─────────────────────────>
+    Thread 0: A ────────────┤        ├────   B
+    Thread 1: A ──────┤              ├────   B 
+    Thread 2: A ─────────┤ BARRIER   ├────   B
+    Thread 3: A ──────┤              ├────   B 
+        Time ─────────────────────────────────>
 
 
 
