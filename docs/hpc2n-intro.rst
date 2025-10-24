@@ -323,11 +323,13 @@ There is more information about the filesystems at HPC2N here: https://www.hpc2n
 Project storage for this course
 """""""""""""""""""""""""""""""
 
-The project for this course is hpc2n2025-xyz. It has default storage of 500 GB, and that is located in the default location: 
+The project for this course is hpc2n202w-xyz. You need to substitute the letter by the actual numerical values.
+It has default storage of 500 GB, and that is located in the default location: 
+
 
 .. code-block:: bash
 
-   /proj/nobackup/hpc2n2025-xyz/
+   /proj/nobackup/hpc2n202w-xyz/
 
 Unless you ask for a different name for the directory when you apply for it you will get it named after the project's ID. 
 
