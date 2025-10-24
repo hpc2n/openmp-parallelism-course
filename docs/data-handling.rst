@@ -420,17 +420,13 @@ Barrier and Synchronization
 .. warning::
    If not all threads reach the barrier, a **deadlock** will occur!
 
-*Visual Representation*
-
-.. code-block:: text
-
-    Thread 0: A ────────────┤        ├────   B
-    Thread 1: A ──────┤              ├────   B 
-    Thread 2: A ─────────┤ BARRIER   ├────   B
-    Thread 3: A ──────┤              ├────   B 
-        Time ─────────────────────────────────>
 
 
+.. figure:: img/barrier.png
+    :align: center
+    :scale: 70%
+
+----
 
 *Example: Data Race in Matrix Transpose (Fortran)*
 
