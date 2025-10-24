@@ -1,5 +1,5 @@
 More on Worksharing
--------------------
+===================
 
 .. objectives::
 
@@ -680,25 +680,11 @@ Results
 
 **Performance Chart**
 
-.. code-block:: text
+.. figure:: img/perf-nowait.png
+    :align: center
+    :scale: 30%
 
-    Time (μs)
-      40 ┤                                    ■ PGI wait
-         │                                    □ PGI nowait
-      35 ┤                                    ● GNU wait
-         │                                    ○ GNU nowait
-      30 ┤                                    ▲ Intel wait
-         │                                    △ Intel nowait
-      25 ┤     ■
-         │     □     ■
-      20 ┤     ●     □     ■
-         │     ○     ●     □
-      15 ┤     ▲     ○     ●
-         │     △     ▲     ○
-      10 ┤           △     ▲
-         │                 △
-       0 └─────┴─────┴─────┴─────
-            4     6     8   Threads
+----
 
 .. note::
    Even small savings (0.6-1.3 μs) can add up in frequently executed code.
