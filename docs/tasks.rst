@@ -790,24 +790,6 @@ Configuration
 
 *Compiler Comparison: Integrator*
 
-.. code-block:: text
-
-    Speedup
-      25 ┤
-         │                        ● Intel ifort
-      20 ┤                     ●
-         │                  ●
-      15 ┤               ●
-         │            ●
-      10 ┤         ●  ○ GCC gfortran
-         │      ●  ○
-       5 ┤   ●  ○
-         │●  ○
-       0 └─────┴─────┴─────┴─────
-            1    10    20    40  Cores
-
-Observation
-
 
 .. note::
    GCC shows inferior scalability beyond 20 cores compared to Intel compiler.
