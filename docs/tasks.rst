@@ -1,6 +1,15 @@
 The Task Directive
 ==================
 
+.. objectives::
+
+ - Learn the basic terminology.
+ - Learn about the :code:`task` construct.
+ - Learn more about data sharing rules.
+ - Learn how to construct a task graph in a three-based manner.
+ - Learn how to construct a task graph in a centralised manner.
+ - Learn how to wait tasks to complete their execution.
+
 Beyond Regular Loops
 
 
@@ -61,7 +70,77 @@ The task may execute:
 - **When:** Now or later
 - **By whom:** Encountering thread or other thread
 
+The thread that encounters the :code:`task` construct creates an explicit task from the structured block.
+The encountering thread 
 
+ - may execute the task **immediately** or 
+ - **defer its execution** to one of the other threads in the team.
+ 
+A task is always **bound to the innermost parallel region**.
+If a task construct is encountered outside a parallel region, then the structured block is executed immediately by the encountering thread.
+
+The :code:`task` construct accepts a set of clauses:
+
+.. code-block:: c
+    :emphasize-lines: 1,4,6,7,8
+
+    if([ task :] scalar-expression) 
+    final(scalar-expression) 
+    untied 
+    default(shared | none) 
+    mergeable 
+    private(list) 
+    firstprivate(list) 
+    shared(list) 
+    in_reduction(reduction-identifier : list) 
+    depend([depend-modifier,] dependence-type : locator-list) 
+    priority(priority-value) 
+    allocate([allocator :] list) 
+    affinity([aff-modifier :] locator-list) 
+    detach(event-handle)
+
+We can already recognise some of the clauses.
+For example, the :code:`if` clause can be used to enable/disable the creation of the corresponding task, and the :code:`default`, :code:`private`, :code:`firstprivate`, and :code:`shared` clauses are used to control the data sharing rules.
+It should be noted that some of these clauses behave slightly differently when compared to the traditional OpenMP constructs.
+
+Let us return to the earlier "Hello world" program:
+    
+.. code-block:: c
+    :linenos:
+    :emphasize-lines: 4,6
+
+    #include <stdio.h>
+
+    int main() {
+        #pragma omp parallel
+        {
+            #pragma omp task
+            printf("Hello world!\n");
+        }
+        return 0;
+    }
+
+Note that the :code:`task` pragma is **inside a parallel construct**.
+Each thread in the team 
+
+ - encounters the task construct, 
+ - creates the corresponding task and 
+ - either executes the task immediately or defer its execution to one of the other threads in the team:
+ 
+.. figure:: img/task.png
+
+Therefore, the number of tasks, and lines printed, are the same as the number of threads in the team:
+    
+.. code-block:: bash
+    :emphasize-lines: 3-6
+
+    $ gcc -o my_program my_program.c -Wall -fopenmp
+    $ ./my_program 
+    Hello world!
+    Hello world!
+    ...
+    Hello world!
+    
 
 *The Task Directive in C*
 
