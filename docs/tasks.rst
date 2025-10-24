@@ -571,19 +571,11 @@ Benchmark Setup
 
 Results Summary
 
+.. figure:: img/perf-fibo.png
+    :align: center
+    :scale: 70%
 
-.. code-block:: text
-
-    Time (seconds) - logarithmic scale
-    1000 ┤  ■ Naive (2 tasks/iteration)
-         │
-     100 ┤  □ serial 10 (if clause, cutoff=10)
-         │  ○ serial 30 (if clause, cutoff=30)
-      10 ┤  ● serial 10, 1 task/iteration
-         │  △ serial 30, 1 task/iteration
-       1 ┤
-         └─────┴─────┴─────┴─────┴─────
-            1     2     5    10    20  Cores
+----
 
 *Key Observations*
 
@@ -776,25 +768,12 @@ Configuration
 - Task started every 5th generation
 - Two accumulation strategies tested
 
-Results
+.. figure:: img/perf-res.png
+    :align: center
+    :scale: 70%
 
-.. code-block:: text
+----
 
-    Speedup
-      30 ┤
-         │                           ○ threadprivate accumulation
-      25 ┤                        ○
-         │                     ○
-      20 ┤                  ○
-         │               ○
-      15 ┤            ○
-         │         ○
-      10 ┤      ○  ■ atomic updates
-         │   ○  ■
-       5 ┤○  ■
-         │■
-       0 └─────┴─────┴─────┴─────┴─────┴─────
-            1    10    20    40    80   128  Cores
 
 *Key Findings*
 
