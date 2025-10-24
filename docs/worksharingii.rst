@@ -682,7 +682,7 @@ Results
 
 .. figure:: img/perf-nowait.png
     :align: center
-    :scale: 30%
+    :scale: 60%
 
 ----
 
@@ -876,7 +876,7 @@ Configurations Tested
 
 .. figure:: img/perf-orphan.png
     :align: center
-    :scale: 30%
+    :scale: 60%
 
 ----
 
