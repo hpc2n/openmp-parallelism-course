@@ -35,19 +35,29 @@ OpenMP parallelism in scientific computing
    hpc2n-intro
    setup
    first-steps
-   data-handling
-   worksharing
-   data-handlingii
-   worksharingii
-   tasks
-   openmp-basics1
-   openmp-basics2
 
 .. toctree::
    :caption: Day 2
    :maxdepth: 1
    
+   data-handling
+   worksharing
+
+.. toctree::
+   :caption: Day 3
+   :maxdepth: 1
+
+   data-handlingii
+   worksharingii
+
+.. toctree::
+   :caption: Day 4
+   :maxdepth: 1
+   
+   tasks
    motivation
+   openmp-basics1
+   openmp-basics2
    task-basics-1
    task-basics-2
    task-basics-lu

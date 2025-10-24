@@ -1,6 +1,11 @@
 Worksharing and Scheduling
---------------------------
+==========================
 
+.. objectives::
+    
+    - Loop construct 
+    - Workshare construct 
+    - Section construct
 
 Worksharing constructs allow easy distribution of work onto threads:
 
@@ -23,7 +28,6 @@ Worksharing constructs allow easy distribution of work onto threads:
 Distributing Loops
 ^^^^^^^^^^^^^^^^^^
 
-
 Distributing large loops is a typical target for OpenMP parallelization.
 
 *Traditional Approach*
@@ -43,8 +47,6 @@ OpenMP offers the "loop construct" to ease loop parallelization:
 
 
 *The Loop Construct Features*
-
-The loop construct:
 
 - Distributes the following loop (C/C++/Fortran) onto threads
 - Makes the iteration variable automatically private
@@ -325,9 +327,9 @@ Scheduling Loop Iterations
 
 Previous examples assumed the same amount of work for each loop iteration. This is not always the case.
 
-*Examples of Uneven Work*
+**Examples of Uneven Work**
 
-**Summing over triangular area:**
+*Summing over triangular area:*
 
 .. code-block:: c
 
@@ -358,13 +360,7 @@ To help load balance in a loop construct, use the ``schedule`` clause:
 
     schedule(kind, [chunk_size])
 
-*Default Behavior*
-
-Default schedule is implementation-dependent (OpenMP 3.0).
-
-*Schedule Kinds*
-
-Choices for ``kind``:
+Default schedule is implementation-dependent (OpenMP 3.0). Choices for ``kind``:
 
 - ``static``
 - ``dynamic``
@@ -372,9 +368,7 @@ Choices for ``kind``:
 - ``auto``
 - ``runtime``
 
-
-*Static Scheduling*
-
+**Static Scheduling**
 
 1. Divide iteration count into chunks of equal size
    
@@ -404,9 +398,7 @@ Static scheduling has the **least overhead** compared to other schedules.
     T0 T1 T2 T3 T0 T1 T2 T3 T0 T1 T2 ...
 
 
-
 *Example: Summation Over Triangular Area (Static)*
-
 
 .. code-block:: fortran
 
@@ -478,7 +470,6 @@ Use dynamic scheduling when:
 
 
 **Guided Scheduling**
-
 
 Similar to dynamic, but with adaptive chunk sizes:
 
@@ -707,7 +698,6 @@ Use when the outer loop has sufficient iterations for good load balance.
 
 *Benefits*
 
-
 - Maximum parallelism exposure
 - Best for cases where individual loops have few iterations
 
@@ -825,8 +815,7 @@ The ``sections`` construct allows parallelization when code blocks can be execut
 - Code blocks may have different amounts of work
 - Mismatch between number of blocks and number of threads
 
-Real-World Application
-~~~~~~~~~~~~~~~~~~~~~~
+*Real-World Application*
 
 Example from research: "Acceleration of Semiempirical QM/MM methods," JCTC, 13, 3525-3536 (2017)
 
@@ -875,6 +864,178 @@ Example from research: "Acceleration of Semiempirical QM/MM methods," JCTC, 13, 
 .. note::
    The ``parallel sections`` directive combines the ``parallel`` and ``sections`` directives for convenience.
 
+
+.. challenge::
+
+    Parallelize a **for** loop which has 20 iterations by evenly divinding the number of interations 
+    among the available threads. Then use a variable *var1* to store the number of iterations in the loop.
+    **Hint** an *atomic* operation can help to protect *var1*. 
+
+.. solution::
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 6a-forworksharing-openmp.c -lm 
+        #include <stdio.h>
+        #ifdef _OPENMP
+        #include <omp.h>
+        #endif
+
+        int main()
+        {
+
+        int i,var1,var2,myWork;  
+        int n = 20; // number of iterations
+        var1 = 0;
+
+        #pragma omp parallel private(myWork, var2) shared(var1)
+            {
+        #ifdef _OPENMP
+            // The purpose of this code is to add 1 to var1 20 times
+            myWork = n/omp_get_num_threads();
+
+            for ( int i = myWork*omp_get_thread_num(); i < myWork*(1+omp_get_thread_num()); i++)
+                var2 += 1;
+
+            #pragma omp atomic update
+            var1 += var2;
+                
+        #else
+            printf("Serial code!\n");
+        #endif
+            }
+        
+            printf("var1 =  %i \n", var1);
+
+        return 0;
+        }
+
+.. challenge::
+
+    Parallelize the previous **for** loop code but this time using the loop construct.
+    **Hint** an *atomic* operation can help to protect *var2*. 
+    
+.. solution::
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 6b-forworksharing-openmp.c -lm 
+        #include <stdio.h>
+        #ifdef _OPENMP
+        #include <omp.h>
+        #endif
+
+        int main()
+        {
+
+        int i,var1;  
+        int n = 20; // number of iterations
+        var1 = 0;
+
+        #pragma omp parallel 
+            {
+        #ifdef _OPENMP
+            // The purpose of this code is to add 1 to var1 20 times
+        #pragma omp for 
+            for ( int i = 0; i < n; i++)
+                #pragma omp atomic update
+                var1 += 1;
+                
+        #else
+            printf("Serial code!\n");
+        #endif
+            }
+        
+            printf("var1 =  %i \n", var1);
+
+        return 0;
+        }
+
+.. challenge::
+
+    Use a critical region to protect a counter variable in a parallel loop that counts the stores the
+    number of iterations. Is this loop parallelization efficient? Why?
+
+.. solution::
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 8-critical-openmp.c -lm 
+        #include <stdio.h>
+        #ifdef _OPENMP
+        #include <omp.h>
+        #endif
+
+        int main()
+        {
+
+        int sum = 0;
+
+        #pragma omp parallel for
+            
+        #ifdef _OPENMP
+            for ( int i = 0; i < 10; i++) {
+                #pragma omp critical
+                {
+                    sum += i;
+                    printf("Thread %d added %d to sum, current sum = %d\n", omp_get_thread_num(), i, sum);
+                }
+            }
+        #else
+            printf("Serial code!\n");
+        #endif
+        
+            printf("Final sum = %d\n", sum);
+
+        return 0;
+        }
+
+.. challenge::
+
+    Create a Section in a parallel region to protect two blocks of code where the thread ID
+    is printed out in each block.
+
+.. solution::
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 6c-sectionsworksharing-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        int main() {
+            #pragma omp parallel num_threads(8)   // We have a total of 8 threads
+            {
+                #pragma omp sections
+                {
+                    #pragma omp section
+                    {
+                        printf("Section 1 executed by thread %d\n", omp_get_thread_num());
+                    }
+                    #pragma omp section
+                    {
+                        printf("Section 2 executed by thread %d\n", omp_get_thread_num());
+                    }
+                }
+            }
+            return 0;
+        }
 
 
 Summary

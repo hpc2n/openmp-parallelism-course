@@ -648,7 +648,9 @@ Compiler Flags
 
 .. challenge::
 
-    Query the threads' IDs and number of threads:   
+    Query the threads' IDs and number of threads in a parallel region.
+
+.. solution::
 
     .. code-block:: c
         :linenos:
