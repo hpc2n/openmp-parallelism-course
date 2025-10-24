@@ -34,6 +34,7 @@ OpenMP parallelism in scientific computing
 
    hpc2n-intro
    setup
+   profiling-analysis
    first-steps
 
 .. toctree::
