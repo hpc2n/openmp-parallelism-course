@@ -682,7 +682,7 @@ Results
 
 .. figure:: img/perf-nowait.png
     :align: center
-    :scale: 60%
+    :scale: 70%
 
 ----
 
@@ -876,7 +876,7 @@ Configurations Tested
 
 .. figure:: img/perf-orphan.png
     :align: center
-    :scale: 60%
+    :scale: 70%
 
 ----
 
@@ -919,6 +919,75 @@ Best Practices:
 - Document functions that contain orphan directives
 - Consider adding checks for parallel context if needed
 - Design functions to work correctly both inside and outside parallel regions
+
+
+.. challenge::
+
+    Inspect and run the following code where an orphan directive is used in *func1*
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 4-static-orphaned-openmp.c -lm 
+        #include <stdio.h>
+        #ifdef _OPENMP
+        #include <omp.h>
+        #endif
+
+        int func1(int var2)
+        {
+        int i;  
+        var2 = 0;
+
+        for ( int i = 0; i < 10; i++)
+        #pragma omp atomic update
+                var2 += 1;
+
+        return var2;
+        }
+
+        int main()
+        {
+
+        int i,var1,var2;  
+        var1 = 0;
+
+        // Static extent
+
+        #pragma omp parallel 
+            {
+            
+        #ifdef _OPENMP
+        #pragma omp for reduction(+:var1)
+            for ( int i = 0; i < 10; i++)
+                var1 += 1;
+                
+        #else
+            printf("Serial code!\n");
+        #endif
+            }
+        
+            printf("Static version: var1 =  %i \n", var1);
+
+        // Dynamic extent
+        int result = 0;
+        #pragma omp parallel reduction(+:result)
+            {
+            result += func1(var2); 
+        #ifdef _OPENMP
+        #else
+            printf("Serial code!\n");
+        #endif
+            }
+
+            printf("Dynamic version: result =  %i \n", result);     
+
+        return 0;
+        }
+
 
 
 Summary
