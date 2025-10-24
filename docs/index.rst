@@ -54,8 +54,8 @@ OpenMP parallelism in scientific computing
    :caption: Day 4
    :maxdepth: 1
    
-   tasks
    motivation
+   tasks
    openmp-basics1
    openmp-basics2
    task-basics-1
