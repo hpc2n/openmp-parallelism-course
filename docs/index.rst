@@ -56,11 +56,6 @@ OpenMP parallelism in scientific computing
    
    motivation
    tasks
-   openmp-basics1
-   openmp-basics2
-   task-basics-1
-   task-basics-2
-   task-basics-lu
 
 .. toctree::
    :caption: Miscellanous
