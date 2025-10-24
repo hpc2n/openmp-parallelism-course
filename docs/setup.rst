@@ -175,26 +175,11 @@ This passes the :code:`-Wall` flag to :code:`g++`. The flag causes the compiler 
             return 0;
         }
 
-Course project and reservation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    
-During the course, you can use the **course reservations** (snic2021-22-272-cpu-day[1|2|3] and snic2021-22-272-gpu-day[1|2|3]) to get faster access to the compute nodes. 
-The reservations are valid during the time 9:00-13:00 on each of the three days (10-12 May 2021). 
-Note that capitalization matters for reservations!
+Course project
+^^^^^^^^^^^^^^
 
-+-----------+--------------------------+--------------------------+
-| Day       | CPU only                 | CPU + GPU                |
-+===========+==========================+==========================+
-| Monday    | snic2021-22-272-cpu-day1 | snic2021-22-272-gpu-day1 |
-+-----------+--------------------------+--------------------------+
-| Tuesday   | snic2021-22-272-cpu-day2 | snic2021-22-272-gpu-day1 |
-+-----------+--------------------------+--------------------------+
-| Wednesday | snic2021-22-272-cpu-day3 | snic2021-22-272-gpu-day1 |
-+-----------+--------------------------+--------------------------+
-
-Note that jobs that are submitted using a reservation are not scheduled outside the reservation time window. 
-You can, however, submit jobs without the reservation as long as you are a member of an active project. 
-The **course project** :code:`SNIC2021-22-272` is valid until 2021-06-01.
+You can request to be a member of the course project hpc2n202w-xyz, where the letters
+need to be substituted by the actual numerical values for the project.
 
 Submitting jobs
 ^^^^^^^^^^^^^^^
@@ -211,7 +196,7 @@ For example, the following command prints the uptime of the allocated compute no
 
 .. code-block:: bash
 
-    $ srun --account=SNIC2021-22-272 --ntasks=1 --time=00:00:15 uptime
+    $ srun --account=hpc2n202w-xyz --ntasks=1 --time=00:00:15 uptime
     srun: job 12727702 queued and waiting for resources
     srun: job 12727702 has been allocated resources
      11:53:43 up 5 days,  1:23,  0 users,  load average: 23,11, 23,20, 23,27
@@ -222,7 +207,7 @@ When the **reservation** is valid, you can specify it using the :code:`--reserva
 
 .. code-block:: bash
 
-    $ srun --account=SNIC2021-22-272 --reservation=snic2021-22-272-cpu-day1 --ntasks=1 --time=00:00:15 uptime
+    $ srun --account=hpc2n202w-xyz --ntasks=1 --time=00:00:15 uptime
      11:58:43 up 6 days,  1:23,  0 users,  load average: 23,11, 22,20, 21,27
 
 were N in dayN is either 1, 2, 3 and cpu can be replaced with gpu if you are running a GPU job. 
@@ -231,7 +216,7 @@ We could submit **multiple tasks** using the :code:`--ntasks=<task count>` argum
 
 .. code-block:: bash
 
-    $ srun --account=SNIC2021-22-272 --reservation=snic2021-22-272-cpu-day1 --ntasks=4 --time=00:00:15 uname -n
+    $ srun --account=hpc2n202w-xyz --ntasks=4 --time=00:00:15 uname -n
     b-cn0932.hpc2n.umu.se
     b-cn0932.hpc2n.umu.se
     b-cn0932.hpc2n.umu.se
@@ -242,7 +227,7 @@ We could request **multiple CPU cores** for each task using the :code:`--cpus-pe
 
 .. code-block:: bash
 
-    $ srun --account=SNIC2021-22-272 --reservation=snic2021-22-272-cpu-day1 --ntasks=4 --cpus-per-task=14 --time=00:00:15 uname -n
+    $ srun --account=hpc2n202w-xyz --ntasks=4 --cpus-per-task=14 --time=00:00:15 uname -n
     b-cn0935.hpc2n.umu.se
     b-cn0935.hpc2n.umu.se
     b-cn0932.hpc2n.umu.se
@@ -252,7 +237,7 @@ If you want to measure the performance, it is advisable to request an **exclusiv
 
 .. code-block:: bash
 
-    $ srun --account=SNIC2021-22-272 --reservation=snic2021-22-272-cpu-day1 --ntasks=4 --cpus-per-task=14 --exclusive --time=00:00:15 uname -n
+    $ srun --account=hpc2n202w-xyz --ntasks=4 --cpus-per-task=14 --exclusive --time=00:00:15 uname -n
     b-cn0935.hpc2n.umu.se
     b-cn0935.hpc2n.umu.se
     b-cn0932.hpc2n.umu.se
@@ -262,7 +247,7 @@ Finally, we could request a **single Nvidia Tesla V100 GPU** and 14 CPU cores us
 
 .. code-block:: bash
 
-    $ srun --account=SNIC2021-22-272 --reservation=snic2021-22-272-gpu-day1 --ntasks=1 --gres=gpu:v100:1,gpuexcl --time=00:00:15 nvidia-smi
+    $ srun --account=hpc2n202w-xyz --ntasks=1 --gres=gpu:v100:1,gpuexcl --time=00:00:15 nvidia-smi
     Wed Apr 21 12:59:15 2021       
     +-----------------------------------------------------------------------------+
     | NVIDIA-SMI 460.67       Driver Version: 460.67       CUDA Version: 11.2     |
@@ -302,7 +287,7 @@ For example:
 
 .. code-block:: bash
 
-    $ alias run_full="srun --account=SNIC2021-22-272 --reservation=snic2021-22-272-cpu-day1 --ntasks=1 --cpus-per-task=28 --time=00:05:00"
+    $ alias run_full="srun --account=hpc2n202w-xyz --ntasks=1 --cpus-per-task=28 --time=00:05:00"
     $ run_full uname -n
     b-cn0932.hpc2n.umu.se
 
@@ -316,8 +301,7 @@ For example, we could write the following to a file called :code:`batch.sh`:
     :linenos:
 
     #!/bin/bash
-    #SBATCH --account=SNIC2021-22-272
-    #SBATCH --reservation=snic2021-22-272-cpu-day1
+    #SBATCH --account=hpc2n202w-xyz
     #SBATCH --ntasks=1
     #SBATCH --time=00:00:15
 

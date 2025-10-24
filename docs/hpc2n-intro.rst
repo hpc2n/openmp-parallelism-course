@@ -106,7 +106,7 @@ In total, Kebnekaise has
 Overview of projects, storage, and accounts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In order to use Kebnekaise, you must be a member of a compute project. This is handled through `SUPR <https://supr.snic.se/>`_ which is why you also need an account there. 
+In order to use Kebnekaise, you must be a member of a compute project. This is handled through `SUPR <https://supr.naiss.se/>`_ which is why you also need an account there. 
 
 **There are three sizes of compute projects**
 
@@ -154,9 +154,9 @@ HPC2N has a webpage with more information about `projects <https://www.hpc2n.umu
 
 **Accounts**
 
-When your project has been approved (or you have become a member of an approved project), you can apply for an account at HPC2N. This is done through SUPR, from the `account request page <https://supr.snic.se/account/>`_. 
+When your project has been approved (or you have become a member of an approved project), you can apply for an account at HPC2N. This is done through SUPR, from the `account request page <https://supr.naiss.se/account/>`_. 
 
-NOTE that if you have not signed the SNIC User Agreement we will not get the account request, so remember to do this! 
+NOTE that if you have not signed the NAISS User Agreement we will not get the account request, so remember to do this! 
 
 You can find more information about creating accounts here: https://www.hpc2n.umu.se/documentation/access-and-accounts/users 
 
@@ -323,11 +323,11 @@ There is more information about the filesystems at HPC2N here: https://www.hpc2n
 Project storage for this course
 """""""""""""""""""""""""""""""
 
-The project for this course is SNIC2021-22-272. It has default storage of 500 GB, and that is located in the default location: 
+The project for this course is hpc2n2025-xyz. It has default storage of 500 GB, and that is located in the default location: 
 
 .. code-block:: bash
 
-   /proj/nobackup/snic2021-22-272/
+   /proj/nobackup/hpc2n2025-xyz/
 
 Unless you ask for a different name for the directory when you apply for it you will get it named after the project's ID. 
 
