@@ -1,5 +1,5 @@
 More on Private Data
---------------------
+====================
 
 
 .. objectives::
@@ -29,6 +29,12 @@ In a parallel region, data can be either shared or private.
 - Normally uninitialized at beginning of parallel region
 - Contents typically lost when parallel region finishes
 - **However:** Connection to values before/after is often needed
+
+.. figure:: img/sm_3.png
+    :align: center
+    :scale: 30%
+
+----
 
 *Memory Layout*
 
@@ -1043,6 +1049,174 @@ In Fortran, you can make a ``COMMON`` block threadprivate:
     integer :: a, b, c
     COMMON /abccom/ a, b, c
     !$OMP threadprivate(/abccom/)
+
+
+.. challenge::
+
+    In a previous exercise, we parallelized a **for** loop which had 20 iterations by evenly divinding the 
+    number of interations among the available threads. An variable was used to store the number of iterations
+    in the loop and an *atomic* operation protected the data from race conditions. Rewrite this code but
+    now use the *reduction* operation.
+
+.. solution::
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 6b-forworksharing-openmp.c -lm 
+        #include <stdio.h>
+        #ifdef _OPENMP
+        #include <omp.h>
+        #endif
+
+        int main()
+        {
+
+        int i,var1;  
+        int n = 20; // number of iterations
+        var1 = 0;
+
+        #pragma omp parallel 
+            {
+        #ifdef _OPENMP
+            // The purpose of this code is to add 1 to var1 20 times
+        #pragma omp for reduction(+:var1)
+            for ( int i = 0; i < n; i++)
+                var1 += 1;
+                
+        #else
+            printf("Serial code!\n");
+        #endif
+            }
+        
+            printf("var1 =  %i \n", var1);
+
+        return 0;
+        }
+
+.. challenge::
+
+    In the following code, monitor the values of the variables at the different stages of the runtime.
+
+    .. code-block:: c
+        :linenos:
+ 
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 5b-datascope-openmp.c -lm 
+        #include <stdio.h>
+        #ifdef _OPENMP
+        #include <omp.h>
+        #endif
+
+        int main()
+        {
+
+        int var1, var2, var3;   // Three variables
+        var1 = 1;
+        var2 = 2;
+        var3 = 3;
+
+        #pragma omp parallel firstprivate(var1,var2) shared(var3)
+            {
+            
+        #ifdef _OPENMP
+            printf("var1 =  %i , var2 = %i , var3 = %i \n",var1,var2,var3);
+            var1 = 10;
+            var2 = 20;
+            var3 = 30;
+        #else
+            printf("Serial code!\n");
+        #endif
+            }
+        
+            printf("var1 =  %i , var2 = %i , var3 = %i \n",var1,var2,var3);
+
+
+        int x = 0; // variable to hold the value from the last iteration
+
+        #pragma omp parallel for lastprivate(x)
+        for (int i = 0; i < 10; i++) {
+            x = i; // x is private to each thread, but will retain value from the last iteration
+            printf("Thread %d: i = %d, x = %d\n", omp_get_thread_num(), i, x);
+        }
+
+        printf("After the loop, x = %d\n", x); // x has the value from the last iteration (n - 1)
+
+
+        return 0;
+        }
+
+.. challenge::
+
+    In the following code, monitor the values of the variable *counter* at the different stages of the runtime.
+
+    .. code-block:: c
+        :linenos:
+ 
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 7-threadprivate-openmp.c -lm 
+        #include <stdio.h>
+        #ifdef _OPENMP
+        #include <omp.h>
+        #endif
+
+        // declare a global variable
+        int counter;
+
+        // this variable is private to each thread
+        #pragma omp threadprivate(counter)
+
+        int main()
+        {
+
+        counter = 0;
+
+        #pragma omp parallel
+        {
+        #ifdef _OPENMP
+            int thread_id = omp_get_thread_num();
+            
+            // Each thread sets its private copy of 'counter'
+            counter = thread_id * 10;
+            printf("Thread %d: counter = %d\n", thread_id, counter);
+
+            // sync all threads
+            #pragma omp barrier
+
+            // Modify the thread-private variable
+            counter += 5;
+            printf("Thread %d after modification: counter = %d\n", thread_id, counter);
+        #else
+            printf("Serial code!\n");
+        #endif
+            }
+        
+        // Outside the parallel region, the main thread's 'counter' value is unaffected
+            printf("In main thread, counter = %d\n", counter); 
+
+        #pragma omp parallel
+        {
+        #ifdef _OPENMP
+            int thread_id = omp_get_thread_num();
+            
+            // print the value of 'counter' in another parallel region
+            printf("Thread %d: counter = %d in the second parallel region\n", thread_id, counter);
+
+        #else
+            printf("Serial code!\n");
+        #endif
+            }
+        
+        return 0;
+        }
+
 
 
 
