@@ -873,28 +873,15 @@ Configurations Tested
 2. Orphaned ``for`` in each function
 3. Orphaned ``for nowait`` in each function
 
-Results
+
+.. figure:: img/perf-orphan.png
+    :align: center
+    :scale: 30%
+
+----
 
 
-.. code-block:: text
-
-    Time (ms)
-    0.06 ┤
-         │                          ■ gcc: parallel for
-    0.05 ┤                          □ gcc: orphaned for
-         │                          ○ gcc: orphaned for nowait
-    0.04 ┤  ■                       ● icc: parallel for
-         │     ■                    ▲ icc: orphaned for
-    0.03 ┤        □                 △ icc: orphaned for nowait
-         │        ■  □
-    0.02 ┤           ○  ■  □  ○
-         │              ●  ▲  △
-    0.01 ┤
-         │
-       0 └─────┴─────┴─────┴─────┴─────
-            2     4     6     8    10  Cores
-
-Key Observations
+*Key Observations*
 
 
 - Orphaned directives perform **better** than creating new parallel regions
