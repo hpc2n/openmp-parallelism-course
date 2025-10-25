@@ -19,7 +19,7 @@
 
 #project = 'Task-based parallelism in scientific computing'
 project = 'OpenMP parallelism in scientific computing'
-copyright = '2021, The contributors'
+copyright = '2025, The contributors'
 author = 'Pedro Ojeda, Joachim Hein, and Mirko Myllykoski'
 github_user = 'hpc2n'
 #github_repo_name = 'Task-based-parallelism-course'  # auto-detected from dirname if blank

@@ -5,7 +5,7 @@ OpenMP-based parallelism in scientific computing
 
 **Content:** The course mainly focuses on the task-pragmas implemented in the newer incarnations of OpenMP. 
 
-**Format:** The course will be three half-days and comprised of lectures and hands-on sessions. This is an online-only course (Zoom).
+**Format:** The course will be three half-days and comprised of lectures and hands-on sessions. This is an on-site course.
 
 **Audience:** UMU course. 
 

@@ -1,7 +1,13 @@
 OpenMP parallelism in scientific computing
 ==============================================
 
-:Abstract: The purpose of the course is to learn when a code could benefit from task-based parallelism, and how to apply it. A task-based algorithm comprises of a set of self-contained tasks that have well-defined inputs and outputs. This differs from the common practice of organizing an implementation into subroutines in that a task-based implementation does not call the associated computation kernels directly, instead it is the role of a runtime system to schedule the task to various computational resources, such as CPU cores and GPUs. One of the main benefits of this approach is that the underlying parallelism is exposed automatically as the runtime system gradually traverses the resulting task graph.
+:Abstract: The purpose of the course is to learn when a code could benefit from OpenMP, including task-based 
+parallelism, and how to apply it. A task-based algorithm comprises of a set of self-contained tasks that have 
+well-defined inputs and outputs. This differs from the common practice of organizing an implementation into 
+subroutines in that a task-based implementation does not call the associated computation kernels directly, 
+instead it is the role of a runtime system to schedule the task to various computational resources, such as 
+CPU cores and GPUs. One of the main benefits of this approach is that the underlying parallelism is exposed 
+automatically as the runtime system gradually traverses the resulting task graph.
 
 :Content: The course mainly focuses on the task-pragmas implemented in the newer incarnations of OpenMP. 
 
@@ -9,9 +15,9 @@ OpenMP parallelism in scientific computing
 
 :Audience: ...
 
-:Date and Time: 2021-05-{10,11,12}, 9:00-12:00
+:Date and Time:  Nov.-Dec. 2025, 13:00-15:00
 
-:Location: Online through Zoom
+:Location: On-site
 
 :Instructors: Pedro Ojeda-May (pedro.ojeda-may@umu.se)
 
