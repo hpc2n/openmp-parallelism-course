@@ -1,13 +1,7 @@
 OpenMP parallelism in scientific computing
 ==============================================
 
-:Abstract: The purpose of the course is to learn when a code could benefit from OpenMP, including task-based 
-parallelism, and how to apply it. A task-based algorithm comprises of a set of self-contained tasks that have 
-well-defined inputs and outputs. This differs from the common practice of organizing an implementation into 
-subroutines in that a task-based implementation does not call the associated computation kernels directly, 
-instead it is the role of a runtime system to schedule the task to various computational resources, such as 
-CPU cores and GPUs. One of the main benefits of this approach is that the underlying parallelism is exposed 
-automatically as the runtime system gradually traverses the resulting task graph.
+:Abstract: The purpose of the course is to learn when a code could benefit from OpenMP, including task-based parallelism, and how to apply it. A task-based algorithm comprises of a set of self-contained tasks that have well-defined inputs and outputs. This differs from the common practice of organizing an implementation into subroutines in that a task-based implementation does not call the associated computation kernels directly, instead it is the role of a runtime system to schedule the task to various computational resources, such as CPU cores and GPUs. One of the main benefits of this approach is that the underlying parallelism is exposed automatically as the runtime system gradually traverses the resulting task graph.
 
 :Content: The course mainly focuses on the task-pragmas implemented in the newer incarnations of OpenMP. 
 
@@ -25,7 +19,7 @@ automatically as the runtime system gradually traverses the resulting task graph
 
 :Registration: ...
 
-:Acknowledgment: This material is based on the course created by Mirko Myllykoski (mirkom@cs.umu.se), and the OpenMP course by Joachim Hein (Lund University).
+:Acknowledgment: This material is based on the courses created by Joachim Hein (Lund University) and Mirko Myllykoski (Umeå University).
 
 .. prereq::
 
