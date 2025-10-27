@@ -300,7 +300,7 @@ The Roofline analysis provides insights into code performance:
 
 .. figure:: img/advisor6.png
     :align: center
-    :scale: 50%
+    :scale: 30%
 
 ----
 
