@@ -66,7 +66,7 @@ Workflow
     
     }
 
-- Copy/paste the following batch script for sending the jobs to the Kebnekaise's batch queue:
+- Copy/paste the following batch script *job_vtune.sh* for sending the jobs to the Kebnekaise's batch queue:
 
 .. code-block:: console
 
@@ -101,12 +101,31 @@ Workflow
 
 - Also correct the projectID. Then, submitthe job with **sbatch job_vtune.sh**.
 
-- In this script, the number of threads is set to 10 (it takes~2min.) for the Fibonacci number 56.
+- In this script, the number of threads is set to 10 (it takes ~ 2min.) for the Fibonacci number 56.
 
 - Once the job finishes. Load the Vtune module on the terminal: “ml VTune/2021.6.0” and load the gui: 
   *vtune-gui*. Then, load the “r*hs” project:
+
+.. figure:: img/vtune1.png
+    :align: center
+    :scale: 70%
+
+----
+
 
 - If you don't see a project, go to “Open Result” and choose the r*hs project and then the “*.vtune” file.
 `Intel's tutorial: <https://cdrdv2-public.intel.com/671480/vtune-tutorial-linux-finding-hotspots.pdf>`__
 
 - You can then see the different types of results for this “hotspots” analysis:
+
+.. figure:: img/vtune2.png
+    :align: center
+    :scale: 70%
+
+----
+
+.. figure:: img/vtune3.png
+    :align: center
+    :scale: 70%
+
+----
