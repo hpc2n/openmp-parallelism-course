@@ -1,13 +1,13 @@
-Profiling analysis with VTune
-=============================
+Profiling analysis with VTune and Advisor
+=========================================
 
 .. objectives::
     
     - Learn the profiling tool VTune for OpenMP codes
 
 
-Workflow
-^^^^^^^^
+VTune Workflow
+^^^^^^^^^^^^^^
 
 - Load your compiler tool: “ml foss”
 
@@ -129,3 +129,161 @@ Workflow
     :scale: 70%
 
 ----
+
+
+Advisor Workflow
+^^^^^^^^^^^^^^^^
+
+**Step 1: Compile Your Code**
+
+1. Load your compiler tool::
+
+    ml foss
+
+2. Compile your code::
+
+    gcc -O3 -march=native -g -o test.x fibonacci_recursion.c -lm
+
+3. Fix the paths to the directory where you obtained the executable ``test.x`` in the ``job_advisor.sh`` script. Also correct the project ID.
+
+4. Submit the job::
+
+    sbatch job_advisor.sh
+
+5. Note: This script for the Fibonacci number 50 takes approximately 6 minutes.
+
+----
+
+**Step 2: View Results with Advisor GUI**
+
+
+Once the job finishes:
+
+1. Load the Advisor module on the terminal::
+
+    ml Advisor/2023.2.0
+
+2. Launch the GUI::
+
+    advisor-gui
+
+3. Go to **Open Project**
+
+
+
+.. figure:: img/advisor1.png
+    :align: center
+    :scale: 70%
+
+----
+
+4. Find the ``advi_results`` folder
+
+
+
+.. figure:: img/advisor2.png
+    :align: center
+    :scale: 70%
+
+----
+
+5. Choose the ``advi_results.advixeproj`` file
+
+.. figure:: img/advisor3.png
+    :align: center
+    :scale: 70%
+
+----
+
+6. Click **Show Results**
+
+.. figure:: img/advisor4.png
+    :align: center
+    :scale: 70%
+
+----
+
+Measuring Code Performance
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*Performance Metrics Formula*
+
+**Floating Point Operations per second (FLOPS):**
+
+.. math::
+
+    \text{FLOPS} = \frac{\text{Nr.FLOP}}{1\text{sec}} = \frac{\text{Nr.FLOP}}{\text{Byte}} \times \frac{\text{Byte}}{\text{sec}}
+
+.. math::
+
+    = \text{Arithmetic Intensity (AI)} \times \text{Bandwidth (BW)}
+
+Roofline Model
+--------------
+
+.. figure:: img/advisor5.png
+    :align: center
+    :scale: 70%
+
+----
+
+The roofline model visualizes performance bottlenecks:
+
+- **X-axis:** Log(AI) - Arithmetic Intensity
+- **Y-axis:** Log(FLOPS) - Floating Point Operations per Second
+- **Diagonal line:** Represents memory bandwidth constraint
+- **Horizontal line:** Represents peak FLOPS (compute capability)
+
+**Performance Regions:**
+
+- **Memory Bound:** Performance limited by bandwidth (below the roofline intersection)
+- **Compute Bound:** Performance limited by computation capability (at the roofline ceiling)
+
+More details: https://www.telesens.co/2018/07/26/understanding-roofline-charts/
+
+
+Understanding Roofline Analysis Results
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The Roofline analysis provides insights into code performance:
+
+*Code Analytics Section*
+
+.. figure:: img/advisor6.png
+    :align: center
+    :scale: 70%
+
+----
+
+In the **Code Analytics** view, you can see:
+
+- **GFLOPS** = Giga floating point operations per second
+- **GINTOPS** = Giga integer operations per second
+
+These metrics show the number of operations per second (floating point or integers) for expensive functions in your code.
+
+Key Metrics Displayed
+----------------------
+
+- **Performance:** Operations per second for each function
+- **Arithmetic Intensity:** Ratio of compute operations to memory access
+- **Elapsed Time:** Time spent in each function
+- **Top Functions:** Most computationally expensive functions
+
+The visualization helps identify:
+
+- Whether your code is memory-bound or compute-bound
+- Optimization opportunities
+- Performance bottlenecks in specific functions
+
+----
+
+Summary
+=======
+
+Intel Advisor's Roofline analysis helps you:
+
+1. Understand performance characteristics of your code
+2. Identify optimization opportunities
+3. Determine if your code is limited by memory bandwidth or compute capability
+4. Focus optimization efforts on the most impactful areas
