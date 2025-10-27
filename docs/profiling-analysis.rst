@@ -108,7 +108,7 @@ VTune Workflow
 
 .. figure:: img/vtune1.png
     :align: center
-    :scale: 70%
+    :scale: 50%
 
 ----
 
@@ -120,13 +120,13 @@ VTune Workflow
 
 .. figure:: img/vtune2.png
     :align: center
-    :scale: 70%
+    :scale: 50%
 
 ----
 
 .. figure:: img/vtune3.png
     :align: center
-    :scale: 70%
+    :scale: 50%
 
 ----
 
@@ -251,7 +251,7 @@ The Roofline analysis provides insights into code performance:
 
 .. figure:: img/advisor6.png
     :align: center
-    :scale: 70%
+    :scale: 50%
 
 ----
 
