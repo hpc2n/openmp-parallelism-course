@@ -142,13 +142,62 @@ Advisor Workflow
 
 2. Compile your code::
 
+.. code-block:: c
+
+    // On cluster Kebnekaise
+    // ml foss
+    // gcc -O3 -march=native -g -o test.x fibonacci_recursion.c -lm
+    #include <stdio.h>
+    #include <stdlib.h>
+
+    unsigned long long fibbonacci(int n) {
+    if(n == 0){
+        return 0;
+    } else if(n == 1) {
+        return 1;
+    } else {
+        return (fibbonacci(n-1) + fibbonacci(n-2));
+    }
+    }
+
+    int main(int argc, char *argv[]) {
+    int n;
+    int i;
+        
+    if(argc > 1) 
+        n = atoi(argv[1]);
+    else
+    {
+        printf("Give n : "); scanf("%d", &n);
+    } 
+
+    printf("%llu ",fibbonacci(n));            
+    }
+
+
     gcc -O3 -march=native -g -o test.x fibonacci_recursion.c -lm
 
 3. Fix the paths to the directory where you obtained the executable ``test.x`` in the ``job_advisor.sh`` script. Also correct the project ID.
 
 4. Submit the job::
 
-    sbatch job_advisor.sh
+.. code-block:: console
+
+    #!/bin/bash
+    #SBATCH -A hpc2n202X-XYZ
+    #SBATCH -c 1
+    #SBATCH --time=00:10:00
+    #SBATCH --mail-type=END
+    #SBATCH -C skylake
+
+    # Load Intel Advisor tool
+    ml Advisor/2023.2.0
+    # Load foss
+    ml foss
+
+    advisor --collect=roofline --project-dir=./advi_results -- ./executable list-of-arguments    
+
+with the standard command: ``sbatch job_advisor.sh``
 
 5. Note: This script for the Fibonacci number 50 takes approximately 6 minutes.
 
