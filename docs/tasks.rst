@@ -652,7 +652,7 @@ Results Summary
 
 .. figure:: img/perf-fibo.png
     :align: center
-    :scale: 70%
+    :scale: 90%
 
 ----
 
@@ -725,7 +725,7 @@ Integration with Adaptive Refinement
 
 3. **Check difference** between the two integrals:
    
-   - Compare to threshold × interval length
+   - Compare to threshold * interval length
 
 4. **Decision:**
    
@@ -849,7 +849,7 @@ Configuration
 
 .. figure:: img/perf-res.png
     :align: center
-    :scale: 70%
+    :scale: 90%
 
 ----
 
@@ -1024,6 +1024,8 @@ Specifies the number of tasks to create.
 *Additional Restrictions*
 
 Final number of tasks may be affected by iteration count and other factors.
+
+
 
 
 Summary

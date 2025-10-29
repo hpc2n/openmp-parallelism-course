@@ -55,7 +55,6 @@ OpenMP parallelism in scientific computing
    :caption: Day 4
    :maxdepth: 1
    
-   motivation
    tasks
 
 .. toctree::
