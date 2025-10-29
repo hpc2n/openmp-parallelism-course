@@ -1025,7 +1025,37 @@ Specifies the number of tasks to create.
 
 Final number of tasks may be affected by iteration count and other factors.
 
+.. challenge::
 
+    Use two tasks where each prints out *Hello* and *World* strings. Use 4 threads. 
+
+.. solution::
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 12a-task-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        int main() {
+
+            #pragma omp parallel num_threads(4)
+            {
+
+                #pragma omp task
+                {printf("Hello\n");}
+
+                #pragma omp task
+                {printf("World\n");}
+
+            }
+
+            return 0;
+        }
 
 
 Summary
