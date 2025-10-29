@@ -104,16 +104,14 @@ This is normal and you should **NOT** force unload them.
        .. code-block:: bash
        
             $ ml purge
-            $ ml foss buildenv
     
        The :code:`foss` module loads the GNU compiler 
-       The :code:`buildenv` module sets certain environment variables that are necessary for source code compilation.
        
     2. Investigate which modules were loaded.
        
     3. Purge all modules.
        
-    4. Find the latest FOSS toolchain (:code:`foss`). Load it and the :code:`buildenv` module. 
+    4. Find the latest FOSS toolchain (:code:`foss`). 
        Investigate the loaded modules.
        Purge all modules.
 
