@@ -1057,6 +1057,95 @@ Final number of tasks may be affected by iteration count and other factors.
             return 0;
         }
 
+.. challenge::
+
+    Inspect and run the following code to see the behavior of shared, private, and first private variables in the context of tasks.
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 13a-sharedprivate-task-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        void process_task(int id, int *shared_data) {
+            printf("Task %d: shared_data = %d\n", id, *shared_data);
+        }
+
+        int main() {
+            int shared_data = 100; // variable that is shared across tasks
+            int private_data = 200; // variable is private to each task
+
+            #pragma omp parallel
+            {
+                #pragma omp single
+                {
+                    for (int i = 0; i < 4; i++) {
+                        int firstprivate_data = i * 10; // firstprivate variable: unique for each task but initialized with i * 10
+
+                        #pragma omp task shared(shared_data) private(private_data) firstprivate(firstprivate_data)
+                        {
+                            // here we modify the private_data variable, which is unique to each task
+                            private_data = i * 100;
+                            printf("Task %d: private_data = %d, firstprivate_data = %d\n", i, private_data, firstprivate_data);
+                            
+                            // Calling a function with shared data
+                            process_task(i, &shared_data);
+
+                            // Use an atomic op. for shared_data  or critical?
+                            #pragma omp atomic
+                            shared_data += 1;
+                        }
+                    }
+                }
+            }
+
+            printf("Final value of shared_data: %d\n", shared_data);
+
+            return 0;
+        }
+
+.. challenge::
+
+    Inspect and run the following code to see the behavior of first private variables in the context of tasks.
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 13b-firstprivate-task-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        void task_example() {
+            int n = 5; // a shared variable with an initial value
+
+            #pragma omp parallel
+            {
+                #pragma omp single
+                {
+                    for (int i = 0; i < 5; i++) {
+                        #pragma omp task private(n) firstprivate(n)
+                        {
+                            // n is private to each task, initialized with its value at task creation
+                            n += i; // Modify n for this task
+                            printf("Task %d: n = %d\n", i, n);
+                        }
+                    }
+                }
+            }
+        }
+
+        int main() {
+            task_example();
+            return 0;
+        }
+
 
 Summary
 ^^^^^^^
