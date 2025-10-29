@@ -99,14 +99,14 @@ This is normal and you should **NOT** force unload them.
 
 .. challenge::
 
-    1. Load the FOSS CUDA toolchain for source code compilation:
+    1. Load the FOSS toolchain for source code compilation:
  
        .. code-block:: bash
        
             $ ml purge
-            $ ml fosscuda/2020b buildenv
+            $ ml foss buildenv
     
-       The :code:`fosscuda/2020b` module loads the GNU compiler (version 2020b), the CUDA SDK and several other libraries. 
+       The :code:`foss` module loads the GNU compiler 
        The :code:`buildenv` module sets certain environment variables that are necessary for source code compilation.
        
     2. Investigate which modules were loaded.
@@ -120,7 +120,7 @@ This is normal and you should **NOT** force unload them.
 Compile C code
 ^^^^^^^^^^^^^^
 
-Once the correct toolchain (:code:`foss/2020b`) has been loaded, we can compile C source files (:code:`*.c`) with the GNU compiler:
+Once the correct toolchain (:code:`foss`) has been loaded, we can compile C source files (:code:`*.c`) with the GNU compiler:
 
 .. code-block:: bash
 
@@ -142,38 +142,6 @@ The :code:`-Wall` causes the compiler to print additional warnings.
             return 0;
         }
 
-Compile CUDA code
-^^^^^^^^^^^^^^^^^
-
-Once the correct toolchain (:code:`fosscuda/2020b`) has been loaded, we can compile CU source files (:code:`*.cu`) with the :code:`nvcc` compiler:
-
-.. code-block:: bash
-
-    $ nvcc -o <binary name> <sources> -Xcompiler="-Wall"
-
-This passes the :code:`-Wall` flag to :code:`g++`. The flag causes the compiler to print extra warnings.
-    
-.. challenge::
-
-    Compile the following "Hello world" program:
-    
-    .. code-block:: c
-        :linenos:
-    
-        #include <stdio.h>
-
-        __global__ void say_hello()
-        {
-            printf("A device says, Hello world!\n");
-        }
-
-        int main()
-        {
-            printf("The host says, Hello world!\n");
-            say_hello<<<1,1>>>();
-            cudaDeviceSynchronize();
-            return 0;
-        }
 
 Course project
 ^^^^^^^^^^^^^^
@@ -203,14 +171,6 @@ For example, the following command prints the uptime of the allocated compute no
 
 Note that we are using the course project, the number of tasks is set to one, and we are requesting 15 seconds.
 
-When the **reservation** is valid, you can specify it using the :code:`--reservation=<reservation>` argument:
-
-.. code-block:: bash
-
-    $ srun --account=hpc2n202w-xyz --ntasks=1 --time=00:00:15 uptime
-     11:58:43 up 6 days,  1:23,  0 users,  load average: 23,11, 22,20, 21,27
-
-were N in dayN is either 1, 2, 3 and cpu can be replaced with gpu if you are running a GPU job. 
 
 We could submit **multiple tasks** using the :code:`--ntasks=<task count>` argument:
 
@@ -243,33 +203,7 @@ If you want to measure the performance, it is advisable to request an **exclusiv
     b-cn0932.hpc2n.umu.se
     b-cn0932.hpc2n.umu.se
     
-Finally, we could request a **single Nvidia Tesla V100 GPU** and 14 CPU cores using the :code:`--gres=gpu:v100:1,gpuexcl` argument:
 
-.. code-block:: bash
-
-    $ srun --account=hpc2n202w-xyz --ntasks=1 --gres=gpu:v100:1,gpuexcl --time=00:00:15 nvidia-smi
-    Wed Apr 21 12:59:15 2021       
-    +-----------------------------------------------------------------------------+
-    | NVIDIA-SMI 460.67       Driver Version: 460.67       CUDA Version: 11.2     |
-    |-------------------------------+----------------------+----------------------+
-    | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
-    | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
-    |                               |                      |               MIG M. |
-    |===============================+======================+======================|
-    |   0  Tesla V100-PCIE...  On   | 00000000:58:00.0 Off |                    0 |
-    | N/A   33C    P0    26W / 250W |      0MiB / 16160MiB |      0%      Default |
-    |                               |                      |                  N/A |
-    +-------------------------------+----------------------+----------------------+
-                                                                                
-    +-----------------------------------------------------------------------------+
-    | Processes:                                                                  |
-    |  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
-    |        ID   ID                                                   Usage      |
-    |=============================================================================|
-    |  No running processes found                                                 |
-    +-----------------------------------------------------------------------------+
-
-    
 .. challenge::
 
     Run both "Hello world" programs on the the compute nodes.
@@ -350,3 +284,199 @@ You can **cancel** a job with the :code:`scancel` command:
 .. code-block:: bash
 
     $ scancel <job_id>
+
+What is High Performance Computing?
+"""""""""""""""""""""""""""""""""""
+
+*High Performance Computing most generally refers to the practice of aggregating computing power in a way that delivers much higher performance than one could get out of a typical desktop computer or workstation in order to solve large problems in science, engineering, or business.* (`insideHPC.com <https://insidehpc.com/hpc-basic-training/what-is-hpc/>`__)
+
+What does this mean?
+ - Aggregating computing power
+    - Kebnekaise: 602 nodes in 15 racks totalling 19288 cores
+    - Your laptop: 4 cores
+ - Higher performance
+    - Kebnekaise: 728,000 billion arithmetical operations per second
+    - Your laptop: 200 billion arithmetical operations per second
+ - Solve large problems
+    - **Time:** The time required to form a solution to the problem is very long.
+    - **Memory:** The solution of the problem requires a lot of memory and/or storage.
+
+.. figure:: img/hpc.png
+    :align: center
+    :scale: 70 %
+    
+Memory models
+"""""""""""""
+
+When it comes to the memory layout, (super)computers can be divided into two primary categories: 
+
+:Shared memory: A **single** memory space for all data:
+
+ - Everyone can access the same data.
+ - Straightforward to use.
+
+ .. figure:: img/sm.png
+    :align: left
+    :scale: 70 %
+    
+:Distributed memory: **Multiple distinct** memory spaces for the data:
+
+ - Everyone has direct access only to the **local data**.
+ - Requires **communication** and **data transfers**.
+
+ .. figure:: img/dm.png
+    :align: left
+    :scale: 70 %
+
+Computing clusters and supercomputers are generally distributed memory machines:
+    
+.. figure:: img/memory.png
+    :align: center
+    :scale: 70 %
+    
+Programming models
+""""""""""""""""""
+
+The programming model changes when we aim for extra performance and/or memory:
+
+:Single-core: Matlab, Python, C, Fortran, ...
+
+ - **Single stream of operations** (thread).
+ - **Single pool of data**.
+    
+ .. figure:: img/single-core.png
+    :align: left
+    :scale: 70 %
+
+:Multi-core: Vectorized Matlab, pthreads, **OpenMP**
+
+ - **Multiple** streams of operations (multiple threads).
+ - Single pool of data.
+ - Extra challenges:
+ 
+    - **Work distribution**.
+    - **Coordination** (synchronization, etc).
+
+ .. figure:: img/multi-core.png
+    :align: left
+    :scale: 70 %
+    
+:Distributed memory: **MPI**, ...
+
+ - Multiple streams of operations (multiple threads).
+ - **Multiple** pools of data.
+ - Extra challenges:
+ 
+    - Work distribution.
+    - Coordination (synchronization, etc).
+    - **Data distribution**.
+    - **Communication** and **data transfers**.
+
+ .. figure:: img/distributed-memory.png
+    :align: left
+    :scale: 70 %
+ 
+:Accelerators / GPUs: **CUDA**, OpenCL, OpenACC, OpenMP, ...
+
+ - Single/multiple streams of operations on the **host device**.
+ - Many **lightweight** streams of operations on the **accelerator**.
+ - Multiple pools of data on **multiple layers**.
+ - Extra challenges:
+ 
+    - Work distribution.
+    - Coordination (synchronization, etc).
+    - Data distribution across **multiple memory spaces**.
+    - Communication and data transfers.
+
+ .. figure:: img/gpu.png
+    :align: left
+    :scale: 70 %
+
+:Hybrid: MPI **+** OpenMP, OpenMP **+** CUDA, MPI **+** CUDA, ...
+
+ - Combines the benefits and the downsides of several programming models.
+ 
+ .. figure:: img/hybrid.png
+    :align: left
+    :scale: 65 %
+
+:Task-based: OpenMP tasks, StarPU
+
+ - Does task-based programming count as a separate programming model?
+ - StarPU = (implicit) MPI + (implicit) pthreads + CUDA
+    
+Functions and data dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Imagine the following computer program:
+
+.. code-block:: c
+    :linenos:
+    
+    #include <stdio.h>
+    
+    void function1(int a, int b) {
+        printf("The sum is %d.\n", a + b);
+    }
+    
+    void function2(int b) {
+        printf("The sum is %d.\n", 10 + b);
+    }
+    
+    int main() {
+        int a = 10, b = 7;
+        function1(a, b);
+        function2(b);
+        return 0;
+    }
+
+The program consists of two functions, :code:`function1` and :code:`function2`, that are called **one after another** from the :code:`main` function.
+The first function reads the variables :code:`a` and :code:`b`, and the second function reads the variable :code:`b`:
+
+.. figure:: img/functions_nodep.png
+
+The program prints the line :code:`The sum is 17.` twice.
+The key observation is that the two functions calls are **independent** of each other.
+More importantly, the two functions can be executed in **parallel**:
+
+.. figure:: img/functions_nodep_parallel.png
+
+Let us modify the the program slightly:
+
+.. code-block:: c
+    :linenos:
+    :emphasize-lines: 3-6,14
+    
+    #include <stdio.h>
+    
+    void function1(int a, int *b) {
+        printf("The sum is %d.\n", a + *b);
+        *b += 3;
+    }
+    
+    void function2(int b) {
+        printf("The sum is %d.\n", 10 + b);
+    }
+    
+    int main() {
+        int a = 10, b = 7;
+        function1(a, &b);
+        function2(b);
+        return 0;
+    }
+
+This time the function :code:`function1` modifies the variable :code:`b`:
+    
+.. figure:: img/functions_dep.png
+
+Therefore, the two function calls are **not** independent of each other and changing the order would change the printed lines.
+Furthermore, executing the two functions in parallel would lead to an **undefined result** as the execution order would be arbitrary.
+
+We could say that **in this particular context**, the function :code:`function2` is **dependent** on the function :code:`function1`.
+That is, the function :code:`function1` must be executed completely before the function :code:`function2` can be executed:
+
+.. figure:: img/functions_dep_explicit.png
+
+However, this **data dependency** exists only when these two functions are called in this particular sequence using these particular arguments.
+In a different context, this particular data dependency does not exists.
+We can therefore conclude that the **data dependencies are separate from the functions definitions**.
