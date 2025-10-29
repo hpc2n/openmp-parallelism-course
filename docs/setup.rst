@@ -5,7 +5,6 @@ Introduction to Kebnekaise
 
  - Learn how to load the necessary modules on Kebnekaise.
  - Learn how to compile C code on Kebnekaise.
- - Learn how to compile CUDA code on Kebnekaise.
  - Learn how to place jobs to the batch queue.
  - Learn how to use the course project and reservations.
 
@@ -398,10 +397,9 @@ The programming model changes when we aim for extra performance and/or memory:
     :align: left
     :scale: 65 %
 
-:Task-based: OpenMP tasks, StarPU
+:Task-based: OpenMP tasks
 
  - Does task-based programming count as a separate programming model?
- - StarPU = (implicit) MPI + (implicit) pthreads + CUDA
     
 Functions and data dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
