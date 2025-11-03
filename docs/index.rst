@@ -35,12 +35,12 @@ OpenMP parallelism in scientific computing
    hpc2n-intro
    setup
    profiling-analysis
-   first-steps
 
 .. toctree::
    :caption: Day 2
    :maxdepth: 1
    
+   first-steps
    data-handling
    worksharing
 
