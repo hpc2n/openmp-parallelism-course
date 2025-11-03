@@ -37,7 +37,6 @@ Application experts (AE)
  - Pedro Ojeda-May
 
 System and support
- - Erik Andersson
  - Birgitte Brydsö (also AE)
  - Niklas Edmundsson
  - Roger Oscarsson
@@ -56,37 +55,22 @@ HPC2N's supercomputer is called **Kebnekaise**. It is named after a massif which
    
 **Kebnekaise compute nodes**
 
-+------------+--------+-----------------------------------+
-| Type       | #      | Description                       |
-+============+========+===================================+
-| Broadwell  |        | Intel Xeon E5-2690v4,             |
-|            | 432    | 2 x 14 cores, 128 GB,             |
-|            |        | FDR Infiniband                    |
-+------------+--------+-----------------------------------+
-| Skylake    |        | Intel Xeon Gold 6132,             |
-|            | 52     | 2 x 14 cores, 192 GB,             |
-|            |        | EDR Infiniband, AVX-512           |
-+------------+--------+-----------------------------------+
-| Large      |        | Intel Xeon E7-8860v4,             |
-| Memory     | 20     | 4 x 18 cores, 3072 GB,            |
-|            |        | EDR Infiniband                    |
-+------------+--------+-----------------------------------+
-| KNL        | 36     | Intel Xeon Phi 7250,              | 
-|            |        | 68 cores, 192 GB,                 |
-|            |        | 16 GB MCDRAM, FDR Infiniband      |
-+------------+--------+-----------------------------------+
+
++---------------------------+------------------+-----------------+---------------------------+
+| CPU                       | Memory/core      | Nr. nodes       |     Type                  |
++===========================+==================+=================+===========================+
+| 2 x 14 core Intel skylake | 6785 MB          | 52              | skylake (intel_cpu)       | 
++---------------------------+------------------+-----------------+---------------------------+
+| 2 x 64 core AMD zen3      | 8020 MB          | 1               | zen3 (amd_cpu)            | 
++---------------------------+------------------+-----------------+---------------------------+
+| 2 x 128 core AMD zen4.    | 2516 MB          | 8               | zen4 (amd_cpu)            | 
++---------------------------+------------------+-----------------+---------------------------+
 
 **Kebnekaise GPU nodes** 
 
 +------------+--------+-------------------------------------------------------------+
 | Type       | #      | Description                                                 |
 +============+========+=============================================================+
-| 2xGPU      | 32     |   Intel Xeon E5-2690v4,  2 x 14 cores,                      |
-| K80        |        |   2 x NVidia K80, 4 x 2496 CUDA cores                       |
-+------------+--------+-------------------------------------------------------------+
-| 4xGPU      | 4      |   Intel Xeon E5-2690v4, 2 x 14 cores,                       |
-| K80        |        |   4 x NVidia K80, 8 x 2496 CUDA cores                       |
-+------------+--------+-------------------------------------------------------------+
 | 2xGPU      | 10     | | Intel Xeon Gold 6132, 2 x 14 cores,                       |
 | V100       |        | | 2 x NVidia V100, 2 x 5120 CUDA cores, 2 x 640 Tensorcores | 
 +------------+--------+-------------------------------------------------------------+
@@ -150,7 +134,7 @@ Project storage is shared among the project members.
    
 The compute project and the storage project can be linked together so members of the compute project automatically becomes members of the storage project. 
 
-HPC2N has a webpage with more information about `projects <https://www.hpc2n.umu.se/account/project>`_.  
+HPC2N has a webpage with more information about `projects <https://docs.hpc2n.umu.se/documentation/projects/>`_.  
 
 **Accounts**
 
@@ -158,7 +142,7 @@ When your project has been approved (or you have become a member of an approved 
 
 NOTE that if you have not signed the NAISS User Agreement we will not get the account request, so remember to do this! 
 
-You can find more information about creating accounts here: https://www.hpc2n.umu.se/documentation/access-and-accounts/users 
+You can find more information about creating accounts `here <https://docs.hpc2n.umu.se/documentation/accounts-rules/>`_.
 
 Connecting to HPC2N's systems and transferring files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -168,23 +152,23 @@ In order to login to HPC2N, you need an SSH client and potentially an X11 server
 If you are using Windows and do not currently have a preferred setup for connecting, we recommend using ThinLinc since that includes everything needed and is quick to install. 
 
 Guides
- - ThinLinc (all OS): https://www.hpc2n.umu.se/documentation/guides/thinlinc
+ - ThinLinc (all OS): https://docs.hpc2n.umu.se/tutorials/connections/#thinlinc
  - Various SSH clients and X11 servers: 
 
-   - Linux: https://www.hpc2n.umu.se/documentation/guides/linux-connection
-   - Windows: https://www.hpc2n.umu.se/documentation/guides/windows-connection
-   - macOS: https://www.hpc2n.umu.se/documentation/guides/mac-connection   
+   - Linux: https://docs.hpc2n.umu.se/tutorials/connections/#connecting__from__linuxunix
+   - Windows: https://docs.hpc2n.umu.se/tutorials/connections/#connecting__from__windows
+   - macOS: https://docs.hpc2n.umu.se/tutorials/connections/#connecting__from__macos
 
 **Password**
 
-You get your first, temporary HPC2N password from this page: https://www.hpc2n.umu.se/forms/user/suprauth?action=pwreset 
+You get your first, temporary HPC2N password from this page: https://docs.hpc2n.umu.se/documentation/access/#first__time__login__password__change
 
 The above page can also be used to reset your HPC2N password if you have forgotten it. 
 
 Note that you are authenticating through SUPR, using that service's login credentials! 
 
 Logging in to Kebnekaise
-""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Remember, the username and password for HPC2N are separate from your SUPR credentials. 
 
@@ -223,7 +207,7 @@ All your files on HPC2N should now be available.
     Login to HPC2N using ThinLinc or your SSH client of choice.
 
 File transfers
-""""""""""""""
+^^^^^^^^^^^^^^
 
 You will often need to tranfer files between different systems, for instance between HPC2N and your own computer. There are several clients for this. 
 

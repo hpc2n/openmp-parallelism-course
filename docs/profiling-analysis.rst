@@ -312,7 +312,7 @@ In the **Code Analytics** view, you can see:
 These metrics show the number of operations per second (floating point or integers) for expensive functions in your code.
 
 Key Metrics Displayed
-----------------------
+---------------------
 
 - **Performance:** Operations per second for each function
 - **Arithmetic Intensity:** Ratio of compute operations to memory access
@@ -325,10 +325,10 @@ The visualization helps identify:
 - Optimization opportunities
 - Performance bottlenecks in specific functions
 
-----
+
 
 Summary
-=======
+^^^^^^^
 
 Intel Advisor's Roofline analysis helps you:
 
