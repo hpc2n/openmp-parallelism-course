@@ -11,7 +11,8 @@ VTune Workflow
 
 - Load your compiler tool: “ml foss”
 
-- Copy/paste the following C code that contains an OpenMP parallel implementation:
+- Copy/paste the following C code that contains an OpenMP parallel implementation (at this point you are not
+expected to understand the OpenMP directives):
 
 .. code-block:: c
 
@@ -103,8 +104,8 @@ VTune Workflow
 
 - In this script, the number of threads is set to 10 (it takes ~ 2min.) for the Fibonacci number 56.
 
-- Once the job finishes. Load the Vtune module on the terminal: “ml VTune/2021.6.0” and load the gui: 
-  *vtune-gui*. Then, load the “r*hs” project:
+- Once the job finishes. Load the Vtune module on the terminal: ``ml VTune/2021.6.0`` and load the gui: 
+  *vtune-gui*. Then, load the ``r*hs`` project:
 
 .. figure:: img/vtune1.png
     :align: center
@@ -113,10 +114,10 @@ VTune Workflow
 ----
 
 
-- If you don't see a project, go to “Open Result” and choose the r*hs project and then the “*.vtune” file.
+- If you don't see a project, go to *Open Result* and choose the ``r*hs`` project and then the ``*.vtune`` file.
 `Intel's tutorial: <https://cdrdv2-public.intel.com/671480/vtune-tutorial-linux-finding-hotspots.pdf>`__
 
-- You can then see the different types of results for this “hotspots” analysis:
+- You can then see the different types of results for this *hotspots* analysis:
 
 .. figure:: img/vtune2.png
     :align: center
