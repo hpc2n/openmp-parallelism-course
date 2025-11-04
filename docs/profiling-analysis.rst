@@ -9,7 +9,7 @@ Profiling analysis with VTune and Advisor
 VTune Workflow
 ^^^^^^^^^^^^^^
 
-- Load your compiler tool: “ml foss”
+- Load your compiler tool: ``ml foss``
 
 - Copy/paste the following C code that contains an OpenMP parallel implementation (at this point you are not
 expected to understand the OpenMP directives):
