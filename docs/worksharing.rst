@@ -1037,6 +1037,43 @@ Example from research: "Acceleration of Semiempirical QM/MM methods," JCTC, 13, 
             return 0;
         }
 
+.. challenge::
+
+    Create two nested parallel region with 2 threads each and print out the thread IDs for the
+    two inner and the outer threads.
+
+.. solution::
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 11-nested-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        int main() {
+            // enabling/disabling nested parallelism
+            omp_set_nested(1);
+
+            #pragma omp parallel num_threads(2)
+            {
+                int outer_tid = omp_get_thread_num();
+                printf("Outer thread %d in outer parallel region\n", outer_tid);
+
+                #pragma omp parallel num_threads(2)
+                {
+                    int inner_tid = omp_get_thread_num();
+                    printf("    Inner thread %d in inner parallel region but outer thread %d\n", inner_tid, outer_tid);
+                }
+            }
+
+            return 0;
+        }
+
+
 
 Summary
 ^^^^^^^
