@@ -1147,6 +1147,61 @@ Final number of tasks may be affected by iteration count and other factors.
         }
 
 
+.. challenge::
+
+    The following function takes an integer as input, and writes the thread number that handles
+    the execution of the function. Use ``tasks`` to parallelize a *for* loop where each task 
+    executes this function:
+
+    .. code-block:: c
+        :linenos:
+
+        void process_element(int i) {
+            // do some work for each element by printing out the thread ID excuting this work
+            printf("Processing element %d in thread %d\n", i, omp_get_thread_num());
+        }
+
+.. solution::
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 12c-task-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        void process_element(int i) {
+            // do some work for each element by printing out the thread ID excuting this work
+            printf("Processing element %d in thread %d\n", i, omp_get_thread_num());
+        }
+
+        int main() {
+            int n = 10;
+
+            #pragma omp parallel
+            {
+                // single directive ensures that only one thread generates tasks
+                #pragma omp single
+                {
+                    for (int i = 0; i < n; i++) {
+                        // Create a new task for each array element
+                        #pragma omp task
+                        {
+                        process_element(i);
+                        }
+                    }
+                printf("Generating tasks \n");
+                }
+            }
+
+            return 0;
+        }
+
+
+
 Summary
 ^^^^^^^
 
