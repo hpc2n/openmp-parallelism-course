@@ -247,6 +247,273 @@ Consider this code:
    - Who executes code block 2
    - When code block 2 is finished
 
+.. challenge::
+
+    Use two tasks where each prints out *Hello* and *World* strings. Use 4 threads. 
+
+.. solution::
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 12a-task-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        int main() {
+
+            #pragma omp parallel num_threads(4)
+            {
+
+                #pragma omp task
+                {printf("Hello\n");}
+
+                #pragma omp task
+                {printf("World\n");}
+
+            }
+
+            return 0;
+        }
+
+.. challenge::
+
+    Inspect and run the following code to see the behavior of shared, private, and first private variables in the context of tasks.
+    Notice that one can use **atomic updates** together with tasks.
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 13a-sharedprivate-task-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        void process_task(int id, int *shared_data) {
+            printf("Task %d: shared_data = %d\n", id, *shared_data);
+        }
+
+        int main() {
+            int shared_data = 100; // variable that is shared across tasks
+            int private_data = 200; // variable is private to each task
+
+            #pragma omp parallel
+            {
+                #pragma omp single
+                {
+                    for (int i = 0; i < 4; i++) {
+                        int firstprivate_data = i * 10; // firstprivate variable: unique for each task but initialized with i * 10
+
+                        #pragma omp task shared(shared_data) private(private_data) firstprivate(firstprivate_data)
+                        {
+                            // here we modify the private_data variable, which is unique to each task
+                            private_data = i * 100;
+                            printf("Task %d: private_data = %d, firstprivate_data = %d\n", i, private_data, firstprivate_data);
+                            
+                            // Calling a function with shared data
+                            process_task(i, &shared_data);
+
+                            // Use an atomic op. for shared_data  or critical?
+                            #pragma omp atomic
+                            shared_data += 1;
+                        }
+                    }
+                }
+            }
+
+            printf("Final value of shared_data: %d\n", shared_data);
+
+            return 0;
+        }
+
+.. challenge::
+
+    Inspect and run the following code to see the behavior of first private variables in the context of tasks.
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 13b-firstprivate-task-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        void task_example() {
+            int n = 5; // a shared variable with an initial value
+
+            #pragma omp parallel
+            {
+                #pragma omp single
+                {
+                    for (int i = 0; i < 5; i++) {
+                        #pragma omp task private(n) firstprivate(n)
+                        {
+                            // n is private to each task, initialized with its value at task creation
+                            n += i; // Modify n for this task
+                            printf("Task %d: n = %d\n", i, n);
+                        }
+                    }
+                }
+            }
+        }
+
+        int main() {
+            task_example();
+            return 0;
+        }
+
+
+.. challenge::
+
+    The following function takes an integer as input, and writes the thread number that handles
+    the execution of the function. Use ``tasks`` to parallelize a *for* loop where each task 
+    executes this function:
+
+    .. code-block:: c
+        :linenos:
+
+        void process_element(int i) {
+            // do some work for each element by printing out the thread ID excuting this work
+            printf("Processing element %d in thread %d\n", i, omp_get_thread_num());
+        }
+
+.. solution::
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 12c-task-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        void process_element(int i) {
+            // do some work for each element by printing out the thread ID excuting this work
+            printf("Processing element %d in thread %d\n", i, omp_get_thread_num());
+        }
+
+        int main() {
+            int n = 10;
+
+            #pragma omp parallel
+            {
+                // single directive ensures that only one thread generates tasks
+                #pragma omp single
+                {
+                    for (int i = 0; i < n; i++) {
+                        // Create a new task for each array element
+                        #pragma omp task
+                        {
+                        process_element(i);
+                        }
+                    }
+                printf("Generating tasks \n");
+                }
+            }
+
+            return 0;
+        }
+
+Allowing Suspension of Current Task
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*taskyield Construct*
+
+At a ``taskyield`` construct, the current task can be suspended to execute a different task.
+
+Syntax
+
+**Fortran:**
+
+.. code-block:: fortran
+
+    !$omp taskyield
+
+**C:**
+
+.. code-block:: c
+
+    #pragma omp taskyield
+
+*Use Case*
+
+Allows the runtime to schedule other tasks while waiting for resources or dependencies.
+
+.. challenge::
+
+    Inspect and run the following code to see the behavior of *taskyield* in the context of tasks.
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 17-taskyield-openmp.c -lm 
+        // ml GCCcore/12.3.0 Clang/16.0.6
+        // clang -O3 -fopenmp -o test.x 17-taskyield-openmp.c
+        #include <omp.h>
+        #include <stdio.h>
+        #include <unistd.h>
+        #include <stdlib.h>
+
+        void something_useful(int id,int random_time) {
+            sleep(random_time); // Simulate work
+            printf("Task %d: did something useful on thread %d\n", id, omp_get_thread_num());
+        }
+
+        void something_critical(int id,int random_time) {
+            sleep(random_time); // Simulate longer work
+            printf("Task %d: did something critical on thread %d\n", id, omp_get_thread_num());
+        }
+
+        void foo(omp_lock_t *lock, int n) {
+            srand(1999); // seed the random number generator
+            int min = 1, max = 10;
+            for (int i = 0; i < n; i++) {
+                int random_time1 = rand() % (max - min + 1) + min;
+                int random_time2 = rand() % (max - min + 1) + min;
+                #pragma omp task
+                {
+                    something_useful(i,random_time1);
+
+                    // Use taskyield to allow other tasks to execute while waiting
+                    while (!omp_test_lock(lock)) {
+                        #pragma omp taskyield
+                        sleep(5);
+                    }
+
+                    something_critical(i,random_time2);
+                    omp_unset_lock(lock);
+                }
+            }
+        }
+
+        int main() {
+            int n = 10; // Number of tasks
+            omp_lock_t lock;
+            omp_init_lock(&lock);
+
+            #pragma omp parallel
+            {
+                #pragma omp single
+                foo(&lock, n);
+            }
+
+            omp_destroy_lock(&lock);
+            return 0;
+        }
+
+
 
 Controlling When Tasks Finish
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -276,31 +543,60 @@ Controlling When Tasks Finish
    Instead of waiting, a thread can execute tasks generated elsewhere.
 
 
+.. challenge::
 
-Allowing Suspension of Current Task
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    Inspect and run the following code to see the behavior of *taskwait* and *barrier* in the context of tasks.
 
-*taskyield Construct*
+    .. code-block:: c
+        :linenos:
 
-At a ``taskyield`` construct, the current task can be suspended to execute a different task.
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 19-taskwait-barrier-openmp.c -lm 
+        // ml GCCcore/12.3.0 Clang/16.0.6
+        // clang -O3 -fopenmp -o test.x 19-taskwait-barrier-openmp.c
+        #include <stdio.h>
+        #include <omp.h>
+        #include <unistd.h>
 
-Syntax
+        void process_task(int task_id) {
+            printf("task %d started by thread %d\n", task_id, omp_get_thread_num());
+            #pragma omp taskyield
+            // do some work
+            sleep(3);
+            printf("task %d completed by thread %d\n", task_id, omp_get_thread_num());
+        }
 
-**Fortran:**
+        int main() {
+            #pragma omp parallel
+            {
+                #pragma omp single
+                {
+                    // create some initial tasks set of tasks
+                    for (int i = 0; i < 3; i++) {
+                        #pragma omp task
+                        process_task(i);
+                    }
 
-.. code-block:: fortran
+                    // wait for all tasks created up to now
+                    #pragma omp taskwait
+                    printf("All tasks at this level completed, but children,grandchildren tasks may still be running.\n");
 
-    !$omp taskyield
+                    // Second set of tasks
+                    for (int i = 3; i < 6; i++) {
+                        #pragma omp task
+                        process_task(i);
+                    }
+                }
+                // A Barrier synchronizes all threads in the parallel region
+                #pragma omp barrier
+                printf("All threads have reached the barrier.\n");
+            }
 
-**C:**
+            return 0;
+        }
 
-.. code-block:: c
-
-    #pragma omp taskyield
-
-*Use Case*
-
-Allows the runtime to schedule other tasks while waiting for resources or dependencies.
 
 
 
@@ -369,6 +665,50 @@ If the expression evaluates to ``.false.``:
 - Encountering thread executes code body directly (included task)
 - No task creation overhead
 
+.. challenge::
+
+    Inspect and run the following code to see the behavior of *if* clause in the context of tasks.
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 15-ifclause-task-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        void process_task(int task_id) {
+            printf("Processing iteration task %d in thread %d\n", task_id, omp_get_thread_num());
+        }
+
+        int main() {
+            int n = 5; // Threshold for deciding if the task is executed synchronously or asynchrously
+
+            #pragma omp parallel
+            {
+                #pragma omp single
+                {
+                    for (int i = 0; i < 10; i++) {
+                        // the task creation will depend on the value of "i" and the clause with "if" condition
+                        #pragma omp task if(i > n) // Tasks with i > n are deferred; others run in the current thread
+                        {
+                        process_task(i);
+
+                        // childrens behave as regular tasks (can be deferred)
+                        #pragma omp task
+                        {
+                            printf("Nested task for %d in thread %d\n", i, omp_get_thread_num());
+                        }
+                        }
+                    }
+                }
+            }
+
+            return 0;
+        }
+
 
 Final Tasks
 ^^^^^^^^^^^
@@ -394,6 +734,54 @@ If the expression evaluates to ``.true.``:
 
 Prevents excessive task creation in deep recursion by serializing once a certain depth is reached.
 
+.. challenge::
+
+    Inspect and run the following code to see the behavior of *final* clause in the context of tasks.
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 16-finalclause-task-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        void process_task(int task_id) {
+            printf("Processing iteration task %d in thread %d\n", task_id, omp_get_thread_num());
+        }
+
+        int main() {
+            int n = 5; // Threshold for the final clause
+
+            #pragma omp parallel
+            {
+                #pragma omp single
+                {
+                    for (int i = 0; i < 10; i++) {
+                        // when i <= n, the task and its child tasks are final and included
+                        // when i > n, task is final and child tasks are regular tasks
+                        #pragma omp task final(i <= n)
+                        {
+                            process_task(i);
+
+                            #pragma omp task 
+                            {
+                                printf("Nested task for %d in thread %d\n", i, omp_get_thread_num());
+                                #pragma omp task 
+                                {
+                                printf("Subnested task for %d in thread %d\n", i, omp_get_thread_num());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return 0;
+        }
+
+
 Mergeable Tasks
 ^^^^^^^^^^^^^^^
 
@@ -418,6 +806,47 @@ For an undeferred or included task, the implementation may:
 *Use Case*
 
 Often used with ``final`` clause for optimization at deep recursion levels.
+
+.. challenge::
+
+    Inspect and run the following code to see the behavior of *mergeable* clause in the context of tasks.
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 18b-mergeable-task-openmp.c -lm 
+        // ml GCCcore/12.3.0 Clang/16.0.6
+        // clang -O3 -fopenmp -o test.x 18b-mergeable-task-openmp.c
+        #include <omp.h>
+        #include <stdio.h>
+
+        void process_task(int task_id) {
+            printf("Processing task %d on thread %d\n", task_id, omp_get_thread_num());
+        }
+
+        int main() {
+            int n = 10; // nr. of iterations
+            
+            #pragma omp parallel
+            {
+                #pragma omp single
+                {
+                    for (int i = 0; i < n; i++) {
+                        // tasks with the mergeable clause
+                        #pragma omp task mergeable
+                        {
+                            process_task(i);
+                        }
+                    }
+                }
+            }
+            
+            return 0;
+        }
+
 
 Task Scheduling Points
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -933,6 +1362,66 @@ The list contains variables, which may include array sections.
 - Runtime can optimize scheduling within dependency constraints
 - More flexible than barriers
 
+.. challenge::
+
+    Inspect and run the following code to see the behavior of dependencies in the context of tasks.
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 14-lifecycle-task-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        int taskA(int *a) {
+            *a += 1;
+            printf("Executing taskA, a=%d\n",*a);
+        }
+
+        int taskB(int *a, int *b) {
+            *a += 1;
+            *b += 1;
+            printf("Executing taskB, a=%d  b=%d\n", *a,*b);
+        }
+
+        int taskC(int *a, int *b, int *c) {
+            *a += 1;
+            *b += 1;
+            *c += 1;
+            printf("Executing taskC, a=%d  b=%d  c=%d\n",*a,*b,*c);
+        }
+
+        int main() {
+
+            int a = 0;
+            int b = 0;
+            int c = 0;
+
+            #pragma omp parallel
+            {
+                #pragma omp single
+                {
+                    #pragma omp task depend(out : a)
+                    taskA(&a);  // taskA runs independently
+
+                    #pragma omp task depend(in : a) depend(out : b)
+                    taskB(&a,&b);  // taskB is suspended until taskA completes
+                                // when dependencies are satisfied the task is resumed 
+                                // and is ready to continue
+
+                    #pragma omp task depend(in : b)
+                    taskC(&a,&b,&c);  // taskC is suspended until taskB completes
+        
+                }
+            }
+            return 0;
+        }
+
+
+
 taskloop Construct (OpenMP 4.5)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -994,6 +1483,78 @@ Clauses introduced previously that work with ``taskloop``:
 
 There is also a ``taskloop simd`` construct for vectorization.
 
+.. challenge::
+
+    Inspect and run the following code to see the behavior of *taskloop* in the context of tasks.
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 20a-taskloop-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        void process_iteration(int i) {
+            printf("Processing iteration %d in thread %d\n", i, omp_get_thread_num());
+        }
+
+        int main() {
+            int n = 10; // Number of iterations
+
+            #pragma omp parallel
+            {
+                // Use taskloop to distribute iterations as tasks
+                #pragma omp single
+                {
+                    #pragma omp taskloop
+                    for (int i = 0; i < n; i++) {
+                        process_iteration(i);
+                    }
+                }
+            }
+
+            return 0;
+        }
+
+.. challenge::
+
+    Inspect and run the following code to see the behavior of *taskloop* in the context of tasks.
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=1 
+        // gcc -O3 -march=native -fopenmp -o test.x 20b-taskloop-openmp.c -lm 
+        #include <stdio.h>
+        #include <omp.h>
+
+        int main() {
+            int n = 2000; // Number of iterations
+            int sumR = 0; // Summation
+            #pragma omp parallel shared(sumR) 
+            {
+                // Use taskloop to distribute iterations as tasks
+                #pragma omp single
+                {
+                    #pragma omp taskloop
+                    for (int i = 0; i < n; i++) {
+                        #pragma omp atomic 
+                        sumR +=1;
+                    }
+                }
+            }
+
+            printf("Total summation = %d \n", sumR);
+
+            return 0;
+        }
+
+
 Controlling Number of Tasks Created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1025,180 +1586,7 @@ Specifies the number of tasks to create.
 
 Final number of tasks may be affected by iteration count and other factors.
 
-.. challenge::
 
-    Use two tasks where each prints out *Hello* and *World* strings. Use 4 threads. 
-
-.. solution::
-
-    .. code-block:: c
-        :linenos:
-
-        // On cluster Kebnekaise
-        // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 12a-task-openmp.c -lm 
-        #include <stdio.h>
-        #include <omp.h>
-
-        int main() {
-
-            #pragma omp parallel num_threads(4)
-            {
-
-                #pragma omp task
-                {printf("Hello\n");}
-
-                #pragma omp task
-                {printf("World\n");}
-
-            }
-
-            return 0;
-        }
-
-.. challenge::
-
-    Inspect and run the following code to see the behavior of shared, private, and first private variables in the context of tasks.
-
-    .. code-block:: c
-        :linenos:
-
-        // On cluster Kebnekaise
-        // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 13a-sharedprivate-task-openmp.c -lm 
-        #include <stdio.h>
-        #include <omp.h>
-
-        void process_task(int id, int *shared_data) {
-            printf("Task %d: shared_data = %d\n", id, *shared_data);
-        }
-
-        int main() {
-            int shared_data = 100; // variable that is shared across tasks
-            int private_data = 200; // variable is private to each task
-
-            #pragma omp parallel
-            {
-                #pragma omp single
-                {
-                    for (int i = 0; i < 4; i++) {
-                        int firstprivate_data = i * 10; // firstprivate variable: unique for each task but initialized with i * 10
-
-                        #pragma omp task shared(shared_data) private(private_data) firstprivate(firstprivate_data)
-                        {
-                            // here we modify the private_data variable, which is unique to each task
-                            private_data = i * 100;
-                            printf("Task %d: private_data = %d, firstprivate_data = %d\n", i, private_data, firstprivate_data);
-                            
-                            // Calling a function with shared data
-                            process_task(i, &shared_data);
-
-                            // Use an atomic op. for shared_data  or critical?
-                            #pragma omp atomic
-                            shared_data += 1;
-                        }
-                    }
-                }
-            }
-
-            printf("Final value of shared_data: %d\n", shared_data);
-
-            return 0;
-        }
-
-.. challenge::
-
-    Inspect and run the following code to see the behavior of first private variables in the context of tasks.
-
-    .. code-block:: c
-        :linenos:
-
-        // On cluster Kebnekaise
-        // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 13b-firstprivate-task-openmp.c -lm 
-        #include <stdio.h>
-        #include <omp.h>
-
-        void task_example() {
-            int n = 5; // a shared variable with an initial value
-
-            #pragma omp parallel
-            {
-                #pragma omp single
-                {
-                    for (int i = 0; i < 5; i++) {
-                        #pragma omp task private(n) firstprivate(n)
-                        {
-                            // n is private to each task, initialized with its value at task creation
-                            n += i; // Modify n for this task
-                            printf("Task %d: n = %d\n", i, n);
-                        }
-                    }
-                }
-            }
-        }
-
-        int main() {
-            task_example();
-            return 0;
-        }
-
-
-.. challenge::
-
-    The following function takes an integer as input, and writes the thread number that handles
-    the execution of the function. Use ``tasks`` to parallelize a *for* loop where each task 
-    executes this function:
-
-    .. code-block:: c
-        :linenos:
-
-        void process_element(int i) {
-            // do some work for each element by printing out the thread ID excuting this work
-            printf("Processing element %d in thread %d\n", i, omp_get_thread_num());
-        }
-
-.. solution::
-
-    .. code-block:: c
-        :linenos:
-
-        // On cluster Kebnekaise
-        // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 12c-task-openmp.c -lm 
-        #include <stdio.h>
-        #include <omp.h>
-
-        void process_element(int i) {
-            // do some work for each element by printing out the thread ID excuting this work
-            printf("Processing element %d in thread %d\n", i, omp_get_thread_num());
-        }
-
-        int main() {
-            int n = 10;
-
-            #pragma omp parallel
-            {
-                // single directive ensures that only one thread generates tasks
-                #pragma omp single
-                {
-                    for (int i = 0; i < n; i++) {
-                        // Create a new task for each array element
-                        #pragma omp task
-                        {
-                        process_element(i);
-                        }
-                    }
-                printf("Generating tasks \n");
-                }
-            }
-
-            return 0;
-        }
 
 
 
