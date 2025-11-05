@@ -279,6 +279,160 @@ Consider this code:
             return 0;
         }
 
+Let us consider the data sharing rules with the following example:
+
+.. code-block:: c
+    :linenos:
+    :emphasize-lines: 5,7
+
+    #include <stdio.h>
+    
+    int main() {
+        int number = 1;
+        #pragma omp parallel
+        {
+            #pragma omp task
+            {
+                printf("I think the number is %d.\n", number);
+                number++;
+            }
+        }
+        return 0;
+    }
+    
+The output of the program is not that surprising:
+
+.. code-block::
+    :emphasize-lines: 3-6
+
+    $ gcc -o my_program my_program.c -Wall -fopenmp
+    $ ./my_program 
+    I think the number is 1.
+    I think the number is 2.
+    I think the number is 2.
+    I think the number is 3.
+    ...
+
+That is, variables declared outside the parallel construct are still :code:`shared` by default.
+This is consistent with the three basic data sharing rules.
+
+If we move the variable :code:`number` inside the parallel construct, then the variable becomes :code:`firstprivate` by default:
+
+.. code-block:: c
+    :linenos:
+    :emphasize-lines: 6
+
+    #include <stdio.h>
+    
+    int main() {
+        #pragma omp parallel
+        {
+            int number = 1;
+            #pragma omp task
+            {
+                printf("I think the number is %d.\n", number);
+                number++;
+            }
+        }
+        return 0;
+    }
+
+.. code-block::
+    :emphasize-lines: 3-6
+
+    $ gcc -o my_program my_program.c -Wall -fopenmp
+    $ ./my_program 
+    I think the number is 1.
+    I think the number is 1.
+    I think the number is 1.
+    I think the number is 1.
+    ...
+
+The value of the variable is copied when the task is created.
+
+Single construct
+^^^^^^^^^^^^^^^^
+
+In the earlier examples, **each thread in the team created a task**. 
+This is sometimes very convenient as the need for new tasks might arise gradually.
+However, it is more likely that we want to generate the task graph in a centralized manner, i.e. **only one thread should generate the task**.
+This can be accomplished by combining the :code:`parallel` and :code:`single` constructs:
+
+.. code-block:: c
+    :linenos:
+    :emphasize-lines: 4-5,7
+
+    #include <stdio.h>
+
+    int main() {
+        #pragma omp parallel
+        #pragma omp single nowait
+        {
+            #pragma omp task
+            printf("Hello world!\n");
+        }
+        return 0;
+    }
+
+The :code:`nowait` clause removes the redundant barrier from the end of the :code:`single` construct. 
+    
+.. code-block:: bash
+    :emphasize-lines: 3
+
+    $ gcc -o my_program my_program.c -Wall -fopenmp
+    $ ./my_program 
+    Hello world!
+    
+Note that the binding thread set for a :code:`single` region is the current team.
+That is, any tasks in the current team can execute the task.
+
+.. challenge::
+
+    Write a program that creates 10 tasks. 
+    Each task should print the thread number of the calling thread.
+    
+    **Hint:** From the :code:`omp.h` header file:
+    
+    .. code-block:: c
+    
+        int omp_get_thread_num (void);
+    
+.. solution::
+
+    .. code-block:: c
+        :linenos:
+        
+        #include <stdio.h>
+        #include <omp.h>
+
+        int main() {
+            #pragma omp parallel
+            #pragma omp single nowait
+            {
+                for (int i = 0; i < 10; i++) {
+                    #pragma omp task
+                    printf("I am thread no. %d.\n", omp_get_thread_num());
+                }
+            }
+            return 0;
+        }
+        
+    .. code-block:: bash
+        :emphasize-lines: 3-12
+    
+        $ gcc -o my_program my_program.c -Wall -fopenmp                       
+        $ ./my_program                                 
+        I am thread no. 5.
+        I am thread no. 13.
+        I am thread no. 6.
+        I am thread no. 8.
+        I am thread no. 4.
+        I am thread no. 7.
+        I am thread no. 15.
+        I am thread no. 12.
+        I am thread no. 0.
+        I am thread no. 9.
+
 .. challenge::
 
     Inspect and run the following code to see the behavior of shared, private, and first private variables in the context of tasks.
@@ -513,7 +667,100 @@ Allows the runtime to schedule other tasks while waiting for resources or depend
             return 0;
         }
 
+Child tasks and taskwait construct
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+A task can create new **child tasks**:
+
+.. code-block:: c
+    :linenos:
+    :emphasize-lines: 7-8
+    
+    #include <stdio.h>
+    
+    int main() {
+        #pragma omp parallel
+        #pragma omp single
+        {
+            #pragma omp task
+            {
+                #pragma omp task
+                printf("Hello.\n");
+
+                printf("Hi.\n"); 
+            }
+
+            printf("Hej.\n");
+        }
+
+        printf("Goodbye.\n"); 
+
+        return 0;
+    }
+
+.. code-block:: bash
+    :emphasize-lines: 4-5,9-10
+
+    $ gcc -o my_program my_program.c -Wall -fopenmp
+    $ ./my_program 
+    Hej
+    Hi.
+    Hello.
+    Goodbye.
+    $ ./my_program 
+    Hej.
+    Hello.
+    Hi.
+    Goodbye.
+
+Note that child tasks are executed separately from the generating tasks. 
+In particular, it is possible that a child task gets executed after the generating task has finished.
+We can use the :code:`taskwait` construct to **wait on the completion of child tasks** of the generating task:
+
+.. code-block:: c
+
+    #pragma omp taskwait [clause[ [,] clause] ... ] new-line
+
+This allows us to enforce an execution order:
+
+
+.. code-block:: c
+    :linenos:
+    :emphasize-lines: 12
+    
+    #include <stdio.h>
+
+    int main() {
+        #pragma omp parallel
+        #pragma omp single
+        {
+            #pragma omp task
+            {
+                #pragma omp task
+                printf("Hello.\n");
+
+                #pragma omp taskwait
+
+                printf("Hi.\n"); 
+            }
+
+            printf("Hej.\n");
+        }
+
+        printf("Goodbye.\n"); 
+
+        return 0;
+    }
+    
+.. code-block:: bash
+    :emphasize-lines: 4-5
+    
+    $ gcc -o my_program my_program.c -Wall -fopenmp
+    $ ./my_program 
+    Hej.
+    Hello.
+    Hi.
+    Goodbye.
 
 Controlling When Tasks Finish
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -541,6 +788,42 @@ Controlling When Tasks Finish
 
 .. note::
    Instead of waiting, a thread can execute tasks generated elsewhere.
+
+All threads in the team must reach the barrier and **complete all explicit tasks** bound to the parallel region before they are allowed to continue execution beyond the barrier:
+
+.. code-block:: c
+    :linenos:
+    :emphasize-lines: 9
+
+    #include <stdio.h>
+
+    int main() {
+        #pragma omp parallel
+        {
+            #pragma omp task
+            printf("Hello.\n");
+
+            #pragma omp barrier
+
+            #pragma omp task
+            printf("Goodbye.\n");
+        }
+
+        return 0;
+    }
+    
+.. code-block:: bash
+
+    $ gcc -o my_program my_program.c -Wall -fopenmp
+    $ ./my_program 
+    Hello.
+    Hello.
+    ...
+    Hello.
+    Goodbye.
+    Goodbye.
+    Goodbye.
+    ...
 
 
 .. challenge::
