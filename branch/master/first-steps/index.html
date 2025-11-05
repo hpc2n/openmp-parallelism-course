@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>First Steps in OpenMP &mdash; OpenMP parallelism in scientific computing  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_lesson.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/term_role_formatting.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="../_static/minipres.js"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+    <link rel="next" title="Data for Parallel Regions" href="../data-handling/" />
+    <link rel="prev" title="Profiling analysis with VTune and Advisor" href="../profiling-analysis/" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../" class="icon icon-home">
+            OpenMP parallelism in scientific computing
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Day 1</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hpc2n-intro/">Introduction to HPC2N</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup/">Introduction to Kebnekaise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../profiling-analysis/">Profiling analysis with VTune and Advisor</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 2</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">First Steps in OpenMP</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#shared-memory-programming">Shared Memory Programming</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shared-memory-architecture">Shared Memory Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#openmp-resources">OpenMP Resources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#threads-in-openmp">Threads in OpenMP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#library-functions">Library Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conditional-compilation">Conditional Compilation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-parallel-construct-in-fortran">The <code class="docutils literal notranslate"><span class="pre">parallel</span></code> Construct in Fortran</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-parallel-construct-in-c">The <code class="docutils literal notranslate"><span class="pre">parallel</span></code> Construct in C</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#controlling-the-number-of-threads">Controlling the Number of Threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#timing-openmp-code">Timing OpenMP Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compiling-openmp-code">Compiling OpenMP Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../data-handling/">Data for Parallel Regions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../worksharing/">Worksharing and Scheduling</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 3</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-handlingii/">More on Private Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../worksharingii/">More on Worksharing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 4</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tasks/">The Task Directive</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Miscellanous</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick-reference/">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/">Instructor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../">OpenMP parallelism in scientific computing</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">First Steps in OpenMP</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/hpc2n/OpenMP-parallelism-course/blob/master/docs/first-steps.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="first-steps-in-openmp">
+<h1>First Steps in OpenMP<a class="headerlink" href="#first-steps-in-openmp" title="Permalink to this heading"></a></h1>
+<div class="admonition-objectives objectives admonition" id="objectives-0">
+<p class="admonition-title">Objectives</p>
+<ul class="simple">
+<li><p>Parallel and serial regions</p></li>
+<li><p>Master thread and teams of threads</p></li>
+<li><p>Directives and library functions</p></li>
+<li><p>Controlling the number of threads</p></li>
+<li><p>Timing OpenMP codes</p></li>
+</ul>
+</div>
+<section id="shared-memory-programming">
+<h2>Shared Memory Programming<a class="headerlink" href="#shared-memory-programming" title="Permalink to this heading"></a></h2>
+<p>Shared memory programming is widely deployed in scientific computing due to the prevalence of multicore processors and
+multithreaded processing cores.</p>
+<p><strong>Historical Context</strong></p>
+<ul class="simple">
+<li><p>Shared memory hardware was very expensive 20 years ago</p></li>
+<li><p>Inexpensive these days</p></li>
+<li><p>Contemporary laptops have between 2 and 8 cores</p></li>
+</ul>
+<p><strong>Programming Options</strong></p>
+<p>There are several ways to program shared memory systems:</p>
+<ul class="simple">
+<li><p><strong>Posix threads</strong> (typically C, C++)</p></li>
+<li><p><strong>OpenMP</strong> (C, C++, Fortran)</p></li>
+<li><p><strong>Threaded languages</strong> (e.g., Java)</p></li>
+</ul>
+</section>
+<section id="shared-memory-architecture">
+<h2>Shared Memory Architecture<a class="headerlink" href="#shared-memory-architecture" title="Permalink to this heading"></a></h2>
+<p>In shared memory architecture, threads placed on several processing elements manipulate the same shared memory space.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/sm_2.png"><img alt="../_images/sm_2.png" src="../_images/sm_2.png" style="width: 244.79999999999998px; height: 156.6px;" /></a>
+</figure>
+<hr class="docutils" />
+<p><strong>Advantages:</strong></p>
+<ul class="simple">
+<li><p>Easy to move data between threads</p></li>
+<li><p>Write result to shared memory on one processor</p></li>
+<li><p>Read on a different processor</p></li>
+</ul>
+<p><strong>Considerations:</strong></p>
+<ul class="simple">
+<li><p>Care is needed regarding order (e.g., P0 needs to write before P2 can read)</p></li>
+<li><p>Read/write to shared memory has typically higher cost than manipulating registers/cache</p></li>
+<li><p>This creates communication overhead</p></li>
+</ul>
+</section>
+<section id="openmp-resources">
+<h2>OpenMP Resources<a class="headerlink" href="#openmp-resources" title="Permalink to this heading"></a></h2>
+<p><strong>Official Resources</strong></p>
+<ul class="simple">
+<li><p>OpenMP is trademarked by the OpenMP ARB (a not-for-profit corporation)</p></li>
+<li><p>Website: <a class="reference external" href="http://openmp.org">http://openmp.org</a></p></li>
+<li><p>Standard specifications (free): <a class="reference external" href="http://www.openmp.org/specifications/">http://www.openmp.org/specifications/</a></p></li>
+</ul>
+<p><strong>Free Tutorials</strong></p>
+<ul class="simple">
+<li><p>YouTube playlist: <a class="reference external" href="https://www.youtube.com/playlist?list=PLLX-Q6B8xqZ8n8bwjGdzBJ25X2utwnoEG">https://www.youtube.com/playlist?list=PLLX-Q6B8xqZ8n8bwjGdzBJ25X2utwnoEG</a></p></li>
+<li><p>LLNL tutorial: <a class="reference external" href="https://computing.llnl.gov/tutorials/openMP/">https://computing.llnl.gov/tutorials/openMP/</a></p></li>
+</ul>
+<p><strong>Textbooks</strong></p>
+<ol class="arabic simple">
+<li><p><strong>Using OpenMP</strong> (OpenMP 2.5)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>B Chapman, G Jost, R van der Pas</p>
+</dd>
+<dt class="field-even">Publisher<span class="colon">:</span></dt>
+<dd class="field-even"><p>MIT Press, Cambridge, Massachusetts, 2008</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>Using OpenMP – The next Step</strong> (OpenMP 4.5)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Authors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>R van der Pas, E Stolzer, C Terboven</p>
+</dd>
+<dt class="field-even">Publisher<span class="colon">:</span></dt>
+<dd class="field-even"><p>MIT Press, Cambridge, Massachusetts, 2017</p>
+</dd>
+</dl>
+</li>
+</ol>
+</section>
+<section id="threads-in-openmp">
+<h2>Threads in OpenMP<a class="headerlink" href="#threads-in-openmp" title="Permalink to this heading"></a></h2>
+<p><strong>Execution Model</strong></p>
+<p>Program execution follows a fork-join model:</p>
+<ol class="arabic simple">
+<li><p><strong>Start:</strong> Program execution starts single-threaded (master thread)</p></li>
+<li><p><strong>Fork:</strong> When entering a parallel region, a team of threads is created</p></li>
+<li><p><strong>Parallel work:</strong> Each thread executes an independent instruction stream</p></li>
+<li><p><strong>Join:</strong> At the end of parallel region, threads join and synchronization occurs</p></li>
+<li><p><strong>Continue:</strong> Single thread continues execution</p></li>
+</ol>
+<p>Different parallel regions can have different numbers of threads.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/parallel_construct.png"><img alt="../_images/parallel_construct.png" src="../_images/parallel_construct.png" style="width: 647.1px; height: 463.2px;" /></a>
+</figure>
+<hr class="docutils" />
+<p><strong>OpenMP: Directive Based</strong></p>
+<p>OpenMP is based on compiler directives that control parallel execution.</p>
+<ul class="simple">
+<li><p><strong>In Fortran:</strong> Directives are special comments</p></li>
+<li><p><strong>In C/C++:</strong> Directives are <code class="docutils literal notranslate"><span class="pre">#pragma</span></code> statements</p></li>
+<li><p>Directives are ignored by compilers without OpenMP support or when OpenMP is not enabled</p></li>
+<li><p>This makes it easy to maintain a single source version for both serial and parallel execution</p></li>
+<li><p>OpenMP also facilitates conditional compilation</p></li>
+</ul>
+<p><strong>OpenMP Directives in Fortran</strong></p>
+<p><em>Free Format</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp directive_name [clause […]]</span>
+</pre></div>
+</div>
+<p><em>Fixed Format</em></p>
+<p>Directives always start in column 1:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span>!$omp directive_name [clause […]]
+c$omp directive_name [clause […]]
+*$omp directive_name [clause […]]
+</pre></div>
+</div>
+<p>The first piece (e.g., <code class="docutils literal notranslate"><span class="pre">!$omp</span></code>) is called the <strong>sentinel</strong>.</p>
+<p><strong>Line Continuation</strong></p>
+<p><em>Free format example:</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel do &amp;</span>
+<span class="c">!$omp shared(a,b)</span>
+</pre></div>
+</div>
+<p><em>Fixed format example:</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">c$omp</span><span class="w"> </span><span class="n">parallel</span><span class="w"> </span><span class="k">do</span>
+<span class="n">c$ompa</span><span class="w"> </span><span class="n">shared</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+<span class="n">c$ompb</span><span class="w"> </span><span class="n">schedule</span><span class="p">(</span><span class="n">dynamic</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A non-blank character in column 6 marks a continuation line.</p>
+</div>
+<p><strong>OpenMP Directives in C/C++</strong></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp directive_name [clause […]]</span>
+</pre></div>
+</div>
+<p><strong>Line Continuation</strong></p>
+<p>Use backslash <code class="docutils literal notranslate"><span class="pre">\</span></code> for line continuation.</p>
+<ul class="simple">
+<li><p><strong>Directive name:</strong> Specifies the action</p></li>
+<li><p><strong>Clause(s):</strong> Allow further specification</p></li>
+</ul>
+</section>
+<section id="library-functions">
+<h2>Library Functions<a class="headerlink" href="#library-functions" title="Permalink to this heading"></a></h2>
+<p>In addition to directives, OpenMP offers library functions mainly to control the operating environment.</p>
+<p><strong>Including Headers</strong></p>
+<p><em>In C:</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span>
+</pre></div>
+</div>
+<p><em>In Fortran:</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">include</span><span class="w"> </span><span class="s2">&quot;omp_lib.h&quot;</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">use </span><span class="n">omp_lib</span>
+</pre></div>
+</div>
+</section>
+<section id="conditional-compilation">
+<h2>Conditional Compilation<a class="headerlink" href="#conditional-compilation" title="Permalink to this heading"></a></h2>
+<p>OpenMP compilers define the preprocessor macro <code class="docutils literal notranslate"><span class="pre">_OPENMP</span></code>.</p>
+<p><em>C Example</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#ifdef _OPENMP</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span>
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+<p><em>Fortran Example</em></p>
+<p>Lines starting with <code class="docutils literal notranslate"><span class="pre">!$</span></code> (free format) or <code class="docutils literal notranslate"><span class="pre">!$</span></code>, <code class="docutils literal notranslate"><span class="pre">*$</span></code>, <code class="docutils literal notranslate"><span class="pre">c$</span></code> (fixed format) are only compiled if OpenMP is active:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$ use omp_lib</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This guard is required if code needs to be compiled serially.</p>
+</div>
+</section>
+<section id="the-parallel-construct-in-fortran">
+<h2>The <code class="docutils literal notranslate"><span class="pre">parallel</span></code> Construct in Fortran<a class="headerlink" href="#the-parallel-construct-in-fortran" title="Permalink to this heading"></a></h2>
+<p>The most important construct in OpenMP.</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel</span>
+<span class="w">    </span><span class="n">structured</span><span class="w"> </span><span class="k">block </span><span class="n">of</span><span class="w"> </span><span class="n">Fortran</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Starts a team of threads working on the block between the directives</p></li>
+<li><p>At the end of the parallel region, there’s an implicit synchronization (wait for the last thread)</p></li>
+</ul>
+<p><strong>First Example</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">program </span><span class="n">example</span>
+<span class="w">    </span><span class="k">implicit none</span>
+
+<span class="k">    print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;3+5=&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="o">+</span><span class="mi">5</span>
+
+<span class="w">    </span><span class="c">!$omp parallel</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;6+7=&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="o">+</span><span class="mi">7</span>
+<span class="w">    </span><span class="c">!$omp end parallel</span>
+
+<span class="k">end program </span><span class="n">example</span>
+</pre></div>
+</div>
+<p><strong>Execution:</strong></p>
+<ul class="simple">
+<li><p>First portion executed on master thread (prints “3+5=” once)</p></li>
+<li><p>Parallel construct creates threads</p></li>
+<li><p>Each thread performs addition and prints “6+7=”</p></li>
+<li><p>Code also compiles serially (without OpenMP)</p></li>
+</ul>
+</section>
+<section id="the-parallel-construct-in-c">
+<h2>The <code class="docutils literal notranslate"><span class="pre">parallel</span></code> Construct in C<a class="headerlink" href="#the-parallel-construct-in-c" title="Permalink to this heading"></a></h2>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">structured</span><span class="w"> </span><span class="n">block</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">C</span><span class="w"> </span><span class="n">instructions</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Starts a team of threads working on the block enclosed with <code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">}</span></code> in parallel</p></li>
+<li><p>At the end of the parallel region, there’s an implicit synchronization (wait for the last thread)</p></li>
+</ul>
+<p><strong>First Example</strong></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;3+5=%i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="o">+</span><span class="mi">5</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cp">#pragma omp parallel</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;6+7=%i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="o">+</span><span class="mi">7</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Execution:</strong></p>
+<ul class="simple">
+<li><p>First portion executed on master thread (prints “3+5=” once)</p></li>
+<li><p>Parallel construct creates threads</p></li>
+<li><p>Each thread performs addition and prints “6+7=”</p></li>
+</ul>
+</section>
+<section id="controlling-the-number-of-threads">
+<h2>Controlling the Number of Threads<a class="headerlink" href="#controlling-the-number-of-threads" title="Permalink to this heading"></a></h2>
+<p>The number of threads started by a parallel construct can be controlled in several ways (listed by increasing priority):</p>
+<ol class="arabic simple">
+<li><p>Environment Variable</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">OMP_NUM_THREADS</span><span class="o">=</span>n
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Function Call</p></li>
+</ol>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">omp_set_num_threads</span><span class="p">(</span><span class="n">n</span><span class="p">);</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Clause on Parallel Construct (Highest Priority)</p></li>
+</ol>
+<p><em>Fortran:</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel num_threads(n)</span>
+</pre></div>
+</div>
+<p><em>C:</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel num_threads(n)</span>
+</pre></div>
+</div>
+<p><strong>Thread Number and Thread ID query Functions</strong></p>
+<p>These functions require header files to be included.</p>
+<p><em>Query number of threads:</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">omp_get_num_threads</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><em>Query thread ID:</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Thread Numbering</strong></p>
+<p>In a parallel region with n threads, thread IDs range from 0 to n-1.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/parallel_construct2.png"><img alt="../_images/parallel_construct2.png" src="../_images/parallel_construct2.png" style="width: 646.8px; height: 235.2px;" /></a>
+</figure>
+<hr class="docutils" />
+<p><strong>Example: Printing Thread Numbers</strong></p>
+<p><em>Fortran Version</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">program </span><span class="n">FortranHello</span>
+<span class="w">    </span><span class="c">!$ use omp_lib</span>
+<span class="w">    </span><span class="k">implicit none</span>
+
+<span class="w">    </span><span class="c">!$omp parallel</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;I am thread&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">(),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">             </span><span class="s2">&quot; out of &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">()</span>
+<span class="w">    </span><span class="c">!$omp end parallel</span>
+
+<span class="k">end program </span><span class="n">FortranHello</span>
+</pre></div>
+</div>
+<p>Sample Output (8 threads)</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>I am thread 0 out of 8
+I am thread 3 out of 8
+I am thread 4 out of 8
+I am thread 2 out of 8
+I am thread 1 out of 8
+I am thread 7 out of 8
+I am thread 6 out of 8
+I am thread 5 out of 8
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each thread prints its thread number and total number of threads. The order is non-deterministic.</p>
+</div>
+<p><em>C Version</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp parallel</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;I am thread %i of %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+<span class="w">               </span><span class="n">omp_get_thread_num</span><span class="p">(),</span>
+<span class="w">               </span><span class="n">omp_get_num_threads</span><span class="p">());</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Use Case: Task Farm Using Thread Numbers</strong></p>
+<p>You have three serial programs and want to run them on different threads.</p>
+<p>Convert the programs into functions/subroutines.</p>
+<p><em>Fortran Implementation</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">Program </span><span class="n">Prog2</span>
+<span class="w">    </span><span class="c">! statements</span>
+<span class="k">End Program </span><span class="n">Prog2</span>
+</pre></div>
+</div>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">sub2</span><span class="p">()</span>
+<span class="w">    </span><span class="c">! statements</span>
+<span class="k">End subroutine </span><span class="n">sub2</span>
+</pre></div>
+</div>
+<p>New main program:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">Program </span><span class="n">farm</span>
+<span class="w">    </span><span class="k">use </span><span class="n">omp_lib</span>
+
+<span class="w">    </span><span class="k">call </span><span class="n">omp_set_num_threads</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c">!$OMP parallel</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="p">.</span><span class="n">eq</span><span class="p">.</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">call </span><span class="n">sub0</span><span class="p">()</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="p">.</span><span class="n">eq</span><span class="p">.</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="k">call </span><span class="n">sub1</span><span class="p">()</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="p">.</span><span class="n">eq</span><span class="p">.</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="k">call </span><span class="n">sub2</span><span class="p">()</span>
+<span class="w">    </span><span class="c">!$OMP end parallel</span>
+
+<span class="k">End program </span><span class="n">farm</span>
+</pre></div>
+</div>
+<p><em>C Implementation</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="c1">// statements</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">funct2</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="c1">// statements</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>New main function:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">omp_set_num_threads</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cp">#pragma omp parallel</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="n">funct0</span><span class="p">();</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="n">funct1</span><span class="p">();</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="n">funct2</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="timing-openmp-code">
+<h2>Timing OpenMP Code<a class="headerlink" href="#timing-openmp-code" title="Permalink to this heading"></a></h2>
+<p>Parallel programming is all about speed, so timing is essential.</p>
+<p>Timer Function: <code class="docutils literal notranslate"><span class="pre">omp_get_wtime()</span></code></p>
+<ul class="simple">
+<li><p>Returns elapsed wall-clock time in seconds</p></li>
+<li><p>Returns <code class="docutils literal notranslate"><span class="pre">double</span></code> in C, <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">precision</span></code> in Fortran</p></li>
+<li><p>Accuracy can be queried with <code class="docutils literal notranslate"><span class="pre">omp_get_wtick()</span></code></p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Timer is bound to thread!</p>
+</div>
+<p><em>Fortran Example</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">double precision</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">stime</span><span class="p">,</span><span class="w"> </span><span class="n">ftime</span>
+
+<span class="n">stime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_wtime</span><span class="p">()</span>
+
+<span class="c">! code segment to be timed</span>
+
+<span class="n">ftime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_wtime</span><span class="p">()</span>
+<span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;time: &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">ftime</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">stime</span>
+</pre></div>
+</div>
+<p><em>C Example</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">double</span><span class="w"> </span><span class="n">stime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_wtime</span><span class="p">();</span>
+
+<span class="c1">// code segments to be timed</span>
+
+<span class="kt">double</span><span class="w"> </span><span class="n">ftime</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_wtime</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">stime</span><span class="p">;</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">&quot;time: %f</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">ftime</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="compiling-openmp-code">
+<h2>Compiling OpenMP Code<a class="headerlink" href="#compiling-openmp-code" title="Permalink to this heading"></a></h2>
+<p>Most modern compilers support OpenMP. Simply add a compiler flag to enable OpenMP.</p>
+<p>Compiler Flags</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21.4%" />
+<col style="width: 21.4%" />
+<col style="width: 57.1%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Compiler</p></th>
+<th class="head"><p>Flag</p></th>
+<th class="head"><p>Standard Implemented (_OPENMP)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>GNU</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-fopenmp</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>version 4.8.5</p></td>
+<td><p>OpenMP 3.1</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>version 4.9.3</p></td>
+<td><p>OpenMP 4.0</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>version 5.4.0</p></td>
+<td><p>OpenMP 4.0</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>version 6.2.0</p></td>
+<td><p>OpenMP 4.5</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Intel</strong></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-openmp</span></code> (old)</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-qopenmp</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>version 16.0.1</p></td>
+<td><p>OpenMP 4.0</p></td>
+</tr>
+<tr class="row-even"><td></td>
+<td><p>version 16.0.3</p></td>
+<td><p>OpenMP 4.0</p></td>
+</tr>
+<tr class="row-odd"><td></td>
+<td><p>version 17.0</p></td>
+<td><p>OpenMP 4.5</p></td>
+</tr>
+</tbody>
+</table>
+<p><em>Example with GCC</em></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gfortran<span class="w"> </span>-O3<span class="w"> </span>-fopenmp<span class="w"> </span>-o<span class="w"> </span>prog_omp<span class="w"> </span>prog_omp.f90
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Some features of newer standards may be available depending on compiler version.</p>
+</div>
+<div class="admonition-exercise exercise important admonition" id="exercise-0">
+<p class="admonition-title">Exercise</p>
+<p>Compile and run the following <em>hello wold</em> example on the cluster:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1">// On cluster Kebnekaise</span>
+<span class="linenos"> 2</span><span class="c1">// ml foss/2023b</span>
+<span class="linenos"> 3</span><span class="c1">// gcc -O3 -march=native -fopenmp -o test.x 1a-hello-openmp.c -lm</span>
+<span class="linenos"> 4</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="linenos"> 5</span>
+<span class="linenos"> 6</span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="linenos"> 7</span><span class="p">{</span>
+<span class="linenos"> 8</span>
+<span class="linenos"> 9</span><span class="cp">#pragma omp parallel num_threads(4)</span>
+<span class="linenos">10</span><span class="p">{</span>
+<span class="linenos">11</span><span class="cp">#ifdef _OPENMP </span><span class="c1">// Macro for OpenMP</span>
+<span class="linenos">12</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello, you are using OpenMP! </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="linenos">13</span><span class="cp">#else</span>
+<span class="linenos">14</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello from serial!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="linenos">15</span><span class="cp">#endif</span>
+<span class="linenos">16</span><span class="p">}</span>
+<span class="linenos">17</span>
+<span class="linenos">18</span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">19</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition-exercise exercise important admonition" id="exercise-1">
+<p class="admonition-title">Exercise</p>
+<p>Query the threads’ IDs and number of threads in a parallel region.</p>
+</div>
+<div class="admonition-solution solution important dropdown admonition" id="solution-0">
+<p class="admonition-title">Solution</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1">// On cluster Kebnekaise</span>
+<span class="linenos"> 2</span><span class="c1">// ml foss</span>
+<span class="linenos"> 3</span><span class="c1">// export OMP_NUM_THREADS=1</span>
+<span class="linenos"> 4</span><span class="c1">// gcc -O3 -march=native -fopenmp -o test.x 2a-runtime-openmp.c -lm</span>
+<span class="linenos"> 5</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="linenos"> 6</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos"> 7</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span><span class="c1">   // This header contains the querying functions</span>
+<span class="linenos"> 8</span><span class="cp">#endif</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="linenos">11</span><span class="p">{</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="kt">int</span><span class="w"> </span><span class="n">threadID</span><span class="p">;</span><span class="w">   </span><span class="c1">// Thread ID</span>
+<span class="linenos">14</span><span class="kt">int</span><span class="w"> </span><span class="n">numThreads</span><span class="p">;</span><span class="w"> </span><span class="c1">// Number of threads</span>
+<span class="linenos">15</span><span class="cp">#pragma omp parallel</span>
+<span class="linenos">16</span><span class="w">    </span><span class="p">{</span>
+<span class="linenos">17</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos">18</span><span class="w">    </span><span class="n">threadID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="linenos">19</span><span class="w">    </span><span class="n">numThreads</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">();</span>
+<span class="linenos">20</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;I am thread %i of %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">threadID</span><span class="p">,</span><span class="w"> </span><span class="n">numThreads</span><span class="p">);</span>
+<span class="linenos">21</span><span class="cp">#else</span>
+<span class="linenos">22</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello from serial!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="linenos">23</span><span class="cp">#endif</span>
+<span class="linenos">24</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">25</span>
+<span class="linenos">26</span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">27</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this heading"></a></h2>
+<p>This guide introduced the following OpenMP concepts:</p>
+<ul class="simple">
+<li><p>Teams of threads in OpenMP and the fork-join execution model</p></li>
+<li><p>Controlling and querying basic properties of threads</p>
+<ul>
+<li><p>Number of threads</p></li>
+<li><p>Thread number/ID</p></li>
+</ul>
+</li>
+<li><p>Timing parallel code with <code class="docutils literal notranslate"><span class="pre">omp_get_wtime()</span></code></p></li>
+<li><p>Compiler flags for enabling OpenMP support</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../profiling-analysis/" class="btn btn-neutral float-left" title="Profiling analysis with VTune and Advisor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../data-handling/" class="btn btn-neutral float-right" title="Data for Parallel Regions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, The contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
