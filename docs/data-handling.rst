@@ -904,11 +904,26 @@ Restrictions apply to the allowed statement forms.
     x = intr_proc(x, expr_list)
     x = intr_proc(expr_list, x)
 
-*Allowed Capture Statements*
+*Example (C)*
 
-.. code-block:: fortran
+.. code-block:: c
 
-    v = x
+    #pragma omp atomic capture
+    {
+        v = x;      // v gets the OLD value
+        x += 5;     // then x is updated
+    }
+
+Without *atomic capture* one would need to operations which could lead to race coditions:
+
+.. code-block:: c
+
+    // WRONG - race condition!
+    #pragma omp atomic read
+    v = x;
+    #pragma omp atomic update
+    x += 5;
+    // Another thread could modify x between these two operations!
 
 .. challenge::
 
