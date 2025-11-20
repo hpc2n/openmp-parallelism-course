@@ -141,7 +141,7 @@ Advisor Workflow
 
     ml foss
 
-2. Compile your code::
+2. Use this code::
 
 .. code-block:: c
 
@@ -175,6 +175,9 @@ Advisor Workflow
     printf("%llu ",fibbonacci(n));            
     }
 
+and compile it:
+
+.. code-block:: c
 
     gcc -O3 -march=native -g -o test.x fibonacci_recursion.c -lm
 
@@ -327,6 +330,27 @@ The visualization helps identify:
 - Performance bottlenecks in specific functions
 
 
+.. challenge::
+
+    Use the code provided in the VTune section and run the code with 8 
+    threads for the Fibonacci number 56. Use the VTune GUI to obtain the Elapsed Time,
+    and the Top Hotspots in the **Summary** tab. 
+
+    Go to the **Bottom-up** tab and see the Effective Time by Utilization of the 
+    functions, which one has a Poor utilization? 
+
+    In the plot at the bottom one can see the CPU Utilization for each Thread. The CPU 
+    Time shows when the threads are doing some work, otherwise they are idle. Ideally,
+    the plot would show brown bars denoting fully occupied threads. How does this plot look 
+    for the present code? Do the behavior of the individual threads explain the
+    Effective Time by Utilization above?
+
+.. challenge::
+
+    Use the code example in the Advisor section and collect results for the Fibonacci number 50.
+    Then, in the Advisor GUI, obtain the GFLOPS and GINTOPS in the Code Analytics tab.
+
+    In the Source tab, do you see the part of the code that coul be improved? 
 
 Summary
 ^^^^^^^
