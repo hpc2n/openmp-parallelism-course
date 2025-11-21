@@ -956,7 +956,7 @@ Without *atomic capture* one would need to operations which could lead to race c
             printf("var1 =  %i , var2 = %i , var3 = %i \n",var1,var2,var3);
             var1 = 10;
             var2 = 20;
-            var3 = 30;    // RACE CONDITION!!
+            var3 = omp_get_thread_num();    // RACE CONDITION!!
         #else
             printf("Serial code!\n");
         #endif
