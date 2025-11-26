@@ -1168,24 +1168,6 @@ First numbers in series: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, ...
 .. note::
    Recursive implementation: not efficient for computation, but good for demonstrating task parallelism!
 
-
-*Serial Fibonacci Implementation (Fortran)*
-
-.. code-block:: fortran
-
-    recursive function recursive_fib(in) result(fibnum)
-        integer, intent(in) :: in
-        integer(lint) :: fibnum, sub1, sub2
-        
-        if (in .gt. 1) then
-            sub1 = recursive_fib(in - 1)
-            sub2 = recursive_fib(in - 2)
-            fibnum = sub1 + sub2
-        else
-            fibnum = in
-        endif
-    end function recursive_fib
-
 *Recursion Tree*
 
 .. code-block:: text
@@ -1198,156 +1180,375 @@ First numbers in series: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, ...
            / \    / \  / \  / \
          ...  ... ... ... ... ...
 
+.. tabs::
 
-*Parallel Version: Attempt 1 (Fortran)*
+    .. tab:: C 
 
-Adding One Task
+        *Serial Fibonacci Implementation (C)*
 
-.. code-block:: fortran
+        .. code-block:: c
 
-    recursive function recursive_fib(in) result(fibnum)
-        integer, intent(in) :: in
-        integer(lint) :: fibnum, sub1, sub2
-        
-        if (in .gt. 1) then
-            !$OMP task shared(sub1) firstprivate(in)
-                sub1 = recursive_fib(in - 1)
-            !$OMP end task
-            sub2 = recursive_fib(in - 2)
-            fibnum = sub1 + sub2
-        else
-            fibnum = in
-        endif
-    end function recursive_fib
-
-*Data Sharing*
+            unsigned long long recursive_fib(int in) {
+                unsigned long long fibnum, sub1, sub2;
+                
+                if (in > 1) {
+                    sub1 = recursive_fib(in - 1);
+                    sub2 = recursive_fib(in - 2);
+                    fibnum = sub1 + sub2;
+                } else {
+                    fibnum = in;
+                }
+                return fibnum;
+            }
 
 
-- ``sub1`` is ``shared`` - declared inside function, must share to return result
-- ``in`` is ``firstprivate`` - initialized at task creation
+        *Parallel Version: Attempt 1 (C)*
+
+        Adding One Task
+
+        .. code-block:: c
+
+            unsigned long long recursive_fib(int in) {
+                unsigned long long fibnum, sub1, sub2;
+                
+                if (in > 1) {
+                    #pragma omp task shared(sub1) firstprivate(in)
+                    {
+                        sub1 = recursive_fib(in - 1);
+                    }
+                    sub2 = recursive_fib(in - 2);
+                    fibnum = sub1 + sub2;
+                } else {
+                    fibnum = in;
+                }
+                return fibnum;
+            }
+
+        *Data Sharing*
 
 
-
-*Parallel Version: Attempt 2 (Fortran)*
-
-Adding Second Task
-
-
-.. code-block:: fortran
-
-    recursive function recursive_fib(in) result(fibnum)
-        integer, intent(in) :: in
-        integer(lint) :: fibnum, sub1, sub2
-        
-        if (in .gt. 1) then
-            !$OMP task shared(sub1) firstprivate(in)
-                sub1 = recursive_fib(in - 1)
-            !$OMP end task
-            !$OMP task shared(sub2) firstprivate(in)
-                sub2 = recursive_fib(in - 2)
-            !$OMP end task
-            fibnum = sub1 + sub2
-        else
-            fibnum = in
-        endif
-    end function recursive_fib
-
-.. danger::
-   **Problem:** Need to have ``sub1`` and ``sub2`` ready before computing ``fibnum``!
+        - ``sub1`` is ``shared`` - declared inside function, must share to return result
+        - ``in`` is ``firstprivate`` - initialized at task creation
 
 
 
-*Parallel Version: Final Solution (Fortran)*
+        *Parallel Version: Attempt 2 (C)*
 
-Adding taskwait
-
-.. code-block:: fortran
-
-    recursive function recursive_fib(in) result(fibnum)
-        integer, intent(in) :: in
-        integer(lint) :: fibnum, sub1, sub2
-        
-        if (in .gt. 1) then
-            !$OMP task shared(sub1) firstprivate(in)
-                sub1 = recursive_fib(in - 1)
-            !$OMP end task
-            !$OMP task shared(sub2) firstprivate(in)
-                sub2 = recursive_fib(in - 2)
-            !$OMP end task
-            !$OMP taskwait
-            fibnum = sub1 + sub2
-        else
-            fibnum = in
-        endif
-    end function recursive_fib
-
-*Solution*
-
-- ``taskwait`` waits for the 2 tasks above
-- Recursion takes care of grandchildren automatically
+        Adding Second Task
 
 
-*Calling the Parallel Fibonacci*
+        .. code-block:: c
 
-Original Serial Code
+            unsigned long long recursive_fib(int in) {
+                unsigned long long fibnum, sub1, sub2;
+                
+                if (in > 1) {
+                    #pragma omp task shared(sub1) firstprivate(in)
+                    {
+                        sub1 = recursive_fib(in - 1);
+                    }
+                    #pragma omp task shared(sub2) firstprivate(in)
+                    {
+                        sub2 = recursive_fib(in - 2);
+                    }
+                    fibnum = sub1 + sub2;
+                } else {
+                    fibnum = in;
+                }
+                return fibnum;
+            }
 
-.. code-block:: fortran
-
-    program fibonacci
-        !$ use omp_lib
-        integer, parameter :: lint = selected_int_kind(10)
-        integer(lint) :: fibres
-        integer :: input
-        
-        read (*,*) input
-        fibres = recursive_fib(input)
-        print *, "Fibonacci number", input, " is:", fibres
-    end program fibonacci
+        .. danger::
+        **Problem:** Need to have ``sub1`` and ``sub2`` ready before computing ``fibnum``!
 
 
 
-*Attempt: Starting Parallel Region*
+        *Parallel Version: Final Solution (C)*
 
-.. code-block:: fortran
+        Adding taskwait
 
-    program fibonacci
-        !$ use omp_lib
-        integer, parameter :: lint = selected_int_kind(10)
-        integer(lint) :: fibres
-        integer :: input
-        
-        read (*,*) input
-        !$OMP parallel shared(input, fibres) default(none)
-            fibres = recursive_fib(input)
-        !$OMP end parallel
-        print *, "Fibonacci number", input, " is:", fibres
-    end program fibonacci
+        .. code-block:: c
 
-.. danger::
-   **Problem:** Each thread starts Fibonacci calculation! Multiple redundant computations.
+            unsigned long long recursive_fib(int in) {
+                unsigned long long fibnum, sub1, sub2;
+                
+                if (in > 1) {
+                    #pragma omp task shared(sub1) firstprivate(in)
+                    {
+                        sub1 = recursive_fib(in - 1);
+                    }
+                    #pragma omp task shared(sub2) firstprivate(in)
+                    {
+                        sub2 = recursive_fib(in - 2);
+                    }
+                    #pragma omp taskwait
+                    fibnum = sub1 + sub2;
+                } else {
+                    fibnum = in;
+                }
+                return fibnum;
+            }
+
+        *Solution*
+
+        - ``taskwait`` waits for the 2 tasks above
+        - Recursion takes care of grandchildren automatically
 
 
-*Solution: Using single Construct*
+        *Calling the Parallel Fibonacci*
 
-.. code-block:: fortran
+        Original Serial Code
 
-    program fibonacci
-        !$ use omp_lib
-        integer, parameter :: lint = selected_int_kind(10)
-        integer(lint) :: fibres
-        integer :: input
-        
-        read (*,*) input
-        !$OMP parallel shared(input, fibres) default(none)
-            !$OMP single
+        .. code-block:: c
+
+            #include <stdio.h>
+            #include <stdlib.h>
+            
+            int main(int argc, char *argv[]) {
+                unsigned long long fibres;
+                int input;
+                
+                printf("Enter input: ");
+                scanf("%d", &input);
+                fibres = recursive_fib(input);
+                printf("Fibonacci number %d is: %llu\n", input, fibres);
+                
+                return 0;
+            }
+
+
+
+        *Attempt: Starting Parallel Region*
+
+        .. code-block:: c
+
+            #include <stdio.h>
+            #include <stdlib.h>
+            #include <omp.h>
+            
+            int main(int argc, char *argv[]) {
+                unsigned long long fibres;
+                int input;
+                
+                printf("Enter input: ");
+                scanf("%d", &input);
+                
+                #pragma omp parallel shared(input, fibres) default(none)
+                {
+                    fibres = recursive_fib(input);
+                }
+                
+                printf("Fibonacci number %d is: %llu\n", input, fibres);
+                
+                return 0;
+            }
+
+        .. danger::
+        **Problem:** Each thread starts Fibonacci calculation! Multiple redundant computations.
+
+
+        *Solution: Using single Construct*
+
+        .. code-block:: c
+
+            #include <stdio.h>
+            #include <stdlib.h>
+            #include <omp.h>
+            
+            int main(int argc, char *argv[]) {
+                unsigned long long fibres;
+                int input;
+                
+                printf("Enter input: ");
+                scanf("%d", &input);
+                
+                #pragma omp parallel shared(input, fibres) default(none)
+                {
+                    #pragma omp single
+                    {
+                        fibres = recursive_fib(input);
+                    }
+                }
+                
+                printf("Fibonacci number %d is: %llu\n", input, fibres);
+                
+                return 0;
+            }
+
+        .. note::
+        ``single`` ensures only one thread starts the recursion, but all threads can help execute tasks.
+
+    .. tab:: Fortran
+      
+
+
+        *Serial Fibonacci Implementation (Fortran)*
+
+        .. code-block:: fortran
+
+            recursive function recursive_fib(in) result(fibnum)
+                integer, intent(in) :: in
+                integer(lint) :: fibnum, sub1, sub2
+                
+                if (in .gt. 1) then
+                    sub1 = recursive_fib(in - 1)
+                    sub2 = recursive_fib(in - 2)
+                    fibnum = sub1 + sub2
+                else
+                    fibnum = in
+                endif
+            end function recursive_fib
+
+
+        *Parallel Version: Attempt 1 (Fortran)*
+
+        Adding One Task
+
+        .. code-block:: fortran
+
+            recursive function recursive_fib(in) result(fibnum)
+                integer, intent(in) :: in
+                integer(lint) :: fibnum, sub1, sub2
+                
+                if (in .gt. 1) then
+                    !$OMP task shared(sub1) firstprivate(in)
+                        sub1 = recursive_fib(in - 1)
+                    !$OMP end task
+                    sub2 = recursive_fib(in - 2)
+                    fibnum = sub1 + sub2
+                else
+                    fibnum = in
+                endif
+            end function recursive_fib
+
+        *Data Sharing*
+
+
+        - ``sub1`` is ``shared`` - declared inside function, must share to return result
+        - ``in`` is ``firstprivate`` - initialized at task creation
+
+
+
+        *Parallel Version: Attempt 2 (Fortran)*
+
+        Adding Second Task
+
+
+        .. code-block:: fortran
+
+            recursive function recursive_fib(in) result(fibnum)
+                integer, intent(in) :: in
+                integer(lint) :: fibnum, sub1, sub2
+                
+                if (in .gt. 1) then
+                    !$OMP task shared(sub1) firstprivate(in)
+                        sub1 = recursive_fib(in - 1)
+                    !$OMP end task
+                    !$OMP task shared(sub2) firstprivate(in)
+                        sub2 = recursive_fib(in - 2)
+                    !$OMP end task
+                    fibnum = sub1 + sub2
+                else
+                    fibnum = in
+                endif
+            end function recursive_fib
+
+        .. danger::
+        **Problem:** Need to have ``sub1`` and ``sub2`` ready before computing ``fibnum``!
+
+
+
+        *Parallel Version: Final Solution (Fortran)*
+
+        Adding taskwait
+
+        .. code-block:: fortran
+
+            recursive function recursive_fib(in) result(fibnum)
+                integer, intent(in) :: in
+                integer(lint) :: fibnum, sub1, sub2
+                
+                if (in .gt. 1) then
+                    !$OMP task shared(sub1) firstprivate(in)
+                        sub1 = recursive_fib(in - 1)
+                    !$OMP end task
+                    !$OMP task shared(sub2) firstprivate(in)
+                        sub2 = recursive_fib(in - 2)
+                    !$OMP end task
+                    !$OMP taskwait
+                    fibnum = sub1 + sub2
+                else
+                    fibnum = in
+                endif
+            end function recursive_fib
+
+        *Solution*
+
+        - ``taskwait`` waits for the 2 tasks above
+        - Recursion takes care of grandchildren automatically
+
+
+        *Calling the Parallel Fibonacci*
+
+        Original Serial Code
+
+        .. code-block:: fortran
+
+            program fibonacci
+                !$ use omp_lib
+                integer, parameter :: lint = selected_int_kind(10)
+                integer(lint) :: fibres
+                integer :: input
+                
+                read (*,*) input
                 fibres = recursive_fib(input)
-            !$OMP end single
-        !$OMP end parallel
-        print *, "Fibonacci number", input, " is:", fibres
-    end program fibonacci
+                print *, "Fibonacci number", input, " is:", fibres
+            end program fibonacci
 
-.. note::
-   ``single`` ensures only one thread starts the recursion, but all threads can help execute tasks.
+
+
+        *Attempt: Starting Parallel Region*
+
+        .. code-block:: fortran
+
+            program fibonacci
+                !$ use omp_lib
+                integer, parameter :: lint = selected_int_kind(10)
+                integer(lint) :: fibres
+                integer :: input
+                
+                read (*,*) input
+                !$OMP parallel shared(input, fibres) default(none)
+                    fibres = recursive_fib(input)
+                !$OMP end parallel
+                print *, "Fibonacci number", input, " is:", fibres
+            end program fibonacci
+
+        .. danger::
+        **Problem:** Each thread starts Fibonacci calculation! Multiple redundant computations.
+
+
+        *Solution: Using single Construct*
+
+        .. code-block:: fortran
+
+            program fibonacci
+                !$ use omp_lib
+                integer, parameter :: lint = selected_int_kind(10)
+                integer(lint) :: fibres
+                integer :: input
+                
+                read (*,*) input
+                !$OMP parallel shared(input, fibres) default(none)
+                    !$OMP single
+                        fibres = recursive_fib(input)
+                    !$OMP end single
+                !$OMP end parallel
+                print *, "Fibonacci number", input, " is:", fibres
+            end program fibonacci
+
+        .. note::
+        ``single`` ensures only one thread starts the recursion, but all threads can help execute tasks.
 
 
 
