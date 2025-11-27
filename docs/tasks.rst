@@ -350,6 +350,127 @@ If we move the variable :code:`number` inside the parallel construct, then the v
 
 The value of the variable is copied when the task is created.
 
+.. challenge::
+
+    Replace the *fixme* strings with the types of the variables in the code when the defaults are used.
+    (Exercise inspired in an example of `Christian Terboven <https://hpc-wiki.info/hpc/OpenMP_in_Small_Bites>`_).
+
+    .. code-block:: c
+        :linenos:
+
+        #include <stdio.h>
+        #include <omp.h>
+
+        static int first = 1;  // File scope (static global)
+
+        int main() {
+            // Variables in main scope
+            int second = 2; 
+            int third = 3; 
+            
+            #pragma omp parallel private(second)
+            {
+                // Variable in parallel region scope
+                int fourth = 4; 
+                
+                #pragma omp task 
+                {
+                    // Variable in task scope
+                    int fifth = 5;
+                    
+                    // Data scoping in this task:
+                    // "first":  *fixme*    (static global)
+                    // "second": *fixme*    (private in parallel, becomes firstprivate in task)
+                    // "third":  *fixme*    (declared outside parallel)
+                    // "fourth": *fixme*    (declared in parallel region)
+                    // "fifth":  *fixme*    (declared in task)
+                    
+                    printf("1=%d, 2=%d, 3=%d, 4=%d, 5=%d\n", 
+                        first, second, third, fourth, fifth);
+                }
+            }
+            return 0;
+        }    
+
+    Now, use default(none) and write the types of the variables in the *fixme* strings to have the 
+    same behavior as in the previous code:
+
+    .. code-block:: c
+        :linenos:
+
+        #pragma omp parallel private(*fixme*) default(none) shared(*fixme*, *fixme*)
+        {
+            int fourth = 4; 
+            
+            #pragma omp task default(none) firstprivate(*fixme*,*fixme*) shared(*fixme*, *fixme*)
+            {
+                int fifth = 5;
+                printf("1=%d, 2=%d, 3=%d, 4=%d, 5=%d\n", 
+                    first, second, third, fourth, fifth);
+            }
+        }        
+
+        
+
+.. solution::
+
+    The variables using default data scope look like:
+
+    .. code-block:: c
+        :linenos:
+
+        #include <stdio.h>
+        #include <omp.h>
+
+        static int first = 1;  // File scope (static global)
+
+        int main() {
+            // Variables in main scope
+            int second = 2; 
+            int third = 3; 
+            
+            #pragma omp parallel private(second)
+            {
+                // Variable in parallel region scope
+                int fourth = 4; 
+                
+                #pragma omp task 
+                {
+                    // Variable in task scope
+                    int fifth = 5;
+                    
+                    // Data scoping in this task:
+                    // "first":  shared        (static global)
+                    // "second": firstprivate  (private in parallel, becomes firstprivate in task)
+                    // "third":  shared        (declared outside parallel)
+                    // "fourth": firstprivate  (declared in parallel region)
+                    // "fifth":  private       (declared in task)
+                    
+                    printf("1=%d, 2=%d, 3=%d, 4=%d, 5=%d\n", 
+                        first, second, third, fourth, fifth);
+                }
+            }
+            return 0;
+        }
+
+    And not using defaults **default(none)**, the variables will need to be declared as follows to have
+    the same behavior as in the previous code: 
+
+    .. code-block:: c
+        :linenos:
+
+        #pragma omp parallel private(second) default(none) shared(first, third)
+        {
+            int fourth = 4; 
+            
+            #pragma omp task default(none) firstprivate(second, fourth) shared(first, third)
+            {
+                int fifth = 5;
+                printf("1=%d, 2=%d, 3=%d, 4=%d, 5=%d\n", 
+                    first, second, third, fourth, fifth);
+            }
+        }
+
 Single construct
 ^^^^^^^^^^^^^^^^
 
