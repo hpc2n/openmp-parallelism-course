@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>More on Worksharing &mdash; OpenMP parallelism in scientific computing  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_lesson.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/term_role_formatting.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="../_static/minipres.js"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+    <link rel="next" title="The Task Directive" href="../tasks/" />
+    <link rel="prev" title="More on Private Data" href="../data-handlingii/" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../" class="icon icon-home">
+            OpenMP parallelism in scientific computing
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Day 1</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hpc2n-intro/">Introduction to HPC2N</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup/">Introduction to Kebnekaise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../profiling-analysis/">Profiling analysis with VTune and Advisor</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 2</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../first-steps/">First Steps in OpenMP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-handling/">Data for Parallel Regions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../worksharing/">Worksharing and Scheduling</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 3</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../data-handlingii/">More on Private Data</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">More on Worksharing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#work-for-single-threads">Work for Single Threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clauses-for-parallel-construct">Clauses for Parallel Construct</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clause-num-threads">Clause: num_threads</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#keeping-memory-consistent">Keeping Memory Consistent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ensuring-memory-consistency-flush">Ensuring Memory Consistency: flush</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#memory-reorder-out-of-order-execution">Memory Reorder: Out-of-Order Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#clause-nowait">Clause: nowait</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#specialty-of-static-schedule">Specialty of Static Schedule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#orphan-directives">Orphan Directives</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 4</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tasks/">The Task Directive</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Miscellanous</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick-reference/">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/">Instructor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../">OpenMP parallelism in scientific computing</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">More on Worksharing</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/hpc2n/OpenMP-parallelism-course/blob/master/docs/worksharingii.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="more-on-worksharing">
+<h1>More on Worksharing<a class="headerlink" href="#more-on-worksharing" title="Permalink to this heading"></a></h1>
+<div class="admonition-objectives objectives admonition" id="objectives-0">
+<p class="admonition-title">Objectives</p>
+<p>This guide covers advanced worksharing concepts:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">single</span></code> and <code class="docutils literal notranslate"><span class="pre">master</span></code> constructs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">if</span></code> clause for conditional parallelization</p></li>
+<li><p>Flushes and implicit barriers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nowait</span></code> clause for removing barriers</p></li>
+<li><p>Orphan directives</p></li>
+</ul>
+</div>
+<section id="work-for-single-threads">
+<h2>Work for Single Threads<a class="headerlink" href="#work-for-single-threads" title="Permalink to this heading"></a></h2>
+<p><strong>Single Construct</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">single</span></code> construct is a worksharing construct placed inside a parallel region.</p>
+<p>As the name suggests, a single thread executes the region.</p>
+<ul class="simple">
+<li><p><strong>Not specified</strong> which thread executes the region</p></li>
+<li><p>Other threads wait at an implicit barrier at the end</p></li>
+<li><p>Useful for operations that should be done only once</p></li>
+</ul>
+<p><em>Use Cases</em></p>
+<p><strong>Guard when writing to shared variables:</strong></p>
+<ul class="simple">
+<li><p>Enforcing a single write</p></li>
+</ul>
+<p><strong>Guard I/O operations:</strong></p>
+<ul class="simple">
+<li><p>Writing to stdout or file (single write)</p></li>
+<li><p>Reading from stdin or file (data read once)</p></li>
+</ul>
+<p><strong>Starting tasks:</strong></p>
+<ul class="simple">
+<li><p>Task creation (covered later in course)</p></li>
+</ul>
+<p><em>Example: single Construct (Fortran)</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel shared(a, b, n) private(i)</span>
+<span class="w">    </span><span class="c">!$omp single</span>
+<span class="w">    </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">()</span>
+<span class="w">    </span><span class="c">!$omp end single  ! implied barrier, required!</span>
+
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">n</span>
+<span class="w">        </span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The barrier after <code class="docutils literal notranslate"><span class="pre">single</span></code> ensures that <code class="docutils literal notranslate"><span class="pre">a</span></code> is set before any thread uses it in the loop.</p>
+</div>
+<p><em>Example: single Construct (C)</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel shared(a, b, n) private(i)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp single</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span><span class="w">  </span><span class="c1">// implied barrier, required!</span>
+
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The barrier after <code class="docutils literal notranslate"><span class="pre">single</span></code> ensures that <code class="docutils literal notranslate"><span class="pre">a</span></code> is set before any thread uses it in the loop.</p>
+</div>
+<p><strong>Master Construct</strong></p>
+<p>Similar to <code class="docutils literal notranslate"><span class="pre">single</span></code>, but with specific differences.</p>
+<p><em>Key Differences from single</em></p>
+<p><strong>Execution:</strong></p>
+<ul class="simple">
+<li><p>Work is always done on the master thread (thread 0)</p></li>
+<li><p>Deterministic behavior</p></li>
+</ul>
+<p><strong>Synchronization:</strong></p>
+<ul class="simple">
+<li><p><strong>No</strong> implied barrier/synchronization</p></li>
+<li><p>More lightweight than <code class="docutils literal notranslate"><span class="pre">single</span></code> if barrier is not needed</p></li>
+</ul>
+<p><em>When to Use</em></p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">master</span></code> when:</p>
+<ul class="simple">
+<li><p>You specifically need thread 0 to do the work</p></li>
+<li><p>You don’t need synchronization afterward</p></li>
+<li><p>Performance is critical and barrier overhead should be avoided</p></li>
+</ul>
+<p><strong>Ordered Construct</strong></p>
+<p>Execute part of a loop body in sequential order.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Significant performance penalty! Requires enough other parallel work to pay the overhead.</p>
+</div>
+<p><em>How It Works</em></p>
+<ol class="arabic simple">
+<li><p>Thread working on first iteration enters the ordered region, others wait</p></li>
+<li><p>When done, thread for second iteration enters</p></li>
+<li><p>And so on, in sequential order</p></li>
+</ol>
+<p><em>Requirements</em></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ordered</span></code> clause must also be specified on the loop construct (<code class="docutils literal notranslate"><span class="pre">omp</span> <span class="pre">for</span></code>/<code class="docutils literal notranslate"><span class="pre">omp</span> <span class="pre">do</span></code>)</p></li>
+<li><p>No more than one <code class="docutils literal notranslate"><span class="pre">ordered</span></code> region per thread and iteration</p></li>
+</ul>
+<p><em>Use Cases</em></p>
+<ul class="simple">
+<li><p>Ordered printing from parallel loops</p></li>
+<li><p>Debugging (e.g., data races)</p></li>
+</ul>
+<p><em>Example: Ordered Construct</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel default(none) shared(b)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp for ordered schedule(dynamic, 1)</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">PSIZE</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expensiveFunction</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+
+<span class="w">        </span><span class="cp">#pragma omp ordered</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;b[%3i] = %4i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>The computation <code class="docutils literal notranslate"><span class="pre">expensiveFunction(i)</span></code> happens in parallel</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">printf</span></code> statements execute in sequential order (i=0, 1, 2, …)</p></li>
+<li><p>This ensures ordered output despite parallel execution</p></li>
+</ul>
+</section>
+<section id="clauses-for-parallel-construct">
+<h2>Clauses for Parallel Construct<a class="headerlink" href="#clauses-for-parallel-construct" title="Permalink to this heading"></a></h2>
+<p><strong>if Clause</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">if</span></code> clause can be specified on the <code class="docutils literal notranslate"><span class="pre">parallel</span></code> construct.</p>
+<p>If the condition evaluates to false:</p>
+<ul class="simple">
+<li><p>No parallel region is started</p></li>
+<li><p>Code executes serially</p></li>
+<li><p>Useful for runtime evaluation (e.g., loop count too small to benefit from parallelization)</p></li>
+</ul>
+<p><em>Syntax</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel if (condition)</span>
+</pre></div>
+</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel if (condition)</span>
+</pre></div>
+</div>
+<p><em>Example: if Clause (Fortran)</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span>
+
+<span class="c">!$omp parallel if (n &gt; 5) shared(n)</span>
+<span class="w">    </span><span class="c">!$omp single</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;The n is: &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">n</span>
+<span class="w">    </span><span class="c">!$omp end single</span>
+
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;Hello, I am thread&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">             </span><span class="n">omp_get_thread_num</span><span class="p">(),</span><span class="w"> </span><span class="s2">&quot; of&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">             </span><span class="n">omp_get_num_threads</span><span class="p">()</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">&gt;</span> <span class="pre">5</span></code>: parallel region with multiple threads</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">&lt;=</span> <span class="pre">5</span></code>: serial execution with single thread</p></li>
+</ul>
+<p><em>Example: if Clause (C)</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel if (n &gt; 5) shared(n)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp single</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;The n is %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello, I am thread %i of %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+<span class="w">           </span><span class="n">omp_get_thread_num</span><span class="p">(),</span>
+<span class="w">           </span><span class="n">omp_get_num_threads</span><span class="p">());</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">&gt;</span> <span class="pre">5</span></code>: parallel region with multiple threads</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">&lt;=</span> <span class="pre">5</span></code>: serial execution with single thread</p></li>
+</ul>
+</section>
+<section id="clause-num-threads">
+<h2>Clause: num_threads<a class="headerlink" href="#clause-num-threads" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">num_threads</span></code> clause specifies the number of threads to start in a parallel region.</p>
+<p><em>Syntax</em></p>
+<p><strong>C:</strong></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">nthread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="cp">#pragma omp parallel num_threads(nthread)</span>
+</pre></div>
+</div>
+<p><strong>Fortran:</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">nthread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span>
+<span class="c">!$omp parallel num_threads(nthread)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This overrides the default thread count and environment variables for this specific parallel region.</p>
+</div>
+</section>
+<section id="keeping-memory-consistent">
+<h2>Keeping Memory Consistent<a class="headerlink" href="#keeping-memory-consistent" title="Permalink to this heading"></a></h2>
+<p><em>OpenMP: Relaxed Memory Model</em></p>
+<p>OpenMP uses a relaxed memory model for performance.</p>
+<p>Threads are allowed to have their “own temporary view” of memory:</p>
+<ul class="simple">
+<li><p>Not required to be consistent with main memory</p></li>
+<li><p>Data may be in registers or cache, invisible to other threads</p></li>
+</ul>
+<p><strong>Programmer Responsibility</strong></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>This is a “may be” for the hardware, but the programmer must assume it is (for portability).</p>
+</div>
+<p><em>Scope for Data Races</em></p>
+<p>Without proper synchronization:</p>
+<ul class="simple">
+<li><p>Memory modified by other threads may not be in temporary view</p></li>
+<li><p>Own changes may not be visible to other threads</p></li>
+</ul>
+</section>
+<section id="ensuring-memory-consistency-flush">
+<h2>Ensuring Memory Consistency: flush<a class="headerlink" href="#ensuring-memory-consistency-flush" title="Permalink to this heading"></a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">flush</span></code> to ensure memory consistency across threads.</p>
+<p><em>What flush Does</em></p>
+<p><strong>Writes modifications to memory:</strong></p>
+<ul class="simple">
+<li><p>Modifications in temporary view are written to memory system</p></li>
+<li><p>Guaranteed to be visible to other threads</p></li>
+</ul>
+<p><strong>Discards temporary view:</strong></p>
+<ul class="simple">
+<li><p>Temporary view gets discarded</p></li>
+<li><p>Next access needs to read from memory subsystem</p></li>
+<li><p>Ensures modifications from other threads are “known”</p></li>
+</ul>
+<p><strong>Prevents reordering:</strong></p>
+<ul class="simple">
+<li><p>No reordering of memory access and flush</p></li>
+</ul>
+<p><em>Example: Without flush (Problem)</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">i</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">dimension</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">b</span>
+<span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="o">/</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="w"> </span><span class="o">/</span><span class="p">)</span>
+
+<span class="c">!$OMP parallel &amp;</span>
+<span class="c">!$OMP shared(b), private(i)</span>
+<span class="w">    </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span>
+<span class="w">    </span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+<span class="c">!$OMP end parallel</span>
+</pre></div>
+</div>
+<p><em>Memory Behavior (3 threads)</em></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Initial:     [3, 4, 5, 6]
+
+Thread 0: i=1
+  b(1) = 3 + 1 = 4
+  b(2) = 4 + 1 = 5    (but may read stale value!)
+
+Thread 1: i=2
+  b(2) = 4 + 2 = 6    (conflict!)
+  b(3) = 5 + 1 = 6
+
+Thread 2: i=3
+  b(3) = 5 + 3 = 8    (conflict!)
+  b(4) = 6 + 1 = 7
+
+Result: [4, 6, 8, 7]  ← Not what we want!
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Without synchronization, threads may read stale values and overwrite each other’s changes.</p>
+</div>
+<p><em>Example: With barrier (Solution)</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">i</span>
+<span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">dimension</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">b</span>
+<span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="o">/</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="mi">6</span><span class="w"> </span><span class="o">/</span><span class="p">)</span>
+
+<span class="c">!$OMP parallel &amp;</span>
+<span class="c">!$OMP shared(b), private(i)</span>
+<span class="w">    </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span>
+<span class="w">    </span><span class="c">!$OMP barrier</span>
+<span class="w">    </span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+<span class="c">!$OMP end parallel</span>
+</pre></div>
+</div>
+<p><em>Memory Behavior (3 threads)</em></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Initial:     [3, 4, 5, 6]
+
+Phase 1 (before barrier):
+  Thread 0: b(1) = 4
+  Thread 1: b(2) = 6
+  Thread 2: b(3) = 8
+
+Result after phase 1: [4, 6, 8, 6]
+
+BARRIER (flush to memory)
+
+Phase 2 (after barrier):
+  Thread 0: b(2) = 6 + 1 = 7
+  Thread 1: b(3) = 8 + 1 = 9
+  Thread 2: b(4) = 6 + 1 = 7
+
+Final result: [4, 7, 9, 7]  ← Correct!
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The barrier ensures all writes from phase 1 are visible before phase 2 begins.</p>
+</div>
+<p><strong>Sequence Required for Data Visibility</strong></p>
+<p>For data to be visible on another thread, the following sequence is required:</p>
+<ol class="arabic simple">
+<li><p><strong>First thread writes</strong> to shared memory</p></li>
+<li><p><strong>First thread flush</strong> - change goes into memory system</p></li>
+<li><p><strong>Second thread flush</strong> - discard local temporary view</p></li>
+<li><p><strong>Second thread reads</strong> - gets updated value from memory</p></li>
+</ol>
+<p><em>Important Notes</em></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<ul class="simple">
+<li><p>A flush doesn’t “push” data to other threads</p></li>
+<li><p>Fixing data races typically also requires synchronization</p></li>
+<li><p>Implied flushes are often sufficient</p></li>
+</ul>
+</div>
+<p><em>Explicit Flush</em></p>
+<p>You can issue an explicit flush:</p>
+<p><strong>Fortran:</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$OMP flush</span>
+</pre></div>
+</div>
+<p><strong>C:</strong></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp flush</span>
+</pre></div>
+</div>
+<p><em>Implicit Barriers and Data Flushes</em></p>
+<p>OpenMP automatically performs barriers and flushes at specific points.</p>
+<p><em>Constructs with Barrier and Flush</em></p>
+<p><strong>At barrier:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">!$omp</span> <span class="pre">barrier</span></code> / <code class="docutils literal notranslate"><span class="pre">#pragma</span> <span class="pre">omp</span> <span class="pre">barrier</span></code> (flush)</p></li>
+</ul>
+<p><strong>Start and end of constructs:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">parallel</span></code> region (barrier &amp; flush)</p></li>
+</ul>
+<p><strong>Start and end:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">critical</span></code> region (flush)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ordered</span></code> region (flush)</p></li>
+</ul>
+<p><strong>End only:</strong></p>
+<ul class="simple">
+<li><p>Loop constructs (<code class="docutils literal notranslate"><span class="pre">for</span></code>/<code class="docutils literal notranslate"><span class="pre">do</span></code>) (barrier &amp; flush)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">single</span></code> (barrier &amp; flush)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">workshare</span></code> (barrier &amp; flush)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sections</span></code> (barrier &amp; flush)</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>No barrier or flush at the start</strong> of loop, single, workshare, or sections!</p>
+</div>
+<p><strong>Other Operations</strong></p>
+<ul class="simple">
+<li><p>Various locking operations (flush)</p></li>
+<li><p>Start and end of <code class="docutils literal notranslate"><span class="pre">atomic</span></code> flushes “protected” variable</p>
+<ul>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">seq_cst</span></code> on <code class="docutils literal notranslate"><span class="pre">atomic</span></code> to include “global” flush</p></li>
+</ul>
+</li>
+</ul>
+<p><strong>No barrier or flush associated with master construct!</strong></p>
+</section>
+<section id="memory-reorder-out-of-order-execution">
+<h2>Memory Reorder: Out-of-Order Execution<a class="headerlink" href="#memory-reorder-out-of-order-execution" title="Permalink to this heading"></a></h2>
+<p><em>Problem Scenario</em></p>
+<p>Consider this code:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="p">...</span>
+<span class="n">A</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3.0</span>
+<span class="c">!$omp atomic write</span>
+<span class="n">matrix_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="p">...</span>
+</pre></div>
+</div>
+<p><em>Potential Problems</em></p>
+<ol class="arabic">
+<li><p><strong>No guarantee A(5) is in memory:</strong></p>
+<ul class="simple">
+<li><p>Value might still be in registers/cache</p></li>
+</ul>
+</li>
+<li><p><strong>No guarantee order is maintained:</strong></p>
+<ul class="simple">
+<li><p>Optimizing compiler might reorder:</p></li>
+</ul>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">matrix_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="p">...</span>
+<span class="n">A</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3.0</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Another thread might see <code class="docutils literal notranslate"><span class="pre">matrix_set</span> <span class="pre">=</span> <span class="pre">1</span></code> but read an old value of <code class="docutils literal notranslate"><span class="pre">A(5)</span></code>!</p>
+</div>
+<p><em>Fix: Using flush to Prevent Reordering</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="p">...</span>
+<span class="n">A</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3.0</span>
+<span class="c">!$omp flush</span>
+<span class="c">!$omp atomic write</span>
+<span class="n">matrix_set</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="p">...</span>
+</pre></div>
+</div>
+<p><em>What the flush Does</em></p>
+<ol class="arabic simple">
+<li><p><strong>Ensures modified A is in memory:</strong></p>
+<ul class="simple">
+<li><p>All threads can see the updated value</p></li>
+</ul>
+</li>
+<li><p><strong>Prohibits reordering of memory accesses:</strong></p>
+<ul class="simple">
+<li><p>Compiler and hardware cannot move <code class="docutils literal notranslate"><span class="pre">matrix_set</span> <span class="pre">=</span> <span class="pre">1</span></code> before the flush</p></li>
+<li><p>Guarantees <code class="docutils literal notranslate"><span class="pre">A(5)</span></code> is written before <code class="docutils literal notranslate"><span class="pre">matrix_set</span></code> is set</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="clause-nowait">
+<h2>Clause: nowait<a class="headerlink" href="#clause-nowait" title="Permalink to this heading"></a></h2>
+<p>Barriers have performance implications. The implied barrier of a construct may not be required for correctness.</p>
+<p><em>Removing Barriers</em></p>
+<p>Specifying <code class="docutils literal notranslate"><span class="pre">nowait</span></code>:</p>
+<ul class="simple">
+<li><p><strong>In C:</strong> on the construct itself</p></li>
+<li><p><strong>In Fortran:</strong> on the end construct directive</p></li>
+</ul>
+<p>This suppresses the implied barrier (including flush).</p>
+<p><em>When to Use</em></p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">nowait</span></code> when:</p>
+<ul class="simple">
+<li><p>Threads don’t need to wait for each other</p></li>
+<li><p>No data dependencies between constructs</p></li>
+<li><p>You want to improve performance by allowing threads to continue immediately</p></li>
+</ul>
+<p><em>Example: Tensor Product (C)</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel shared(a, b, t, n, m)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp for nowait</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">funcA</span><span class="p">(</span><span class="n">i</span><span class="p">);</span><span class="w">  </span><span class="c1">// no barrier needed!</span>
+
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">funcB</span><span class="p">(</span><span class="n">j</span><span class="p">);</span><span class="w">  </span><span class="c1">// barrier needed!</span>
+
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">            </span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">];</span><span class="w">  </span><span class="c1">// bad access to b!</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>First loop initializes <code class="docutils literal notranslate"><span class="pre">a</span></code> with <code class="docutils literal notranslate"><span class="pre">nowait</span></code> - threads can continue immediately</p></li>
+<li><p>Second loop initializes <code class="docutils literal notranslate"><span class="pre">b</span></code> - implicit barrier ensures all threads finish before tensor product</p></li>
+<li><p>Third loop uses both <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code> - needs both to be complete</p></li>
+</ul>
+<p><em>Example: Adding Vectors (Fortran)</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel shared(a, b, t, n)</span>
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">n</span>
+<span class="w">        </span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sin</span><span class="p">(</span><span class="kt">real</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+<span class="w">    </span><span class="c">!$omp end do nowait  ! no barrier here!</span>
+
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">n</span>
+<span class="w">        </span><span class="n">b</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">cos</span><span class="p">(</span><span class="kt">real</span><span class="p">(</span><span class="n">j</span><span class="p">))</span><span class="w">  </span><span class="c">! barrier here!</span>
+
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">n</span>
+<span class="w">        </span><span class="n">t</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Demo code - a single loop would help performance.</p>
+</div>
+<ul class="simple">
+<li><p>First loop fills <code class="docutils literal notranslate"><span class="pre">a</span></code> - can proceed without waiting</p></li>
+<li><p>Second loop fills <code class="docutils literal notranslate"><span class="pre">b</span></code> - implicit barrier before final loop</p></li>
+<li><p>Third loop needs both <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code> complete</p></li>
+</ul>
+<p><em>Example: Adding Vectors (C)</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel shared(a, b, t, n)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp for nowait</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sin</span><span class="p">((</span><span class="kt">double</span><span class="p">)</span><span class="n">i</span><span class="p">);</span><span class="w">  </span><span class="c1">// no barrier here!</span>
+
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cos</span><span class="p">((</span><span class="kt">double</span><span class="p">)</span><span class="n">j</span><span class="p">);</span><span class="w">  </span><span class="c1">// barrier needed!</span>
+
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Demo code - a single loop would help performance.</p>
+</div>
+<ul class="simple">
+<li><p>First loop fills <code class="docutils literal notranslate"><span class="pre">a</span></code> - can proceed without waiting</p></li>
+<li><p>Second loop fills <code class="docutils literal notranslate"><span class="pre">b</span></code> - implicit barrier before final loop</p></li>
+<li><p>Third loop needs both <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code> complete</p></li>
+</ul>
+<p><strong>Performance Impact of nowait</strong></p>
+<p>Benchmark Setup</p>
+<p><strong>Hardware:</strong></p>
+<ul class="simple">
+<li><p>Dual socket, quad-core Intel Xeon E5520 (2.26 GHz)</p></li>
+</ul>
+<p><strong>Compilers tested:</strong></p>
+<ul class="simple">
+<li><p>PGI 10.9</p></li>
+<li><p>GCC 4.4</p></li>
+<li><p>Intel 12.0</p></li>
+</ul>
+<p><strong>Problem:</strong></p>
+<ul class="simple">
+<li><p>Vector addition example with <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">1000</span></code></p></li>
+<li><p>Time measured in microseconds (μs)</p></li>
+<li><p>Tested with 4, 6, and 8 threads</p></li>
+</ul>
+<p>Results</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Threads    Savings from nowait
+-------    -------------------
+4-8        0.6 - 1.3 μs
+</pre></div>
+</div>
+<p><strong>Performance Chart</strong></p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/perf-nowait.png"><img alt="../_images/perf-nowait.png" src="../_images/perf-nowait.png" style="width: 301.0px; height: 244.99999999999997px;" /></a>
+</figure>
+<hr class="docutils" />
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Even small savings (0.6-1.3 μs) can add up in frequently executed code.</p>
+</div>
+</section>
+<section id="specialty-of-static-schedule">
+<h2>Specialty of Static Schedule<a class="headerlink" href="#specialty-of-static-schedule" title="Permalink to this heading"></a></h2>
+<p>When specifying a static schedule with:</p>
+<ul class="simple">
+<li><p>Same iteration count</p></li>
+<li><p>Same chunk size (or default)</p></li>
+<li><p>Loops bound to same parallel region</p></li>
+</ul>
+<p><strong>Guarantee:</strong></p>
+<p>You can safely assume the same thread works on the same iteration in all loops.</p>
+<p>Can use <code class="docutils literal notranslate"><span class="pre">nowait</span></code> even with data dependencies between loops!</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>This only works with <strong>static</strong> scheduling. Other schedules don’t guarantee iteration-to-thread mapping.</p>
+</div>
+<p><em>Example: Static Schedule with Dependencies (Fortran)</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel shared(a, b, t, n)</span>
+<span class="w">    </span><span class="c">!$omp do schedule(static)</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">n</span>
+<span class="w">        </span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sin</span><span class="p">(</span><span class="kt">real</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+<span class="w">    </span><span class="c">!$omp end do nowait  ! no barrier here!</span>
+
+<span class="w">    </span><span class="c">!$omp do schedule(static)</span>
+<span class="w">    </span><span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">n</span>
+<span class="w">        </span><span class="n">b</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">cos</span><span class="p">(</span><span class="kt">real</span><span class="p">(</span><span class="n">j</span><span class="p">))</span>
+<span class="w">    </span><span class="c">!$omp end do nowait  ! no barrier here!</span>
+
+<span class="w">    </span><span class="c">!$omp do schedule(static)</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">n</span>
+<span class="w">        </span><span class="n">t</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="c">!$omp end do nowait  ! no barrier here!</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The static schedule is crucial! Each thread processes the same indices in all three loops.</p>
+</div>
+<p><em>Example: Static Schedule with Dependencies (C)</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel shared(a, b, t, n)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp for schedule(static) nowait</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sin</span><span class="p">((</span><span class="kt">double</span><span class="p">)</span><span class="n">i</span><span class="p">);</span><span class="w">  </span><span class="c1">// no barrier here!</span>
+
+<span class="w">    </span><span class="cp">#pragma omp for schedule(static) nowait</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">b</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cos</span><span class="p">((</span><span class="kt">double</span><span class="p">)</span><span class="n">j</span><span class="p">);</span><span class="w">  </span><span class="c1">// no barrier here!</span>
+
+<span class="w">    </span><span class="cp">#pragma omp for schedule(static)</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">t</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>The static schedule is crucial! Each thread processes the same indices in all three loops.</p>
+</div>
+<p><em>Why This Works</em></p>
+<p>With static scheduling:</p>
+<ul class="simple">
+<li><p>Thread 0 always processes indices 0 to n/num_threads-1</p></li>
+<li><p>Thread 1 always processes indices n/num_threads to 2*n/num_threads-1</p></li>
+<li><p>And so on…</p></li>
+</ul>
+<p>Each thread only reads values it wrote, so no race conditions occur!</p>
+</section>
+<section id="orphan-directives">
+<h2>Orphan Directives<a class="headerlink" href="#orphan-directives" title="Permalink to this heading"></a></h2>
+<p>“Orphan” directives are OpenMP directives that appear inside functions/subroutines called from within a parallel region, rather than directly inside the parallel region.</p>
+<p><em>Thread Safety Assumption</em></p>
+<p>Calling subroutines and functions inside a parallel region is legal, assuming thread safety.</p>
+<p><em>What Can Be Orphaned</em></p>
+<p>The called procedures may contain:</p>
+<ul class="simple">
+<li><p>Worksharing constructs (<code class="docutils literal notranslate"><span class="pre">for</span></code>, <code class="docutils literal notranslate"><span class="pre">do</span></code>, <code class="docutils literal notranslate"><span class="pre">sections</span></code>)</p></li>
+<li><p>Synchronization constructs (<code class="docutils literal notranslate"><span class="pre">barrier</span></code>, <code class="docutils literal notranslate"><span class="pre">critical</span></code>, etc.)</p></li>
+</ul>
+<p><em>Example: Orphan Directive (C)</em></p>
+<p>Main Function</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel shared(v, vl) reduction(+:nm)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">vectorinit</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">vl</span><span class="p">);</span>
+<span class="w">    </span><span class="n">nm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vectornorm</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">vl</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Called Function with Orphan Directive</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">vectorinit</span><span class="p">(</span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="n">vdata</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">leng</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">leng</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">vdata</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">#pragma</span> <span class="pre">omp</span> <span class="pre">for</span></code> directive is “orphaned” - it’s not directly inside the parallel region but binds to the active parallel region when called.</p>
+</div>
+<p><em>Example: Orphan Directive (Fortran)</em></p>
+<p>Main Program</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel shared(v, vl) reduction(+:nm)</span>
+<span class="w">    </span><span class="k">call </span><span class="n">vectorinit</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">vl</span><span class="p">)</span>
+<span class="w">    </span><span class="n">nm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vectornorm</span><span class="p">(</span><span class="n">v</span><span class="p">,</span><span class="w"> </span><span class="n">vl</span><span class="p">)</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<p>Subroutine with Orphan Directive</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">vectorinit</span><span class="p">(</span><span class="n">vdata</span><span class="p">,</span><span class="w"> </span><span class="n">leng</span><span class="p">)</span>
+<span class="w">    </span><span class="kt">double precision</span><span class="p">,</span><span class="w"> </span><span class="k">dimension</span><span class="p">(</span><span class="n">leng</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">vdata</span>
+<span class="w">    </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">leng</span><span class="p">,</span><span class="w"> </span><span class="n">i</span>
+
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">leng</span>
+<span class="w">        </span><span class="n">vdata</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="k">end subroutine </span><span class="n">vectorinit</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">!$omp</span> <span class="pre">do</span></code> directive is “orphaned” - it’s not directly inside the parallel region but binds to the active parallel region when called.</p>
+</div>
+<p><strong>Performance Impact of Orphaning</strong></p>
+<p>Benchmark Setup</p>
+<p><strong>Test:</strong> Vector initialization and norm calculation
+<strong>Vector length:</strong> 40,000
+<strong>Hardware:</strong> Xeon E5-2650 v3
+<strong>Compilers:</strong> GCC 4.9.3, ICC 16.0</p>
+<p>Configurations Tested</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">parallel</span> <span class="pre">for</span></code> in each function (no orphaning)</p></li>
+<li><p>Orphaned <code class="docutils literal notranslate"><span class="pre">for</span></code> in each function</p></li>
+<li><p>Orphaned <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">nowait</span></code> in each function</p></li>
+</ol>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/perf-orphan.png"><img alt="../_images/perf-orphan.png" src="../_images/perf-orphan.png" style="width: 399.0px; height: 294.0px;" /></a>
+</figure>
+<hr class="docutils" />
+<p><em>Key Observations</em></p>
+<ul class="simple">
+<li><p>Orphaned directives perform <strong>better</strong> than creating new parallel regions</p></li>
+<li><p>Using <code class="docutils literal notranslate"><span class="pre">nowait</span></code> provides additional performance gains</p></li>
+<li><p>Starting/closing parallel regions is very expensive</p></li>
+</ul>
+<p><em>Discussion of Orphan Directives</em></p>
+<p>Advantages:</p>
+<p><strong>Reduces need for code restructuring:</strong></p>
+<ul class="simple">
+<li><p>Can parallelize existing functions without major changes</p></li>
+</ul>
+<p><strong>Allows for longer parallel regions:</strong></p>
+<ul class="simple">
+<li><p>Starting/closing parallel regions is very expensive</p></li>
+<li><p>One long parallel region is more efficient than many short ones</p></li>
+</ul>
+<p><strong>Better performance:</strong></p>
+<ul class="simple">
+<li><p>As shown in benchmarks, avoids parallel region overhead</p></li>
+</ul>
+<p>Potential Issues:</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>Problem:</strong> Routine with orphan directive called outside parallel region</p>
+<p>If a function with an orphaned directive is called from serial code, the directive may have no effect or cause unexpected behavior.</p>
+</div>
+<p>Best Practices:</p>
+<ul class="simple">
+<li><p>Document functions that contain orphan directives</p></li>
+<li><p>Consider adding checks for parallel context if needed</p></li>
+<li><p>Design functions to work correctly both inside and outside parallel regions</p></li>
+</ul>
+<div class="admonition-exercise exercise important admonition" id="exercise-0">
+<p class="admonition-title">Exercise</p>
+<p>Inspect and run the following code where an orphan directive is used in <em>func1</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1">// On cluster Kebnekaise</span>
+<span class="linenos"> 2</span><span class="c1">// ml foss</span>
+<span class="linenos"> 3</span><span class="c1">// export OMP_NUM_THREADS=1</span>
+<span class="linenos"> 4</span><span class="c1">// gcc -O3 -march=native -fopenmp -o test.x 4-static-orphaned-openmp.c -lm</span>
+<span class="linenos"> 5</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="linenos"> 6</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos"> 7</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span>
+<span class="linenos"> 8</span><span class="cp">#endif</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="kt">int</span><span class="w"> </span><span class="nf">func1</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">var2</span><span class="p">)</span>
+<span class="linenos">11</span><span class="p">{</span>
+<span class="linenos">12</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="linenos">13</span><span class="n">var2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">14</span>
+<span class="linenos">15</span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="linenos">16</span><span class="cp">#pragma omp atomic update</span>
+<span class="linenos">17</span><span class="w">        </span><span class="n">var2</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="linenos">18</span>
+<span class="linenos">19</span><span class="k">return</span><span class="w"> </span><span class="n">var2</span><span class="p">;</span>
+<span class="linenos">20</span><span class="p">}</span>
+<span class="linenos">21</span>
+<span class="linenos">22</span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="linenos">23</span><span class="p">{</span>
+<span class="linenos">24</span>
+<span class="linenos">25</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="n">var1</span><span class="p">,</span><span class="n">var2</span><span class="p">;</span>
+<span class="linenos">26</span><span class="n">var1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">27</span>
+<span class="linenos">28</span><span class="c1">// Static extent</span>
+<span class="linenos">29</span>
+<span class="linenos">30</span><span class="cp">#pragma omp parallel</span>
+<span class="linenos">31</span><span class="w">    </span><span class="p">{</span>
+<span class="linenos">32</span>
+<span class="linenos">33</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos">34</span><span class="cp">#pragma omp for reduction(+:var1)</span>
+<span class="linenos">35</span><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="linenos">36</span><span class="w">        </span><span class="n">var1</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="linenos">37</span>
+<span class="linenos">38</span><span class="cp">#else</span>
+<span class="linenos">39</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Serial code!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="linenos">40</span><span class="cp">#endif</span>
+<span class="linenos">41</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">42</span>
+<span class="linenos">43</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Static version: var1 =  %i </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">var1</span><span class="p">);</span>
+<span class="linenos">44</span>
+<span class="linenos">45</span><span class="c1">// Dynamic extent</span>
+<span class="linenos">46</span><span class="kt">int</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">47</span><span class="cp">#pragma omp parallel reduction(+:result)</span>
+<span class="linenos">48</span><span class="w">    </span><span class="p">{</span>
+<span class="linenos">49</span><span class="w">    </span><span class="n">result</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">func1</span><span class="p">(</span><span class="n">var2</span><span class="p">);</span>
+<span class="linenos">50</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos">51</span><span class="cp">#else</span>
+<span class="linenos">52</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Serial code!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="linenos">53</span><span class="cp">#endif</span>
+<span class="linenos">54</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">55</span>
+<span class="linenos">56</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Dynamic version: result =  %i </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">);</span>
+<span class="linenos">57</span>
+<span class="linenos">58</span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">59</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this heading"></a></h2>
+<p>This guide covered advanced worksharing concepts in OpenMP:</p>
+<p><strong>Constructs</strong></p>
+<ul class="simple">
+<li><p><strong>single construct:</strong> Execute code on one thread (with barrier)</p></li>
+<li><p><strong>master construct:</strong> Execute code on master thread (no barrier)</p></li>
+<li><p><strong>ordered construct:</strong> Execute loop iterations in sequential order</p></li>
+</ul>
+<p><strong>Clauses</strong></p>
+<ul class="simple">
+<li><p><strong>if clause:</strong> Conditional parallelization</p></li>
+<li><p><strong>num_threads clause:</strong> Control thread count</p></li>
+<li><p><strong>nowait clause:</strong> Remove implicit barriers for performance</p></li>
+</ul>
+<p><strong>Memory Consistency</strong></p>
+<ul class="simple">
+<li><p><strong>flush:</strong> Ensure memory consistency across threads</p></li>
+<li><p><strong>Implicit barriers and flushes:</strong> Automatic synchronization points</p></li>
+<li><p><strong>Memory reordering:</strong> Understanding and preventing issues</p></li>
+</ul>
+<p><strong>Advanced Techniques</strong></p>
+<ul class="simple">
+<li><p><strong>Static schedule specialty:</strong> Using nowait with dependencies</p></li>
+<li><p><strong>Orphan directives:</strong> Worksharing constructs in called functions</p></li>
+</ul>
+<p><strong>Performance Considerations</strong></p>
+<ul class="simple">
+<li><p>Balance between synchronization overhead and correctness</p></li>
+<li><p>Strategic use of <code class="docutils literal notranslate"><span class="pre">nowait</span></code> can improve performance</p></li>
+<li><p>Orphan directives reduce parallel region overhead</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../data-handlingii/" class="btn btn-neutral float-left" title="More on Private Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../tasks/" class="btn btn-neutral float-right" title="The Task Directive" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, The contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Introduction to Kebnekaise &mdash; OpenMP parallelism in scientific computing  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_lesson.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/term_role_formatting.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="../_static/minipres.js"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+    <link rel="next" title="Profiling analysis with VTune and Advisor" href="../profiling-analysis/" />
+    <link rel="prev" title="Introduction to HPC2N" href="../hpc2n-intro/" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../" class="icon icon-home">
+            OpenMP parallelism in scientific computing
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Day 1</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../hpc2n-intro/">Introduction to HPC2N</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction to Kebnekaise</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#modules-and-toolchains">Modules and toolchains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compile-c-code">Compile C code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#course-project">Course project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#submitting-jobs">Submitting jobs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#aliases">Aliases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#batch-files">Batch files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#job-queue">Job queue</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#what-is-high-performance-computing">What is High Performance Computing?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#memory-models">Memory models</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#programming-models">Programming models</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#functions-and-data-dependencies">Functions and data dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../profiling-analysis/">Profiling analysis with VTune and Advisor</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 2</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../first-steps/">First Steps in OpenMP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-handling/">Data for Parallel Regions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../worksharing/">Worksharing and Scheduling</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 3</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-handlingii/">More on Private Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../worksharingii/">More on Worksharing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 4</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tasks/">The Task Directive</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Miscellanous</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick-reference/">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/">Instructor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../">OpenMP parallelism in scientific computing</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Introduction to Kebnekaise</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/hpc2n/OpenMP-parallelism-course/blob/master/docs/setup.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="introduction-to-kebnekaise">
+<h1>Introduction to Kebnekaise<a class="headerlink" href="#introduction-to-kebnekaise" title="Permalink to this heading"></a></h1>
+<div class="admonition-objectives objectives admonition" id="objectives-0">
+<p class="admonition-title">Objectives</p>
+<ul class="simple">
+<li><p>Learn how to load the necessary modules on Kebnekaise.</p></li>
+<li><p>Learn how to compile C code on Kebnekaise.</p></li>
+<li><p>Learn how to place jobs to the batch queue.</p></li>
+<li><p>Learn how to use the course project and reservations.</p></li>
+</ul>
+</div>
+<section id="modules-and-toolchains">
+<h2>Modules and toolchains<a class="headerlink" href="#modules-and-toolchains" title="Permalink to this heading"></a></h2>
+<p>You need to <strong>load the correct toolchain</strong> before compiling your code on Kebnekaise.</p>
+<p>The <strong>available modules</strong> are listed using the <code class="code docutils literal notranslate"><span class="pre">ml</span> <span class="pre">avail</span></code> command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ml<span class="w"> </span>avail
+-------------------------<span class="w"> </span>/hpc2n/eb/modules/all/Core<span class="w"> </span>--------------------------
+Bison/3.0.5<span class="w">                        </span>fosscuda/2020a
+Bison/3.3.2<span class="w">                        </span>fosscuda/2020b<span class="w">        </span><span class="o">(</span>D<span class="o">)</span>
+Bison/3.5.3<span class="w">                        </span>gaussian/16.C.01-AVX2
+Bison/3.7.1<span class="w">                </span><span class="o">(</span>D<span class="o">)</span><span class="w">     </span>gcccuda/2019b
+CUDA/8.0.61<span class="w">                        </span>gcccuda/2020a
+CUDA/10.1.243<span class="w">              </span><span class="o">(</span>D<span class="o">)</span><span class="w">     </span>gcccuda/2020b<span class="w">         </span><span class="o">(</span>D<span class="o">)</span>
+...
+</pre></div>
+</div>
+<p>The list shows the modules you can load directly, and so may change if you have loaded modules.</p>
+<p>In order to see all the modules, including those that have prerequisites to load, use the command <code class="code docutils literal notranslate"><span class="pre">ml</span> <span class="pre">spider</span></code>. Many types of application software fall in this category.</p>
+<p>You can find more <strong>information</strong> regarding a particular module using the <code class="code docutils literal notranslate"><span class="pre">ml</span> <span class="pre">spider</span> <span class="pre">&lt;module&gt;</span></code> command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ml<span class="w"> </span>spider<span class="w"> </span>MATLAB
+
+---------------------------------------------------------------------------
+MATLAB:<span class="w"> </span>MATLAB/2019b.Update2
+---------------------------------------------------------------------------
+<span class="w">    </span>Description:
+<span class="w">    </span>MATLAB<span class="w"> </span>is<span class="w"> </span>a<span class="w"> </span>high-level<span class="w"> </span>language<span class="w"> </span>and<span class="w"> </span>interactive<span class="w"> </span>environment<span class="w"> </span>that
+<span class="w">    </span>enables<span class="w"> </span>you<span class="w"> </span>to<span class="w"> </span>perform<span class="w"> </span>computationally<span class="w"> </span>intensive<span class="w"> </span>tasks<span class="w"> </span>faster<span class="w"> </span>than
+<span class="w">    </span>with<span class="w"> </span>traditional<span class="w"> </span>programming<span class="w"> </span>languages<span class="w"> </span>such<span class="w"> </span>as<span class="w"> </span>C,<span class="w"> </span>C++,<span class="w"> </span>and<span class="w"> </span>Fortran.
+
+
+<span class="w">    </span>This<span class="w"> </span>module<span class="w"> </span>can<span class="w"> </span>be<span class="w"> </span>loaded<span class="w"> </span>directly:<span class="w"> </span>module<span class="w"> </span>load<span class="w"> </span>MATLAB/2019b.Update2
+
+<span class="w">    </span>Help:
+<span class="w">    </span><span class="nv">Description</span>
+<span class="w">    </span><span class="o">===========</span>
+<span class="w">    </span>MATLAB<span class="w"> </span>is<span class="w"> </span>a<span class="w"> </span>high-level<span class="w"> </span>language<span class="w"> </span>and<span class="w"> </span>interactive<span class="w"> </span>environment
+<span class="w">    </span>that<span class="w"> </span>enables<span class="w"> </span>you<span class="w"> </span>to<span class="w"> </span>perform<span class="w"> </span>computationally<span class="w"> </span>intensive<span class="w"> </span>tasks<span class="w"> </span>faster<span class="w"> </span>than<span class="w"> </span>with
+<span class="w">    </span>traditional<span class="w"> </span>programming<span class="w"> </span>languages<span class="w"> </span>such<span class="w"> </span>as<span class="w"> </span>C,<span class="w"> </span>C++,<span class="w"> </span>and<span class="w"> </span>Fortran.
+
+
+<span class="w">    </span>More<span class="w"> </span><span class="nv">information</span>
+<span class="w">    </span><span class="o">================</span>
+<span class="w">    </span>-<span class="w"> </span>Homepage:<span class="w"> </span>http://www.mathworks.com/products/matlab
+</pre></div>
+</div>
+<p>You can <strong>load</strong> the module using the <code class="code docutils literal notranslate"><span class="pre">ml</span> <span class="pre">&lt;module&gt;</span></code> command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ml<span class="w"> </span>MATLAB/2019b.Update2
+</pre></div>
+</div>
+<p>You can <strong>list loaded modules</strong> using the <code class="code docutils literal notranslate"><span class="pre">ml</span></code> command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ml
+
+Currently<span class="w"> </span>Loaded<span class="w"> </span>Modules:
+<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w"> </span>snicenvironment<span class="w">     </span><span class="o">(</span>S<span class="o">)</span><span class="w">   </span><span class="m">7</span><span class="o">)</span><span class="w"> </span>libevent/2.1.11<span class="w">    </span><span class="m">13</span><span class="o">)</span><span class="w"> </span>PMIx/3.0.2
+<span class="w"> </span><span class="m">2</span><span class="o">)</span><span class="w"> </span>systemdefault<span class="w">       </span><span class="o">(</span>S<span class="o">)</span><span class="w">   </span><span class="m">8</span><span class="o">)</span><span class="w"> </span>numactl/2.0.12<span class="w">     </span><span class="m">14</span><span class="o">)</span><span class="w"> </span>impi/2018.4.274
+<span class="w"> </span><span class="m">3</span><span class="o">)</span><span class="w"> </span>GCCcore/8.2.0<span class="w">             </span><span class="m">9</span><span class="o">)</span><span class="w"> </span>XZ/5.2.4<span class="w">           </span><span class="m">15</span><span class="o">)</span><span class="w"> </span>imkl/2019.1.144
+<span class="w"> </span><span class="m">4</span><span class="o">)</span><span class="w"> </span>zlib/1.2.11<span class="w">              </span><span class="m">10</span><span class="o">)</span><span class="w"> </span>libxml2/2.9.8<span class="w">      </span><span class="m">16</span><span class="o">)</span><span class="w"> </span>intel/2019a
+<span class="w"> </span><span class="m">5</span><span class="o">)</span><span class="w"> </span>binutils/2.31.1<span class="w">          </span><span class="m">11</span><span class="o">)</span><span class="w"> </span>libpciaccess/0.14<span class="w">  </span><span class="m">17</span><span class="o">)</span><span class="w"> </span>MATLAB/2019b.Update2
+<span class="w"> </span><span class="m">6</span><span class="o">)</span><span class="w"> </span>iccifort/2019.1.144<span class="w">      </span><span class="m">12</span><span class="o">)</span><span class="w"> </span>hwloc/1.11.11
+
+Where:
+<span class="w"> </span>S:<span class="w">  </span>Module<span class="w"> </span>is<span class="w"> </span>Sticky,<span class="w"> </span>requires<span class="w"> </span>--force<span class="w"> </span>to<span class="w"> </span>unload<span class="w"> </span>or<span class="w"> </span>purge
+</pre></div>
+</div>
+<p>You can <strong>unload all modules</strong> using the <code class="code docutils literal notranslate"><span class="pre">ml</span> <span class="pre">purge</span></code> command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ml<span class="w"> </span>purge
+The<span class="w"> </span>following<span class="w"> </span>modules<span class="w"> </span>were<span class="w"> </span>not<span class="w"> </span>unloaded:
+<span class="w">  </span><span class="o">(</span>Use<span class="w"> </span><span class="s2">&quot;module --force purge&quot;</span><span class="w"> </span>to<span class="w"> </span>unload<span class="w"> </span>all<span class="o">)</span>:
+
+<span class="w">  </span><span class="m">1</span><span class="o">)</span><span class="w"> </span>systemdefault<span class="w">   </span><span class="m">2</span><span class="o">)</span><span class="w"> </span>snicenvironment
+</pre></div>
+</div>
+<p>Note that the <code class="code docutils literal notranslate"><span class="pre">ml</span> <span class="pre">purge</span></code> command will warn that two modules were not unloaded.
+This is normal and you should <strong>NOT</strong> force unload them.</p>
+<div class="admonition-exercise exercise important admonition" id="exercise-0">
+<p class="admonition-title">Exercise</p>
+<ol class="arabic">
+<li><p>Load the FOSS toolchain for source code compilation:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>ml<span class="w"> </span>purge
+</pre></div>
+</div>
+<p>The <code class="code docutils literal notranslate"><span class="pre">foss</span></code> module loads the GNU compiler</p>
+</li>
+<li><p>Investigate which modules were loaded.</p></li>
+<li><p>Purge all modules.</p></li>
+<li><p>Find the latest FOSS toolchain (<code class="code docutils literal notranslate"><span class="pre">foss</span></code>).
+Investigate the loaded modules.
+Purge all modules.</p></li>
+</ol>
+</div>
+</section>
+<section id="compile-c-code">
+<h2>Compile C code<a class="headerlink" href="#compile-c-code" title="Permalink to this heading"></a></h2>
+<p>Once the correct toolchain (<code class="code docutils literal notranslate"><span class="pre">foss</span></code>) has been loaded, we can compile C source files (<code class="code docutils literal notranslate"><span class="pre">*.c</span></code>) with the GNU compiler:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>gcc<span class="w"> </span>-o<span class="w"> </span>&lt;binary<span class="w"> </span>name&gt;<span class="w"> </span>&lt;sources&gt;<span class="w"> </span>-Wall
+</pre></div>
+</div>
+<p>The <code class="code docutils literal notranslate"><span class="pre">-Wall</span></code> causes the compiler to print additional warnings.</p>
+<div class="admonition-exercise exercise important admonition" id="exercise-1">
+<p class="admonition-title">Exercise</p>
+<p>Compile the following “Hello world” program:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="linenos">2</span>
+<span class="linenos">3</span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">4</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello world!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="linenos">5</span><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">6</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="course-project">
+<h2>Course project<a class="headerlink" href="#course-project" title="Permalink to this heading"></a></h2>
+<p>You can request to be a member of the course project hpc2n202w-xyz, where the letters
+need to be substituted by the actual numerical values for the project.</p>
+</section>
+<section id="submitting-jobs">
+<h2>Submitting jobs<a class="headerlink" href="#submitting-jobs" title="Permalink to this heading"></a></h2>
+<p>The jobs are <strong>submitted</strong> using the <code class="code docutils literal notranslate"><span class="pre">srun</span></code> command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>srun<span class="w"> </span>--account<span class="o">=</span>&lt;account&gt;<span class="w"> </span>--ntasks<span class="o">=</span>&lt;task<span class="w"> </span>count&gt;<span class="w"> </span>--time<span class="o">=</span>&lt;time&gt;<span class="w"> </span>&lt;command&gt;
+</pre></div>
+</div>
+<p>This places the command into the batch queue.
+The three arguments are the project number, the number of tasks, and the requested time allocation.
+For example, the following command prints the uptime of the allocated compute node:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>srun<span class="w"> </span>--account<span class="o">=</span>hpc2n202w-xyz<span class="w"> </span>--ntasks<span class="o">=</span><span class="m">1</span><span class="w"> </span>--time<span class="o">=</span><span class="m">00</span>:00:15<span class="w"> </span>uptime
+srun:<span class="w"> </span>job<span class="w"> </span><span class="m">12727702</span><span class="w"> </span>queued<span class="w"> </span>and<span class="w"> </span>waiting<span class="w"> </span><span class="k">for</span><span class="w"> </span>resources
+srun:<span class="w"> </span>job<span class="w"> </span><span class="m">12727702</span><span class="w"> </span>has<span class="w"> </span>been<span class="w"> </span>allocated<span class="w"> </span>resources
+<span class="w"> </span><span class="m">11</span>:53:43<span class="w"> </span>up<span class="w"> </span><span class="m">5</span><span class="w"> </span>days,<span class="w">  </span><span class="m">1</span>:23,<span class="w">  </span><span class="m">0</span><span class="w"> </span>users,<span class="w">  </span>load<span class="w"> </span>average:<span class="w"> </span><span class="m">23</span>,11,<span class="w"> </span><span class="m">23</span>,20,<span class="w"> </span><span class="m">23</span>,27
+</pre></div>
+</div>
+<p>Note that we are using the course project, the number of tasks is set to one, and we are requesting 15 seconds.</p>
+<p>We could submit <strong>multiple tasks</strong> using the <code class="code docutils literal notranslate"><span class="pre">--ntasks=&lt;task</span> <span class="pre">count&gt;</span></code> argument:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>srun<span class="w"> </span>--account<span class="o">=</span>hpc2n202w-xyz<span class="w"> </span>--ntasks<span class="o">=</span><span class="m">4</span><span class="w"> </span>--time<span class="o">=</span><span class="m">00</span>:00:15<span class="w"> </span>uname<span class="w"> </span>-n
+b-cn0932.hpc2n.umu.se
+b-cn0932.hpc2n.umu.se
+b-cn0932.hpc2n.umu.se
+b-cn0932.hpc2n.umu.se
+</pre></div>
+</div>
+<p>Note that all task are running on the same node.
+We could request <strong>multiple CPU cores</strong> for each task using the <code class="code docutils literal notranslate"><span class="pre">--cpus-per-task=&lt;cpu</span> <span class="pre">count&gt;</span></code> argument:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>srun<span class="w"> </span>--account<span class="o">=</span>hpc2n202w-xyz<span class="w"> </span>--ntasks<span class="o">=</span><span class="m">4</span><span class="w"> </span>--cpus-per-task<span class="o">=</span><span class="m">14</span><span class="w"> </span>--time<span class="o">=</span><span class="m">00</span>:00:15<span class="w"> </span>uname<span class="w"> </span>-n
+b-cn0935.hpc2n.umu.se
+b-cn0935.hpc2n.umu.se
+b-cn0932.hpc2n.umu.se
+b-cn0932.hpc2n.umu.se
+</pre></div>
+</div>
+<p>If you want to measure the performance, it is advisable to request an <strong>exclusive access</strong> to the compute nodes (<code class="code docutils literal notranslate"><span class="pre">--exclusive</span></code>):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>srun<span class="w"> </span>--account<span class="o">=</span>hpc2n202w-xyz<span class="w"> </span>--ntasks<span class="o">=</span><span class="m">4</span><span class="w"> </span>--cpus-per-task<span class="o">=</span><span class="m">14</span><span class="w"> </span>--exclusive<span class="w"> </span>--time<span class="o">=</span><span class="m">00</span>:00:15<span class="w"> </span>uname<span class="w"> </span>-n
+b-cn0935.hpc2n.umu.se
+b-cn0935.hpc2n.umu.se
+b-cn0932.hpc2n.umu.se
+b-cn0932.hpc2n.umu.se
+</pre></div>
+</div>
+<div class="admonition-exercise exercise important admonition" id="exercise-2">
+<p class="admonition-title">Exercise</p>
+<p>Run both “Hello world” programs on the the compute nodes.</p>
+</div>
+</section>
+<section id="aliases">
+<h2>Aliases<a class="headerlink" href="#aliases" title="Permalink to this heading"></a></h2>
+<p>In order to save time, you can create an <strong>alias</strong> for a command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">alias</span><span class="w"> </span>&lt;alist&gt;<span class="o">=</span><span class="s2">&quot;&lt;command&gt;&quot;</span>
+</pre></div>
+</div>
+<p>For example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">alias</span><span class="w"> </span><span class="nv">run_full</span><span class="o">=</span><span class="s2">&quot;srun --account=hpc2n202w-xyz --ntasks=1 --cpus-per-task=28 --time=00:05:00&quot;</span>
+$<span class="w"> </span>run_full<span class="w"> </span>uname<span class="w"> </span>-n
+b-cn0932.hpc2n.umu.se
+</pre></div>
+</div>
+</section>
+<section id="batch-files">
+<h2>Batch files<a class="headerlink" href="#batch-files" title="Permalink to this heading"></a></h2>
+<p>It is often more convenient to write the commands into a <strong>batch file</strong>.
+For example, we could write the following to a file called <code class="code docutils literal notranslate"><span class="pre">batch.sh</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="ch">#!/bin/bash</span>
+<span class="linenos">2</span><span class="c1">#SBATCH --account=hpc2n202w-xyz</span>
+<span class="linenos">3</span><span class="c1">#SBATCH --ntasks=1</span>
+<span class="linenos">4</span><span class="c1">#SBATCH --time=00:00:15</span>
+<span class="linenos">5</span>
+<span class="linenos">6</span>ml<span class="w"> </span>purge
+<span class="linenos">7</span>ml<span class="w"> </span>foss/2020b
+<span class="linenos">8</span>
+<span class="linenos">9</span>uname<span class="w"> </span>-n
+</pre></div>
+</div>
+<p>Note that the same arguments that were earlier passed to the <code class="code docutils literal notranslate"><span class="pre">srun</span></code> command are now given as comments.
+It is highly advisable to purge all loaded modules and re-load the required modules as the job inherits the environment.
+The batch file is submitted using the <code class="code docutils literal notranslate"><span class="pre">sbatch</span> <span class="pre">&lt;batch</span> <span class="pre">file&gt;</span></code> command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sbatch<span class="w"> </span>batch.sh
+Submitted<span class="w"> </span>batch<span class="w"> </span>job<span class="w"> </span><span class="m">12728675</span>
+</pre></div>
+</div>
+<p>By default, the output is directed to the file <code class="code docutils literal notranslate"><span class="pre">slurm-&lt;job_id&gt;.out</span></code>, where <code class="code docutils literal notranslate"><span class="pre">&lt;job_id&gt;</span></code> is the <strong>job id</strong> returned by the <code class="code docutils literal notranslate"><span class="pre">sbatch</span></code> command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>cat<span class="w"> </span>slurm-12728675.out
+The<span class="w"> </span>following<span class="w"> </span>modules<span class="w"> </span>were<span class="w"> </span>not<span class="w"> </span>unloaded:
+<span class="w"> </span><span class="o">(</span>Use<span class="w"> </span><span class="s2">&quot;module --force purge&quot;</span><span class="w"> </span>to<span class="w"> </span>unload<span class="w"> </span>all<span class="o">)</span>:
+
+<span class="w"> </span><span class="m">1</span><span class="o">)</span><span class="w"> </span>systemdefault<span class="w">   </span><span class="m">2</span><span class="o">)</span><span class="w"> </span>snicenvironment
+b-cn0102.hpc2n.umu.se
+</pre></div>
+</div>
+<div class="admonition-exercise exercise important admonition" id="exercise-3">
+<p class="admonition-title">Exercise</p>
+<p>Write two batch files that run both “Hello world” programs on the the compute nodes.</p>
+</div>
+</section>
+<section id="job-queue">
+<h2>Job queue<a class="headerlink" href="#job-queue" title="Permalink to this heading"></a></h2>
+<p>You can <strong>investigate the job queue</strong> with the <code class="code docutils literal notranslate"><span class="pre">squeue</span></code> command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>squeue<span class="w"> </span>-u<span class="w"> </span><span class="nv">$USER</span>
+</pre></div>
+</div>
+<p>If you want an estimate for when the job will start running, you can give the <code class="code docutils literal notranslate"><span class="pre">squeue</span></code> command the argument <code class="code docutils literal notranslate"><span class="pre">--start</span></code>.</p>
+<p>You can <strong>cancel</strong> a job with the <code class="code docutils literal notranslate"><span class="pre">scancel</span></code> command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>scancel<span class="w"> </span>&lt;job_id&gt;
+</pre></div>
+</div>
+<section id="what-is-high-performance-computing">
+<h3>What is High Performance Computing?<a class="headerlink" href="#what-is-high-performance-computing" title="Permalink to this heading"></a></h3>
+<p><em>High Performance Computing most generally refers to the practice of aggregating computing power in a way that delivers much higher performance than one could get out of a typical desktop computer or workstation in order to solve large problems in science, engineering, or business.</em> (<a class="reference external" href="https://insidehpc.com/hpc-basic-training/what-is-hpc/">insideHPC.com</a>)</p>
+<dl class="simple">
+<dt>What does this mean?</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>Aggregating computing power</dt><dd><ul>
+<li><p>Kebnekaise: 602 nodes in 15 racks totalling 19288 cores</p></li>
+<li><p>Your laptop: 4 cores</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Higher performance</dt><dd><ul>
+<li><p>Kebnekaise: 728,000 billion arithmetical operations per second</p></li>
+<li><p>Your laptop: 200 billion arithmetical operations per second</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Solve large problems</dt><dd><ul>
+<li><p><strong>Time:</strong> The time required to form a solution to the problem is very long.</p></li>
+<li><p><strong>Memory:</strong> The solution of the problem requires a lot of memory and/or storage.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/hpc.png"><img alt="../_images/hpc.png" src="../_images/hpc.png" style="width: 387.09999999999997px; height: 389.9px;" /></a>
+</figure>
+</section>
+<section id="memory-models">
+<h3>Memory models<a class="headerlink" href="#memory-models" title="Permalink to this heading"></a></h3>
+<p>When it comes to the memory layout, (super)computers can be divided into two primary categories:</p>
+<dl class="field-list">
+<dt class="field-odd">Shared memory<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A <strong>single</strong> memory space for all data:</p>
+<ul class="simple">
+<li><p>Everyone can access the same data.</p></li>
+<li><p>Straightforward to use.</p></li>
+</ul>
+<figure class="align-left">
+<a class="reference internal image-reference" href="../_images/sm.png"><img alt="../_images/sm.png" src="../_images/sm.png" style="width: 224.7px; height: 151.89999999999998px;" /></a>
+</figure>
+</dd>
+<dt class="field-even">Distributed memory<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Multiple distinct</strong> memory spaces for the data:</p>
+<ul class="simple">
+<li><p>Everyone has direct access only to the <strong>local data</strong>.</p></li>
+<li><p>Requires <strong>communication</strong> and <strong>data transfers</strong>.</p></li>
+</ul>
+<figure class="align-left">
+<a class="reference internal image-reference" href="../_images/dm.png"><img alt="../_images/dm.png" src="../_images/dm.png" style="width: 224.7px; height: 246.39999999999998px;" /></a>
+</figure>
+</dd>
+</dl>
+<p>Computing clusters and supercomputers are generally distributed memory machines:</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/memory.png"><img alt="../_images/memory.png" src="../_images/memory.png" style="width: 387.09999999999997px; height: 389.9px;" /></a>
+</figure>
+</section>
+<section id="programming-models">
+<h3>Programming models<a class="headerlink" href="#programming-models" title="Permalink to this heading"></a></h3>
+<p>The programming model changes when we aim for extra performance and/or memory:</p>
+<dl class="field-list">
+<dt class="field-odd">Single-core<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Matlab, Python, C, Fortran, …</p>
+<ul class="simple">
+<li><p><strong>Single stream of operations</strong> (thread).</p></li>
+<li><p><strong>Single pool of data</strong>.</p></li>
+</ul>
+<figure class="align-left">
+<a class="reference internal image-reference" href="../_images/single-core.png"><img alt="../_images/single-core.png" src="../_images/single-core.png" style="width: 79.1px; height: 196.0px;" /></a>
+</figure>
+</dd>
+<dt class="field-even">Multi-core<span class="colon">:</span></dt>
+<dd class="field-even"><p>Vectorized Matlab, pthreads, <strong>OpenMP</strong></p>
+<ul>
+<li><p><strong>Multiple</strong> streams of operations (multiple threads).</p></li>
+<li><p>Single pool of data.</p></li>
+<li><p>Extra challenges:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>Work distribution</strong>.</p></li>
+<li><p><strong>Coordination</strong> (synchronization, etc).</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<figure class="align-left">
+<a class="reference internal image-reference" href="../_images/multi-core.png"><img alt="../_images/multi-core.png" src="../_images/multi-core.png" style="width: 274.4px; height: 196.0px;" /></a>
+</figure>
+</dd>
+<dt class="field-odd">Distributed memory<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>MPI</strong>, …</p>
+<ul>
+<li><p>Multiple streams of operations (multiple threads).</p></li>
+<li><p><strong>Multiple</strong> pools of data.</p></li>
+<li><p>Extra challenges:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Work distribution.</p></li>
+<li><p>Coordination (synchronization, etc).</p></li>
+<li><p><strong>Data distribution</strong>.</p></li>
+<li><p><strong>Communication</strong> and <strong>data transfers</strong>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<figure class="align-left">
+<a class="reference internal image-reference" href="../_images/distributed-memory.png"><img alt="../_images/distributed-memory.png" src="../_images/distributed-memory.png" style="width: 275.79999999999995px; height: 230.29999999999998px;" /></a>
+</figure>
+</dd>
+<dt class="field-even">Accelerators / GPUs<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>CUDA</strong>, OpenCL, OpenACC, OpenMP, …</p>
+<ul>
+<li><p>Single/multiple streams of operations on the <strong>host device</strong>.</p></li>
+<li><p>Many <strong>lightweight</strong> streams of operations on the <strong>accelerator</strong>.</p></li>
+<li><p>Multiple pools of data on <strong>multiple layers</strong>.</p></li>
+<li><p>Extra challenges:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Work distribution.</p></li>
+<li><p>Coordination (synchronization, etc).</p></li>
+<li><p>Data distribution across <strong>multiple memory spaces</strong>.</p></li>
+<li><p>Communication and data transfers.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<figure class="align-left">
+<a class="reference internal image-reference" href="../_images/gpu.png"><img alt="../_images/gpu.png" src="../_images/gpu.png" style="width: 335.29999999999995px; height: 320.59999999999997px;" /></a>
+</figure>
+</dd>
+<dt class="field-odd">Hybrid<span class="colon">:</span></dt>
+<dd class="field-odd"><p>MPI <strong>+</strong> OpenMP, OpenMP <strong>+</strong> CUDA, MPI <strong>+</strong> CUDA, …</p>
+<ul class="simple">
+<li><p>Combines the benefits and the downsides of several programming models.</p></li>
+</ul>
+<figure class="align-left">
+<a class="reference internal image-reference" href="../_images/hybrid.png"><img alt="../_images/hybrid.png" src="../_images/hybrid.png" style="width: 514.15px; height: 212.55px;" /></a>
+</figure>
+</dd>
+<dt class="field-even">Task-based<span class="colon">:</span></dt>
+<dd class="field-even"><p>OpenMP tasks</p>
+<ul class="simple">
+<li><p>Does task-based programming count as a separate programming model?</p></li>
+</ul>
+</dd>
+</dl>
+</section>
+</section>
+<section id="functions-and-data-dependencies">
+<h2>Functions and data dependencies<a class="headerlink" href="#functions-and-data-dependencies" title="Permalink to this heading"></a></h2>
+<p>Imagine the following computer program:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="linenos"> 2</span>
+<span class="linenos"> 3</span><span class="kt">void</span><span class="w"> </span><span class="nf">function1</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos"> 4</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;The sum is %d.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+<span class="linenos"> 5</span><span class="p">}</span>
+<span class="linenos"> 6</span>
+<span class="linenos"> 7</span><span class="kt">void</span><span class="w"> </span><span class="nf">function2</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos"> 8</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;The sum is %d.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+<span class="linenos"> 9</span><span class="p">}</span>
+<span class="linenos">10</span>
+<span class="linenos">11</span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">12</span><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">;</span>
+<span class="linenos">13</span><span class="w">    </span><span class="n">function1</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+<span class="linenos">14</span><span class="w">    </span><span class="n">function2</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+<span class="linenos">15</span><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">16</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>The program consists of two functions, <code class="code docutils literal notranslate"><span class="pre">function1</span></code> and <code class="code docutils literal notranslate"><span class="pre">function2</span></code>, that are called <strong>one after another</strong> from the <code class="code docutils literal notranslate"><span class="pre">main</span></code> function.
+The first function reads the variables <code class="code docutils literal notranslate"><span class="pre">a</span></code> and <code class="code docutils literal notranslate"><span class="pre">b</span></code>, and the second function reads the variable <code class="code docutils literal notranslate"><span class="pre">b</span></code>:</p>
+<figure class="align-default">
+<img alt="../_images/functions_nodep.png" src="../_images/functions_nodep.png" />
+</figure>
+<p>The program prints the line <code class="code docutils literal notranslate"><span class="pre">The</span> <span class="pre">sum</span> <span class="pre">is</span> <span class="pre">17.</span></code> twice.
+The key observation is that the two functions calls are <strong>independent</strong> of each other.
+More importantly, the two functions can be executed in <strong>parallel</strong>:</p>
+<figure class="align-default">
+<img alt="../_images/functions_nodep_parallel.png" src="../_images/functions_nodep_parallel.png" />
+</figure>
+<p>Let us modify the the program slightly:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="linenos"> 2</span>
+<span class="hll"><span class="linenos"> 3</span><span class="kt">void</span><span class="w"> </span><span class="nf">function1</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span class="hll"><span class="linenos"> 4</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;The sum is %d.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="o">*</span><span class="n">b</span><span class="p">);</span>
+</span><span class="hll"><span class="linenos"> 5</span><span class="w">    </span><span class="o">*</span><span class="n">b</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+</span><span class="hll"><span class="linenos"> 6</span><span class="p">}</span>
+</span><span class="linenos"> 7</span>
+<span class="linenos"> 8</span><span class="kt">void</span><span class="w"> </span><span class="nf">function2</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos"> 9</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;The sum is %d.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+<span class="linenos">10</span><span class="p">}</span>
+<span class="linenos">11</span>
+<span class="linenos">12</span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">13</span><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">;</span>
+<span class="hll"><span class="linenos">14</span><span class="w">    </span><span class="n">function1</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">b</span><span class="p">);</span>
+</span><span class="linenos">15</span><span class="w">    </span><span class="n">function2</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+<span class="linenos">16</span><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">17</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>This time the function <code class="code docutils literal notranslate"><span class="pre">function1</span></code> modifies the variable <code class="code docutils literal notranslate"><span class="pre">b</span></code>:</p>
+<figure class="align-default">
+<img alt="../_images/functions_dep.png" src="../_images/functions_dep.png" />
+</figure>
+<p>Therefore, the two function calls are <strong>not</strong> independent of each other and changing the order would change the printed lines.
+Furthermore, executing the two functions in parallel would lead to an <strong>undefined result</strong> as the execution order would be arbitrary.</p>
+<p>We could say that <strong>in this particular context</strong>, the function <code class="code docutils literal notranslate"><span class="pre">function2</span></code> is <strong>dependent</strong> on the function <code class="code docutils literal notranslate"><span class="pre">function1</span></code>.
+That is, the function <code class="code docutils literal notranslate"><span class="pre">function1</span></code> must be executed completely before the function <code class="code docutils literal notranslate"><span class="pre">function2</span></code> can be executed:</p>
+<figure class="align-default">
+<img alt="../_images/functions_dep_explicit.png" src="../_images/functions_dep_explicit.png" />
+</figure>
+<p>However, this <strong>data dependency</strong> exists only when these two functions are called in this particular sequence using these particular arguments.
+In a different context, this particular data dependency does not exists.
+We can therefore conclude that the <strong>data dependencies are separate from the functions definitions</strong>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../hpc2n-intro/" class="btn btn-neutral float-left" title="Introduction to HPC2N" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../profiling-analysis/" class="btn btn-neutral float-right" title="Profiling analysis with VTune and Advisor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, The contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
