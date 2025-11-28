@@ -1675,6 +1675,38 @@ First numbers in series: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, ...
 
 *Performance: Fibonacci Number 40*
 
+How is the performance of the OpenMP tasks implementation? 
+
+*Discussion: Fibonacci Performance*
+
+Key Findings
+
+**Task Overhead:**
+
+- Creating tasks has significant overhead
+- Need sufficient work per task to justify overhead
+
+**Optimization Strategies:**
+
+1. **if clause:** Prevents task creation for small problem sizes. Try adding this clause to the code above:
+
+.. code-block:: fortran
+
+    #pragma omp task shared(sub1) firstprivate(in) if(in > 30)
+    {
+        sub1 = recursive_fib(in - 1);
+    }
+    #pragma omp task shared(sub2) firstprivate(in) if(in >30)
+    {
+        sub2 = recursive_fib(in - 2);
+    }
+
+
+2. **Limit task creation:** Only create tasks at higher recursion levels
+3. **Balance:** Between parallelism and overhead
+
+
+
 Benchmark Setup
 
 
@@ -1701,20 +1733,7 @@ Both compilers show similar patterns:
 - **Solution:** Limit the number of tasks created
 
 
-*Discussion: Fibonacci Performance*
 
-Key Findings
-
-**Task Overhead:**
-
-- Creating tasks has significant overhead
-- Need sufficient work per task to justify overhead
-
-**Optimization Strategies:**
-
-1. **if clause:** Prevents task creation for small problem sizes
-2. **Limit task creation:** Only create tasks at higher recursion levels
-3. **Balance:** Between parallelism and overhead
 
 Hardware Details
 
