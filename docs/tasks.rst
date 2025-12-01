@@ -2044,6 +2044,92 @@ The list contains variables, which may include array sections.
             return 0;
         }
 
+.. challenge::
+
+    In the previous implementation of the Fibonacci generator code, we noticed that the values of 
+    Fibonacci numbers are computed several times during recursion. This situation can be avoided by using
+    task dependencies, as in the following graph which shows the dependencies that we can create explicitl
+    for the Fibonacci number 6:  
+
+
+    .. code-block:: text
+
+        fib[6]
+        depends on fib[5] and fib[4]
+                |
+                v
+            fib[5]
+                depends on fib[4] and fib[3]
+                    |
+                    v
+                fib[4]
+                    depends on fib[3] and fib[2]
+                    /                          \
+                v                            v
+                fib[3]                     fib[2]
+                depends on fib[2] and fib[1]   depends on fib[1] and fib[0]
+                |  \                               |          \
+                v   v                              v           v
+            fib[2] fib[1]                     fib[1]       fib[0]
+            depends on fib[1] and fib[0]
+            |  \
+            v   v
+            fib[1] fib[0]
+
+
+        Base values:
+        fib[1] = 1
+        fib[0] = 0
+
+    Write a code for the Fibonacci numbers generator but now using task dependencies.
+
+.. solution::
+
+    .. code-block:: c
+        :linenos:
+
+        // On cluster Kebnekaise
+        // ml foss
+        // export OMP_NUM_THREADS=4 
+        // gcc -O3 -march=native -fopenmp -o test.x fibonacci_task_dependencies.c -lm 
+        #include <stdio.h>
+        #include <stdlib.h>
+        #include <omp.h>
+
+        int main(int argc, char* argv[]) {
+            int n = (argc > 1) ? atoi(argv[1]) : 40;
+            unsigned long long *fib = malloc((n+1) * sizeof(unsigned long long));
+
+            #pragma omp parallel
+            {
+                #pragma omp single
+                {
+                    // Base cases
+                    #pragma omp task depend(out: fib[0])
+                    { fib[0] = 0; }
+
+                    #pragma omp task depend(out: fib[1])
+                    { fib[1] = 1; }
+
+                    // Create tasks for F(2) .. F(n)
+                    for (int i = 2; i <= n; i++) {
+                        #pragma omp task depend(in: fib[i-1], fib[i-2]) depend(out: fib[i])
+                        {
+                            fib[i] = fib[i-1] + fib[i-2];
+                        }
+                    }
+
+                    // Wait until fib[n] is available
+                    #pragma omp taskwait
+                    printf("fib(%d) = %llu\n", n, fib[n]);
+                }
+            }
+
+            free(fib);
+            return 0;
+        }
+
+
 
 
 taskloop Construct (OpenMP 4.5)
