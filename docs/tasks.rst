@@ -2058,15 +2058,15 @@ The list contains variables, which may include array sections.
         depends on fib[5] and fib[4]
                 |
                 v
-            fib[5]
+              fib[5]
                 depends on fib[4] and fib[3]
                     |
                     v
-                fib[4]
+                  fib[4]
                     depends on fib[3] and fib[2]
                     /                          \
                    v                            v
-                fib[3]                     fib[2]
+                fib[3]                        fib[2]
                 depends on fib[2] and fib[1]   depends on fib[1] and fib[0]
                 |  \                               |          \
                 v   v                              v           v
