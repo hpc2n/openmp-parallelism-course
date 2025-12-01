@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profiling analysis with VTune and Advisor &mdash; OpenMP parallelism in scientific computing  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_lesson.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/term_role_formatting.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="../_static/minipres.js"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+    <link rel="next" title="First Steps in OpenMP" href="../first-steps/" />
+    <link rel="prev" title="Introduction to Kebnekaise" href="../setup/" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../" class="icon icon-home">
+            OpenMP parallelism in scientific computing
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Day 1</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../hpc2n-intro/">Introduction to HPC2N</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup/">Introduction to Kebnekaise</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Profiling analysis with VTune and Advisor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#vtune-workflow">VTune Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#advisor-workflow">Advisor Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#measuring-code-performance">Measuring Code Performance</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#roofline-model">Roofline Model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#understanding-roofline-analysis-results">Understanding Roofline Analysis Results</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#key-metrics-displayed">Key Metrics Displayed</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 2</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../first-steps/">First Steps in OpenMP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-handling/">Data for Parallel Regions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../worksharing/">Worksharing and Scheduling</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 3</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-handlingii/">More on Private Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../worksharingii/">More on Worksharing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 4</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tasks/">The Task Directive</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Miscellanous</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick-reference/">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/">Instructor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../">OpenMP parallelism in scientific computing</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Profiling analysis with VTune and Advisor</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/hpc2n/OpenMP-parallelism-course/blob/master/docs/profiling-analysis.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="profiling-analysis-with-vtune-and-advisor">
+<h1>Profiling analysis with VTune and Advisor<a class="headerlink" href="#profiling-analysis-with-vtune-and-advisor" title="Permalink to this heading"></a></h1>
+<div class="admonition-objectives objectives admonition" id="objectives-0">
+<p class="admonition-title">Objectives</p>
+<ul class="simple">
+<li><p>Learn the profiling tool VTune for OpenMP codes</p></li>
+</ul>
+</div>
+<section id="vtune-workflow">
+<h2>VTune Workflow<a class="headerlink" href="#vtune-workflow" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p>Load your compiler tool: <code class="docutils literal notranslate"><span class="pre">ml</span> <span class="pre">foss</span></code></p></li>
+<li><p>Copy/paste the following C code that contains an OpenMP parallel implementation (at this point you are not</p></li>
+</ul>
+<p>expected to understand the OpenMP directives):</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// On cluster Kebnekaise</span>
+<span class="c1">// ml foss</span>
+<span class="c1">// gcc -O3 -march=native -g -fopenmp -o test.x fibonacci_recursion_omp_tasking.c -lm</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span>
+
+<span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">fibbonacci</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">left</span><span class="p">,</span><span class="w"> </span><span class="n">right</span><span class="p">;</span><span class="w">     </span><span class="c1">//shared variables</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="o">&lt;</span><span class="mi">40</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fibbonacci</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">);</span>
+<span class="w">        </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fibbonacci</span><span class="p">(</span><span class="n">n</span><span class="mi">-2</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">left</span><span class="o">+</span><span class="n">right</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp task shared(left) firstprivate(n)</span>
+<span class="w">    </span><span class="n">left</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fibbonacci</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">);</span>
+<span class="w">    </span><span class="cp">#pragma omp task shared(right) firstprivate(n)</span>
+<span class="w">    </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fibbonacci</span><span class="p">(</span><span class="n">n</span><span class="mi">-2</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cp">#pragma omp taskwait </span><span class="c1">//sync tasks</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">left</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">right</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+
+<span class="k">if</span><span class="p">(</span><span class="n">argc</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">    </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+<span class="k">else</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Give n : &quot;</span><span class="p">);</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">omp_set_dynamic</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+<span class="cp">#pragma omp parallel shared(n)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp single</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;F(%d) = %llu</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">fibbonacci</span><span class="p">(</span><span class="n">n</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Copy/paste the following batch script <em>job_vtune.sh</em> for sending the jobs to the Kebnekaise’s batch queue:</p></li>
+</ul>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span>!/bin/bash
+<span class="gp">#</span>SBATCH<span class="w"> </span>-A<span class="w"> </span>hpc2n202X-XYZ
+<span class="gp">#</span>SBATCH<span class="w"> </span>-N<span class="w"> </span><span class="m">1</span>
+<span class="gp">#</span>SBATCH<span class="w"> </span>-c<span class="w"> </span><span class="m">10</span>
+<span class="gp">#</span>SBATCH<span class="w"> </span>--time<span class="o">=</span><span class="m">00</span>:10:00
+<span class="gp">#</span>SBATCH<span class="w"> </span>--mail-type<span class="o">=</span>END
+<span class="gp">#</span>SBATCH<span class="w"> </span>-C<span class="w"> </span>skylake
+
+
+<span class="go">export OMP_NUM_THREADS=10</span>
+
+<span class="gp"># </span>Load<span class="w"> </span>VTUNE
+<span class="go">ml VTune/2021.6.0</span>
+<span class="gp"># </span>Load<span class="w"> </span>foss
+<span class="go">ml foss</span>
+
+<span class="go">vtune -collect hotspots -app-working-dir /path-to-your-folder  --app-working-dir=/path-to-your-folder -- /path-to-your-folder/executable list-of-arguments</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Compile your code</p></li>
+</ul>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">gcc -O3 -march=native -g -fopenmp-o test.x fibonacci_recursion_omp_tasking.c -lm</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Fix the paths to the directory where you obtained the executable <em>test.x</em> in the <em>job_vtune.sh</em> script.</p></li>
+<li><p>Also correct the projectID. Then, submitthe job with <strong>sbatch job_vtune.sh</strong>.</p></li>
+<li><p>In this script, the number of threads is set to 10 (it takes ~ 2min.) for the Fibonacci number 56.</p></li>
+<li><p>Once the job finishes. Load the Vtune module on the terminal: <code class="docutils literal notranslate"><span class="pre">ml</span> <span class="pre">VTune/2021.6.0</span></code> and load the gui:
+<em>vtune-gui</em>. Then, load the <code class="docutils literal notranslate"><span class="pre">r*hs</span></code> project:</p></li>
+</ul>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/vtune1.png"><img alt="../_images/vtune1.png" src="../_images/vtune1.png" style="width: 919.0px; height: 172.0px;" /></a>
+</figure>
+<hr class="docutils" />
+<ul class="simple">
+<li><p>If you don’t see a project, go to <em>Open Result</em> and choose the <code class="docutils literal notranslate"><span class="pre">r*hs</span></code> project and then the <code class="docutils literal notranslate"><span class="pre">*.vtune</span></code> file.</p></li>
+</ul>
+<p><a class="reference external" href="https://cdrdv2-public.intel.com/671480/vtune-tutorial-linux-finding-hotspots.pdf">Intel’s tutorial:</a></p>
+<ul class="simple">
+<li><p>You can then see the different types of results for this <em>hotspots</em> analysis:</p></li>
+</ul>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/vtune2.png"><img alt="../_images/vtune2.png" src="../_images/vtune2.png" style="width: 919.0px; height: 501.0px;" /></a>
+</figure>
+<hr class="docutils" />
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/vtune3.png"><img alt="../_images/vtune3.png" src="../_images/vtune3.png" style="width: 919.0px; height: 504.5px;" /></a>
+</figure>
+</section>
+<hr class="docutils" />
+<section id="advisor-workflow">
+<h2>Advisor Workflow<a class="headerlink" href="#advisor-workflow" title="Permalink to this heading"></a></h2>
+<p><strong>Step 1: Compile Your Code</strong></p>
+<ol class="arabic">
+<li><p>Load your compiler tool:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ml</span> <span class="n">foss</span>
+</pre></div>
+</div>
+</li>
+<li><p>Use this code:</p></li>
+</ol>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// On cluster Kebnekaise</span>
+<span class="c1">// ml foss</span>
+<span class="c1">// gcc -O3 -march=native -g -o test.x fibonacci_recursion.c -lm</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
+
+<span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">fibbonacci</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">){</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">fibbonacci</span><span class="p">(</span><span class="n">n</span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">fibbonacci</span><span class="p">(</span><span class="n">n</span><span class="mi">-2</span><span class="p">));</span>
+<span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+
+<span class="k">if</span><span class="p">(</span><span class="n">argc</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">    </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+<span class="k">else</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Give n : &quot;</span><span class="p">);</span><span class="w"> </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">n</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">printf</span><span class="p">(</span><span class="s">&quot;%llu &quot;</span><span class="p">,</span><span class="n">fibbonacci</span><span class="p">(</span><span class="n">n</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>and compile it:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">gcc</span><span class="w"> </span><span class="o">-</span><span class="n">O3</span><span class="w"> </span><span class="o">-</span><span class="n">march</span><span class="o">=</span><span class="n">native</span><span class="w"> </span><span class="o">-</span><span class="n">g</span><span class="w"> </span><span class="o">-</span><span class="n">o</span><span class="w"> </span><span class="n">test</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="n">fibonacci_recursion</span><span class="p">.</span><span class="n">c</span><span class="w"> </span><span class="o">-</span><span class="n">lm</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Fix the paths to the directory where you obtained the executable <code class="docutils literal notranslate"><span class="pre">test.x</span></code> in the <code class="docutils literal notranslate"><span class="pre">job_advisor.sh</span></code> script. Also correct the project ID.</p></li>
+<li><p>Submit the job:</p></li>
+</ol>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">#</span>!/bin/bash
+<span class="gp">#</span>SBATCH<span class="w"> </span>-A<span class="w"> </span>hpc2n202X-XYZ
+<span class="gp">#</span>SBATCH<span class="w"> </span>-c<span class="w"> </span><span class="m">1</span>
+<span class="gp">#</span>SBATCH<span class="w"> </span>--time<span class="o">=</span><span class="m">00</span>:10:00
+<span class="gp">#</span>SBATCH<span class="w"> </span>--mail-type<span class="o">=</span>END
+<span class="gp">#</span>SBATCH<span class="w"> </span>-C<span class="w"> </span>skylake
+
+<span class="gp"># </span>Load<span class="w"> </span>Intel<span class="w"> </span>Advisor<span class="w"> </span>tool
+<span class="go">ml Advisor/2023.2.0</span>
+<span class="gp"># </span>Load<span class="w"> </span>foss
+<span class="go">ml foss</span>
+
+<span class="go">advisor --collect=roofline --project-dir=./advi_results -- ./executable list-of-arguments</span>
+</pre></div>
+</div>
+<p>with the standard command: <code class="docutils literal notranslate"><span class="pre">sbatch</span> <span class="pre">job_advisor.sh</span></code></p>
+<ol class="arabic simple" start="5">
+<li><p>Note: This script for the Fibonacci number 50 takes approximately 6 minutes.</p></li>
+</ol>
+<hr class="docutils" />
+<p><strong>Step 2: View Results with Advisor GUI</strong></p>
+<p>Once the job finishes:</p>
+<ol class="arabic">
+<li><p>Load the Advisor module on the terminal:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ml</span> <span class="n">Advisor</span><span class="o">/</span><span class="mf">2023.2.0</span>
+</pre></div>
+</div>
+</li>
+<li><p>Launch the GUI:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">advisor</span><span class="o">-</span><span class="n">gui</span>
+</pre></div>
+</div>
+</li>
+<li><p>Go to <strong>Open Project</strong></p></li>
+</ol>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/advisor1.png"><img alt="../_images/advisor1.png" src="../_images/advisor1.png" style="width: 301.7px; height: 203.0px;" /></a>
+</figure>
+<hr class="docutils" />
+<ol class="arabic simple" start="4">
+<li><p>Find the <code class="docutils literal notranslate"><span class="pre">advi_results</span></code> folder</p></li>
+</ol>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/advisor2.png"><img alt="../_images/advisor2.png" src="../_images/advisor2.png" style="width: 763.0px; height: 123.89999999999999px;" /></a>
+</figure>
+<hr class="docutils" />
+<ol class="arabic simple" start="5">
+<li><p>Choose the <code class="docutils literal notranslate"><span class="pre">advi_results.advixeproj</span></code> file</p></li>
+</ol>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/advisor3.png"><img alt="../_images/advisor3.png" src="../_images/advisor3.png" style="width: 752.5px; height: 116.19999999999999px;" /></a>
+</figure>
+<hr class="docutils" />
+<ol class="arabic simple" start="6">
+<li><p>Click <strong>Show Results</strong></p></li>
+</ol>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/advisor4.png"><img alt="../_images/advisor4.png" src="../_images/advisor4.png" style="width: 427.0px; height: 224.0px;" /></a>
+</figure>
+</section>
+<hr class="docutils" />
+<section id="measuring-code-performance">
+<h2>Measuring Code Performance<a class="headerlink" href="#measuring-code-performance" title="Permalink to this heading"></a></h2>
+<p><em>Performance Metrics Formula</em></p>
+<p><strong>Floating Point Operations per second (FLOPS):</strong></p>
+<div class="math notranslate nohighlight">
+\[\text{FLOPS} = \frac{\text{Nr.FLOP}}{1\text{sec}} = \frac{\text{Nr.FLOP}}{\text{Byte}} \times \frac{\text{Byte}}{\text{sec}}\]</div>
+<div class="math notranslate nohighlight">
+\[= \text{Arithmetic Intensity (AI)} \times \text{Bandwidth (BW)}\]</div>
+<section id="roofline-model">
+<h3>Roofline Model<a class="headerlink" href="#roofline-model" title="Permalink to this heading"></a></h3>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/advisor5.png"><img alt="../_images/advisor5.png" src="../_images/advisor5.png" style="width: 415.79999999999995px; height: 188.29999999999998px;" /></a>
+</figure>
+<hr class="docutils" />
+<p>The roofline model visualizes performance bottlenecks:</p>
+<ul class="simple">
+<li><p><strong>X-axis:</strong> Log(AI) - Arithmetic Intensity</p></li>
+<li><p><strong>Y-axis:</strong> Log(FLOPS) - Floating Point Operations per Second</p></li>
+<li><p><strong>Diagonal line:</strong> Represents memory bandwidth constraint</p></li>
+<li><p><strong>Horizontal line:</strong> Represents peak FLOPS (compute capability)</p></li>
+</ul>
+<p><strong>Performance Regions:</strong></p>
+<ul class="simple">
+<li><p><strong>Memory Bound:</strong> Performance limited by bandwidth (below the roofline intersection)</p></li>
+<li><p><strong>Compute Bound:</strong> Performance limited by computation capability (at the roofline ceiling)</p></li>
+</ul>
+<p>More details: <a class="reference external" href="https://www.telesens.co/2018/07/26/understanding-roofline-charts/">https://www.telesens.co/2018/07/26/understanding-roofline-charts/</a></p>
+</section>
+</section>
+<section id="understanding-roofline-analysis-results">
+<h2>Understanding Roofline Analysis Results<a class="headerlink" href="#understanding-roofline-analysis-results" title="Permalink to this heading"></a></h2>
+<p>The Roofline analysis provides insights into code performance:</p>
+<p><em>Code Analytics Section</em></p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/advisor6.png"><img alt="../_images/advisor6.png" src="../_images/advisor6.png" style="width: 660.3px; height: 323.09999999999997px;" /></a>
+</figure>
+<hr class="docutils" />
+<p>In the <strong>Code Analytics</strong> view, you can see:</p>
+<ul class="simple">
+<li><p><strong>GFLOPS</strong> = Giga floating point operations per second</p></li>
+<li><p><strong>GINTOPS</strong> = Giga integer operations per second</p></li>
+</ul>
+<p>These metrics show the number of operations per second (floating point or integers) for expensive functions in your code.</p>
+<section id="key-metrics-displayed">
+<h3>Key Metrics Displayed<a class="headerlink" href="#key-metrics-displayed" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Performance:</strong> Operations per second for each function</p></li>
+<li><p><strong>Arithmetic Intensity:</strong> Ratio of compute operations to memory access</p></li>
+<li><p><strong>Elapsed Time:</strong> Time spent in each function</p></li>
+<li><p><strong>Top Functions:</strong> Most computationally expensive functions</p></li>
+</ul>
+<p>The visualization helps identify:</p>
+<ul class="simple">
+<li><p>Whether your code is memory-bound or compute-bound</p></li>
+<li><p>Optimization opportunities</p></li>
+<li><p>Performance bottlenecks in specific functions</p></li>
+</ul>
+<div class="admonition-exercise exercise important admonition" id="exercise-0">
+<p class="admonition-title">Exercise</p>
+<p>Use the code provided in the VTune section and run the code with 8
+threads for the Fibonacci number 56. Use the VTune GUI to obtain the Elapsed Time,
+and the Top Hotspots in the <strong>Summary</strong> tab.</p>
+<p>Go to the <strong>Bottom-up</strong> tab and see the Effective Time by Utilization of the
+functions, which one has a Poor utilization?</p>
+<p>In the plot at the bottom one can see the CPU Utilization for each Thread. The CPU
+Time shows when the threads are doing some work, otherwise they are idle. Ideally,
+the plot would show brown bars denoting fully occupied threads. How does this plot look
+for the present code? Do the behavior of the individual threads explain the
+Effective Time by Utilization above?</p>
+</div>
+<div class="admonition-exercise exercise important admonition" id="exercise-1">
+<p class="admonition-title">Exercise</p>
+<p>Use the code example in the Advisor section and collect results for the Fibonacci number 50.
+Then, in the Advisor GUI, obtain the GFLOPS and GINTOPS in the Code Analytics tab.</p>
+<p>In the Source tab, do you see the part of the code that coul be improved?</p>
+</div>
+</section>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this heading"></a></h2>
+<p>Intel Advisor’s Roofline analysis helps you:</p>
+<ol class="arabic simple">
+<li><p>Understand performance characteristics of your code</p></li>
+<li><p>Identify optimization opportunities</p></li>
+<li><p>Determine if your code is limited by memory bandwidth or compute capability</p></li>
+<li><p>Focus optimization efforts on the most impactful areas</p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../setup/" class="btn btn-neutral float-left" title="Introduction to Kebnekaise" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../first-steps/" class="btn btn-neutral float-right" title="First Steps in OpenMP" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, The contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

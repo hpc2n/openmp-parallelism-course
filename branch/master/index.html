@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenMP parallelism in scientific computing &mdash; OpenMP parallelism in scientific computing  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+      <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
+      <link rel="stylesheet" type="text/css" href="_static/sphinx_lesson.css" />
+      <link rel="stylesheet" type="text/css" href="_static/term_role_formatting.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/clipboard.min.js"></script>
+        <script src="_static/copybutton.js"></script>
+        <script src="_static/minipres.js"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex/" />
+    <link rel="search" title="Search" href="search/" />
+    <link rel="next" title="Introduction to HPC2N" href="hpc2n-intro/" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            OpenMP parallelism in scientific computing
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Day 1</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hpc2n-intro/">Introduction to HPC2N</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup/">Introduction to Kebnekaise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="profiling-analysis/">Profiling analysis with VTune and Advisor</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 2</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="first-steps/">First Steps in OpenMP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data-handling/">Data for Parallel Regions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="worksharing/">Worksharing and Scheduling</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 3</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="data-handlingii/">More on Private Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="worksharingii/">More on Worksharing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 4</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tasks/">The Task Directive</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Miscellanous</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quick-reference/">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/">Instructor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">OpenMP parallelism in scientific computing</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">OpenMP parallelism in scientific computing</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/hpc2n/OpenMP-parallelism-course/blob/master/docs/index.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="openmp-parallelism-in-scientific-computing">
+<h1>OpenMP parallelism in scientific computing<a class="headerlink" href="#openmp-parallelism-in-scientific-computing" title="Permalink to this heading"></a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">Abstract<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The purpose of the course is to learn when a code could benefit from OpenMP, including task-based parallelism, and how to apply it. A task-based algorithm comprises of a set of self-contained tasks that have well-defined inputs and outputs. This differs from the common practice of organizing an implementation into subroutines in that a task-based implementation does not call the associated computation kernels directly, instead it is the role of a runtime system to schedule the task to various computational resources, such as CPU cores and GPUs. One of the main benefits of this approach is that the underlying parallelism is exposed automatically as the runtime system gradually traverses the resulting task graph.</p>
+</dd>
+<dt class="field-even">Content<span class="colon">:</span></dt>
+<dd class="field-even"><p>The course mainly focuses on the task-pragmas implemented in the newer incarnations of OpenMP.</p>
+</dd>
+<dt class="field-odd">Format<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Onsite course.</p>
+</dd>
+<dt class="field-even">Audience<span class="colon">:</span></dt>
+<dd class="field-even"><p>…</p>
+</dd>
+<dt class="field-odd">Date and Time<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Nov.-Dec. 2025, 13:00-15:00</p>
+</dd>
+<dt class="field-even">Location<span class="colon">:</span></dt>
+<dd class="field-even"><p>On-site</p>
+</dd>
+<dt class="field-odd">Instructors<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Pedro Ojeda-May (<a class="reference external" href="mailto:pedro&#46;ojeda-may&#37;&#52;&#48;umu&#46;se">pedro<span>&#46;</span>ojeda-may<span>&#64;</span>umu<span>&#46;</span>se</a>)</p>
+</dd>
+<dt class="field-even">Recordings<span class="colon">:</span></dt>
+<dd class="field-even"><p>…</p>
+</dd>
+<dt class="field-odd">Registration<span class="colon">:</span></dt>
+<dd class="field-odd"><p>…</p>
+</dd>
+<dt class="field-even">Acknowledgment<span class="colon">:</span></dt>
+<dd class="field-even"><p>This material is based on the courses created by Joachim Hein (Lund University) and Mirko Myllykoski (Umeå University).</p>
+</dd>
+</dl>
+<div class="admonition-prerequisites prerequisites admonition" id="prerequisites-0">
+<p class="admonition-title">Prerequisites</p>
+<ul class="simple">
+<li><p>Basic knowledge of C programming language.</p></li>
+<li><p>Basic knowledge of parallel programming.</p></li>
+<li><p>Basic Linux skills.</p></li>
+<li><p>Basic knowledge of OpenMP is beneficial but not required.</p></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Day 1</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="hpc2n-intro/">Introduction to HPC2N</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup/">Introduction to Kebnekaise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="profiling-analysis/">Profiling analysis with VTune and Advisor</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Day 2</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="first-steps/">First Steps in OpenMP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data-handling/">Data for Parallel Regions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="worksharing/">Worksharing and Scheduling</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Day 3</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="data-handlingii/">More on Private Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="worksharingii/">More on Worksharing</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Day 4</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tasks/">The Task Directive</a></li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Miscellanous</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="quick-reference/">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide/">Instructor’s guide</a></li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hpc2n-intro/" class="btn btn-neutral float-right" title="Introduction to HPC2N" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, The contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

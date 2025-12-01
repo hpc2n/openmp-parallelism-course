@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data for Parallel Regions &mdash; OpenMP parallelism in scientific computing  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_lesson.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/term_role_formatting.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+        <script src="../_static/minipres.js"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+    <link rel="next" title="Worksharing and Scheduling" href="../worksharing/" />
+    <link rel="prev" title="First Steps in OpenMP" href="../first-steps/" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../" class="icon icon-home">
+            OpenMP parallelism in scientific computing
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Day 1</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hpc2n-intro/">Introduction to HPC2N</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup/">Introduction to Kebnekaise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../profiling-analysis/">Profiling analysis with VTune and Advisor</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 2</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../first-steps/">First Steps in OpenMP</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data for Parallel Regions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#shared-private-data">Shared &amp; Private Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#private-data">Private Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#default-clause">Default Clause</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fixing-data-races">Fixing Data Races</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#barrier-and-synchronization">Barrier and Synchronization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../worksharing/">Worksharing and Scheduling</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 3</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../data-handlingii/">More on Private Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../worksharingii/">More on Worksharing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 4</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tasks/">The Task Directive</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Miscellanous</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick-reference/">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/">Instructor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../">OpenMP parallelism in scientific computing</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Data for Parallel Regions</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/hpc2n/OpenMP-parallelism-course/blob/master/docs/data-handling.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="data-for-parallel-regions">
+<h1>Data for Parallel Regions<a class="headerlink" href="#data-for-parallel-regions" title="Permalink to this heading"></a></h1>
+<div class="admonition-objectives objectives admonition" id="objectives-0">
+<p class="admonition-title">Objectives</p>
+<ul class="simple">
+<li><p><strong>Data:</strong></p>
+<ul>
+<li><p>What is private data</p></li>
+<li><p>What is shared data</p></li>
+<li><p>How to control which is which</p></li>
+</ul>
+</li>
+<li><p><strong>Race conditions:</strong></p>
+<ul>
+<li><p>Basic constructs to avoid data races</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="shared-private-data">
+<h2>Shared &amp; Private Data<a class="headerlink" href="#shared-private-data" title="Permalink to this heading"></a></h2>
+<p><strong>Private and Shared Data Concepts</strong></p>
+<p>In a parallel region, data can be either shared or private.</p>
+<p><em>Shared Data</em></p>
+<ul class="simple">
+<li><p>Every thread can access the same memory location (potential for conflict)</p></li>
+<li><p>Value remains unchanged on entry to parallel region</p></li>
+<li><p>Value survives after end of parallel region</p></li>
+</ul>
+<p><em>Private Data</em></p>
+<ul class="simple">
+<li><p>Each thread has its own private copy</p></li>
+<li><p>Normally uninitialized at the beginning of parallel region</p></li>
+<li><p>Contents typically lost when parallel region finishes</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In a shared memory architecture, shared data resides in the main memory accessible by all processors, while
+each thread maintains its own private data copy.</p>
+</div>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/sm_3.png"><img alt="../_images/sm_3.png" src="../_images/sm_3.png" style="width: 242.39999999999998px; height: 164.1px;" /></a>
+</figure>
+<hr class="docutils" />
+<p><em>Controlling Data Sharing in Fortran</em></p>
+<p>For data declared before the start of a parallel region:</p>
+<ul class="simple">
+<li><p>Use clause <code class="docutils literal notranslate"><span class="pre">shared</span></code> to declare a data structure as shared</p></li>
+<li><p>Use clause <code class="docutils literal notranslate"><span class="pre">private</span></code> to declare a data structure as private</p></li>
+</ul>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">a</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="w"> </span><span class="n">b</span>
+
+<span class="c">!$omp parallel &amp;</span>
+<span class="c">!$omp shared(a) private(b)</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;result=&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">b</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<p>In this example:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span></code> is shared among all threads</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">b</span></code> is private to each thread</p></li>
+</ul>
+<p><em>Controlling Data Sharing in C</em></p>
+<p>For data declared before the start of a parallel region:</p>
+<ul class="simple">
+<li><p>Use clause <code class="docutils literal notranslate"><span class="pre">shared</span></code> to declare a data structure as shared</p></li>
+<li><p>Use clause <code class="docutils literal notranslate"><span class="pre">private</span></code> to declare a data structure as private</p></li>
+</ul>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+<span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel \</span>
+<span class="cp">    shared(a) private(b)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In this example:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span></code> is shared among all threads</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">b</span></code> is private to each thread</p></li>
+</ul>
+</section>
+<section id="private-data">
+<h2>Private Data<a class="headerlink" href="#private-data" title="Permalink to this heading"></a></h2>
+<p>Private data is typically used for control variables, including:</p>
+<ul class="simple">
+<li><p>Thread identification</p></li>
+<li><p>Loop indices</p></li>
+<li><p>Variables internal to the algorithm</p></li>
+</ul>
+<p><em>Default Private Variables</em></p>
+<p>Most variables declared inside a parallel region are private by default:</p>
+<ul class="simple">
+<li><p>Variables declared inside the block (C/C++)</p></li>
+<li><p>Variables in subroutine/function called from inside parallel region</p></li>
+</ul>
+<p><em>Exceptions</em></p>
+<p>The following are <strong>NOT</strong> private by default:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">static</span></code> (C/C++) or <code class="docutils literal notranslate"><span class="pre">save</span></code> (Fortran) variables</p></li>
+<li><p>File scope variables (C/C++) or <code class="docutils literal notranslate"><span class="pre">COMMON</span></code> blocks</p></li>
+<li><p>Variables passed by reference inherit their data-sharing attribute</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>In Fortran, special care is needed with <code class="docutils literal notranslate"><span class="pre">COMMON</span></code> and <code class="docutils literal notranslate"><span class="pre">EQUIVALENCE</span></code> statements.</p>
+</div>
+<p><em>Example: Memory Movements for Private Data (Fortran)</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">b</span>
+
+<span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+
+<span class="c">!$OMP parallel &amp;</span>
+<span class="c">!$OMP private(b)</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">3</span>
+<span class="c">!$OMP end parallel</span>
+</pre></div>
+</div>
+<p><em>Memory Layout</em></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Main Memory: b = 5
+
+Thread 0: b = 0 → b = 3
+Thread 1: b = 1 → b = 4
+Thread 2: b = 2 → b = 5
+Thread 3: b = 3 → b = 6
+
+Main Memory: b = 5
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each thread has its own copy of <code class="docutils literal notranslate"><span class="pre">b</span></code>, and changes do not affect the original value in main memory.</p>
+</div>
+<p><em>Example: Memory Movements for Private Data (C)</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+
+<span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel \</span>
+<span class="cp">    private(b)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><em>Memory Layout</em></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Main Memory: b = 5
+
+Thread 0: b = 0 → b = 3
+Thread 1: b = 1 → b = 4
+Thread 2: b = 2 → b = 5
+Thread 3: b = 3 → b = 6
+
+Main Memory: b = 5
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each thread has its own copy of <code class="docutils literal notranslate"><span class="pre">b</span></code>, and changes do not affect the original value in main memory.</p>
+</div>
+<p><strong>Shared Data</strong></p>
+<ul class="simple">
+<li><p>Majority of the data in parallel programs</p></li>
+<li><p>Typically large data structures (e.g., arrays)</p></li>
+</ul>
+<p><em>Properties</em></p>
+<ul class="simple">
+<li><p>Keeps its value on entry to parallel region</p></li>
+<li><p>Keeps its value on exit from parallel region</p></li>
+<li><p>Every thread can access (read and/or write) the data</p></li>
+</ul>
+<p><em>Safety Considerations</em></p>
+<p><strong>Safe scenario:</strong></p>
+<ul class="simple">
+<li><p>Multiple threads only read the data</p></li>
+</ul>
+<p><strong>Dangerous scenario:</strong></p>
+<ul class="simple">
+<li><p>Multiple threads access the same memory location</p></li>
+<li><p>At least one of these is a write access</p></li>
+<li><p>This easily results in a <strong>race condition</strong></p></li>
+</ul>
+<p><em>Example: Vector Initialization (Fortran)</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="p">,</span><span class="w"> </span><span class="k">parameter</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">vleng</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">120</span>
+<span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">vleng</span><span class="p">),</span><span class="w"> </span><span class="n">myNum</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">fin</span><span class="p">,</span><span class="w"> </span><span class="n">i</span>
+
+<span class="c">!$omp parallel shared(vect) &amp;</span>
+<span class="c">!$omp private(myNum, start, fin, i)</span>
+<span class="w">    </span><span class="n">myNum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vleng</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">()</span>
+<span class="w">    </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">myNum</span>
+<span class="w">    </span><span class="n">fin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">myNum</span>
+
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">fin</span>
+<span class="w">        </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">i</span><span class="w">  </span><span class="c">! threads write different elements</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(v_i = 4i\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is safe because each thread writes to different elements of the shared array.</p>
+</div>
+<p><em>Example: Vector Initialization (C)</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">vleng</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">120</span><span class="p">;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">vleng</span><span class="p">],</span><span class="w"> </span><span class="n">myNum</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">fin</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel shared(vect) \</span>
+<span class="cp">    private(myNum, start, fin, i)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">myNum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vleng</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">();</span>
+<span class="w">    </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">myNum</span><span class="p">;</span>
+<span class="w">    </span><span class="n">fin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">myNum</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">start</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">fin</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">i</span><span class="p">;</span><span class="w">  </span><span class="c1">// threads write different elements</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(v_i = 4i\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is safe because each thread writes to different elements of the shared array.</p>
+</div>
+<p><em>Example: Write Conflict for Shared Data (Fortran)</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span>
+
+<span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+
+<span class="c">!$OMP parallel &amp;</span>
+<span class="c">!$OMP shared(a, b)</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;updated&quot;</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;my b:&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">b</span>
+<span class="c">!$OMP end parallel</span>
+</pre></div>
+</div>
+<p><em>Memory Behavior</em></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Main Memory: a = 5
+
+All threads read: a = 5
+
+Thread 0: b = 5
+Thread 1: b = 6
+Thread 2: b = 7
+Thread 3: b = 8
+
+Final b value: RANDOM (could be 5, 6, 7, or 8)
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<ul class="simple">
+<li><p>Final <code class="docutils literal notranslate"><span class="pre">b</span></code> value is random/unpredictable</p></li>
+<li><p>Individual threads might print <code class="docutils literal notranslate"><span class="pre">b</span></code> before it has its final value</p></li>
+<li><p>This is a <strong>race condition</strong></p></li>
+</ul>
+</div>
+<p><em>Example: Write Conflict for Shared Data (C)</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
+
+<span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel \</span>
+<span class="cp">    shared(a, b)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;updated</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;my b: %i</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><em>Memory Behavior</em></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Main Memory: a = 5
+
+All threads read: a = 5
+
+Thread 0: b = 5
+Thread 1: b = 6
+Thread 2: b = 7
+Thread 3: b = 8
+
+Final b value: RANDOM (could be 5, 6, 7, or 8)
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<ul class="simple">
+<li><p>Final <code class="docutils literal notranslate"><span class="pre">b</span></code> value is random/unpredictable</p></li>
+<li><p>Individual threads might print <code class="docutils literal notranslate"><span class="pre">b</span></code> before it has its final value</p></li>
+<li><p>This is a <strong>race condition</strong></p></li>
+</ul>
+</div>
+</section>
+<section id="default-clause">
+<h2>Default Clause<a class="headerlink" href="#default-clause" title="Permalink to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">default</span></code> clause can be used on a parallel or task construct to determine data sharing of implicitly determined variables.</p>
+<p><strong>In C:</strong></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">default</span><span class="p">(</span><span class="n">shared</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">none</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>In Fortran:</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span>default(shared | none | private | firstprivate)
+</pre></div>
+</div>
+<p>For parallel constructs, if no <code class="docutils literal notranslate"><span class="pre">default</span></code> clause is supplied, <code class="docutils literal notranslate"><span class="pre">default(shared)</span></code> applies.</p>
+<p><em>Recommendation</em></p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Using <code class="docutils literal notranslate"><span class="pre">default(none)</span></code> is typically a good idea!</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">default(none)</span></code>, all variables accessed in the parallel region must be explicitly declared as <code class="docutils literal notranslate"><span class="pre">shared</span></code>, <code class="docutils literal notranslate"><span class="pre">private</span></code>, etc.</p>
+</div>
+</section>
+<section id="fixing-data-races">
+<h2>Fixing Data Races<a class="headerlink" href="#fixing-data-races" title="Permalink to this heading"></a></h2>
+<p>OpenMP provides several constructs to avoid data races:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">barrier</span></code> - synchronization point</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">critical</span></code> - mutual exclusion region</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">atomic</span></code> - lightweight protection for simple operations</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These constructs impact code performance, but we have no interest in “fast garbage”!</p>
+</div>
+</section>
+<section id="barrier-and-synchronization">
+<h2>Barrier and Synchronization<a class="headerlink" href="#barrier-and-synchronization" title="Permalink to this heading"></a></h2>
+<p><strong>The Barrier Construct</strong></p>
+<p><strong>Fortran:</strong></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp barrier</span>
+</pre></div>
+</div>
+<p><strong>C:</strong></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp barrier</span>
+</pre></div>
+</div>
+<p><em>Behavior</em></p>
+<ul class="simple">
+<li><p>All threads wait for the last one to arrive at the barrier</p></li>
+<li><p>Registers are flushed to the memory system</p></li>
+<li><p>All threads must have the barrier in their line of execution</p></li>
+</ul>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If not all threads reach the barrier, a <strong>deadlock</strong> will occur!</p>
+</div>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/barrier.png"><img alt="../_images/barrier.png" src="../_images/barrier.png" style="width: 498.4px; height: 214.2px;" /></a>
+</figure>
+<hr class="docutils" />
+<p><em>Example: Data Race in Matrix Transpose (Fortran)</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp private(mysize, tid, i, j) shared(matrix, mtrans)</span>
+<span class="w">    </span><span class="n">tid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+<span class="w">    </span><span class="n">mysize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nsize</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">()</span>
+
+<span class="w">    </span><span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">tid</span><span class="o">*</span><span class="n">mysize</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">tid</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">mysize</span>
+<span class="w">        </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">nsize</span>
+<span class="w">            </span><span class="n">matrix</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span><span class="mf">0.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span>
+<span class="w">        </span><span class="k">enddo</span>
+<span class="k">    enddo</span>
+
+<span class="w">    </span><span class="c">!$omp barrier</span>
+
+<span class="w">    </span><span class="k">do </span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">tid</span><span class="o">*</span><span class="n">mysize</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">tid</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">mysize</span>
+<span class="w">        </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">nsize</span>
+<span class="w">            </span><span class="n">mtrans</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="k">enddo</span>
+<span class="k">    enddo</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The barrier ensures that all threads complete writing to <code class="docutils literal notranslate"><span class="pre">matrix</span></code> before any thread begins reading from it for the transpose operation.</p>
+</div>
+<p><em>Example: Data Race in Matrix Transpose (C)</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    private(mysize, tid, i, j) shared(matrix, mtrans)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">tid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">    </span><span class="n">mysize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nsize</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">();</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tid</span><span class="o">*</span><span class="n">mysize</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">tid</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">mysize</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nsize</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">            </span><span class="n">matrix</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1000.0</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+
+<span class="w">    </span><span class="cp">#pragma omp barrier</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tid</span><span class="o">*</span><span class="n">mysize</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">tid</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">mysize</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">j</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nsize</span><span class="p">;</span><span class="w"> </span><span class="n">j</span><span class="o">++</span><span class="p">)</span>
+<span class="w">            </span><span class="n">mtrans</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">matrix</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="n">i</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The barrier ensures that all threads complete writing to <code class="docutils literal notranslate"><span class="pre">matrix</span></code> before any thread begins reading from it for the transpose operation.</p>
+</div>
+<p><strong>Critical Regions</strong></p>
+<p>Critical regions protect updates of shared memory locations by ensuring only one thread executes the critical region at a time.</p>
+<p><em>Syntax in C</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp critical (name)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">code</span><span class="o">-</span><span class="n">block</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><em>Syntax in Fortran</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp critical (name)</span>
+<span class="w">    </span><span class="n">code</span><span class="o">-</span><span class="k">block</span>
+<span class="c">!$omp end critical (name)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>Name is optional:</strong></p>
+<ul>
+<li><p>If named: only one thread in all regions with the same name</p></li>
+<li><p>If unnamed: only one thread in all unnamed regions</p></li>
+</ul>
+</li>
+<li><p>Implies a register flush at entrance and exit</p></li>
+<li><p>Useful to execute non-thread-safe functions</p></li>
+<li><p>Performance penalty due to serialization</p></li>
+</ul>
+<p><em>Example: Use of Critical Region (Fortran)</em></p>
+<p>Computing a sum with critical section:</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="nb">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0_dpr</span>
+
+<span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp shared(sum) private(tid, cont)</span>
+<span class="w">    </span><span class="n">tid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+<span class="w">    </span><span class="n">cont</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">func</span><span class="p">(</span><span class="n">tid</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c">!$omp critical (exp_up)</span>
+<span class="w">        </span><span class="nb">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sum</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">cont</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">tid</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;: c=&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">cont</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot; s=&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">sum</span>
+<span class="w">    </span><span class="c">!$omp end critical (exp_up)</span>
+<span class="c">!$omp end parallel</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sum_{k=0}^{n-1} e^k\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The critical region ensures that only one thread updates <code class="docutils literal notranslate"><span class="pre">sum</span></code> at a time, preventing race conditions.</p>
+</div>
+<p><em>Example: Use of Critical Region (C)</em></p>
+<p>Computing a sum with critical section:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">sum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    shared(sum) private(tid, cont)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">tid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">    </span><span class="n">cont</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">func</span><span class="p">(</span><span class="n">tid</span><span class="p">);</span>
+
+<span class="w">    </span><span class="cp">#pragma omp critical (exp_up)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">sum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">cont</span><span class="p">;</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%i: c=%f s=%f</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">tid</span><span class="p">,</span><span class="w"> </span><span class="n">cont</span><span class="p">,</span><span class="w"> </span><span class="n">sum</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sum_{k=0}^{n-1} e^k\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The critical region ensures that only one thread updates <code class="docutils literal notranslate"><span class="pre">sum</span></code> at a time, preventing race conditions.</p>
+</div>
+<hr class="docutils" />
+<p><strong>Atomic Operations</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">atomic</span></code> is a lightweight alternative to <code class="docutils literal notranslate"><span class="pre">critical</span></code> for simple cases.</p>
+<ul class="simple">
+<li><p>Works with simple statements only</p></li>
+<li><p>Can use special hardware instructions if they exist</p></li>
+<li><p>Flushes the “protected” variable on entry and exit</p></li>
+<li><p>Much more efficient than <code class="docutils literal notranslate"><span class="pre">critical</span></code> for simple operations</p></li>
+</ul>
+<p><em>Versions (from OpenMP 3.1)</em></p>
+<p>Four different versions:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">read</span></code> - atomic read operation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">write</span></code> - atomic write operation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">update</span></code> - atomic update operation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">capture</span></code> - atomic update with capture of old/new value</p></li>
+</ul>
+<p><em>OpenMP 4.0 Enhancement</em></p>
+<p>Adding <code class="docutils literal notranslate"><span class="pre">seq_cst</span></code> to atomic flushes all variables:</p>
+<ul class="simple">
+<li><p>Important for controlling instruction reordering</p></li>
+<li><p>Example use case: implementing a lock</p></li>
+</ul>
+<p><em>Atomic Read</em></p>
+<p>Protects only the reading of a scalar intrinsic variable.</p>
+<p><em>Fortran Syntax</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp atomic read</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span>
+</pre></div>
+</div>
+<p><em>C Syntax</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp atomic read</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Protects only the reading of scalar variable <code class="docutils literal notranslate"><span class="pre">x</span></code></p></li>
+<li><p>Flushes <code class="docutils literal notranslate"><span class="pre">x</span></code> on entry and exit</p></li>
+</ul>
+<p><em>Atomic Write</em></p>
+<p>Protects only the writing of a scalar intrinsic variable.</p>
+<p><em>Fortran Syntax</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp atomic write</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span>
+</pre></div>
+</div>
+<p><em>C Syntax</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp atomic write</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><em>Example Expressions</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">v</span><span class="p">;</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">func</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<ul class="simple">
+<li><p>Protects only the writing of <code class="docutils literal notranslate"><span class="pre">x</span></code></p></li>
+<li><p>No protection for evaluation of <code class="docutils literal notranslate"><span class="pre">expr</span></code> on the right-hand side</p></li>
+<li><p>Flushes <code class="docutils literal notranslate"><span class="pre">x</span></code> on entry and exit</p></li>
+</ul>
+</div>
+<p><em>Atomic Update</em></p>
+<p>Protects the update of a variable in simple arithmetic operations.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">atomic</span> <span class="pre">update</span></code> was the only atomic operation prior to OpenMP 3.1. The <code class="docutils literal notranslate"><span class="pre">update</span></code> keyword is optional for backward compatibility.</p>
+</div>
+<ul class="simple">
+<li><p>Only protects the update of the variable, not function calls on the right-hand side</p></li>
+<li><p>Works with simple statements only</p></li>
+<li><p>Can use special hardware instructions if available</p></li>
+<li><p>Flushes the updated variable on entry and exit</p></li>
+</ul>
+<p><em>Example</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">func</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">func</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The evaluation of <code class="docutils literal notranslate"><span class="pre">func(a)</span></code> is NOT protected. Use <code class="docutils literal notranslate"><span class="pre">critical</span></code> if protection is needed!</p>
+</div>
+<p><em>Atomic Update: Fortran Statements</em></p>
+<p><em>Examples</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp atomic update</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+
+<span class="c">!$omp atomic update</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The evaluation of <code class="docutils literal notranslate"><span class="pre">f(a)</span></code> is NOT protected. Use <code class="docutils literal notranslate"><span class="pre">critical</span></code> if needed!</p>
+</div>
+<p><em>Allowed Operations</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">operator</span><span class="w"> </span><span class="n">expr</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="n">operator</span><span class="w"> </span><span class="n">x</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">intr_proc</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">expr_list</span><span class="p">)</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">intr_proc</span><span class="p">(</span><span class="n">expr_list</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span></code> is scalar, intrinsic type</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">operator</span></code> is one of: <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code>, <code class="docutils literal notranslate"><span class="pre">/</span></code>, <code class="docutils literal notranslate"><span class="pre">.AND.</span></code>, <code class="docutils literal notranslate"><span class="pre">.OR.</span></code>, <code class="docutils literal notranslate"><span class="pre">.EQV.</span></code>, <code class="docutils literal notranslate"><span class="pre">.NEQV.</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">intr_proc</span></code> is one of: <code class="docutils literal notranslate"><span class="pre">MAX</span></code>, <code class="docutils literal notranslate"><span class="pre">MIN</span></code>, <code class="docutils literal notranslate"><span class="pre">IAND</span></code>, <code class="docutils literal notranslate"><span class="pre">IOR</span></code>, <code class="docutils literal notranslate"><span class="pre">IEOR</span></code></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">update</span></code> keyword is optional for consistency with older OpenMP standards.</p>
+</div>
+<p><em>Example: Vector Norm (Fortran)</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0D0</span>
+
+<span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp shared(vect, norm) private(myNum, i, lNorm)</span>
+<span class="w">    </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0D0</span>
+<span class="w">    </span><span class="n">myNum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vleng</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">()</span><span class="w">  </span><span class="c">! local size</span>
+
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">myNum</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">(),</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">            </span><span class="n">myNum</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">())</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">    </span><span class="k">enddo</span>
+
+<span class="w">    </span><span class="c">!$omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">lNorm</span>
+<span class="c">!$omp end parallel</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i) \cdot v(i)}\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each thread computes a local sum (<code class="docutils literal notranslate"><span class="pre">lNorm</span></code>), then atomically adds it to the global <code class="docutils literal notranslate"><span class="pre">norm</span></code>.</p>
+</div>
+<p><em>Atomic Update: C Statements</em></p>
+<p><em>Examples</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp atomic update</span>
+<span class="n">x</span><span class="o">++</span><span class="p">;</span>
+
+<span class="cp">#pragma omp atomic update</span>
+<span class="n">x</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The evaluation of <code class="docutils literal notranslate"><span class="pre">f(a)</span></code> is NOT protected. Use <code class="docutils literal notranslate"><span class="pre">critical</span></code> if needed!</p>
+</div>
+<p><em>Allowed Operations</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="p">;</span>
+<span class="n">x</span><span class="o">++</span><span class="p">;</span>
+<span class="o">++</span><span class="n">x</span><span class="p">;</span>
+<span class="n">x</span><span class="o">--</span><span class="p">;</span>
+<span class="o">--</span><span class="n">x</span><span class="p">;</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="w"> </span><span class="n">expr</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span></code> is lvalue, scalar</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">binop</span></code> is one of: <code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code>, <code class="docutils literal notranslate"><span class="pre">/</span></code>, <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">^</span></code>, <code class="docutils literal notranslate"><span class="pre">|</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code>, <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">update</span></code> keyword is optional for consistency with older OpenMP standards.</p>
+</div>
+<p><em>Example: Vector Norm (C)</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+
+<span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    shared(vect, norm) private(myNum, i, lNorm)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">    </span><span class="n">myNum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vleng</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">omp_get_num_threads</span><span class="p">();</span><span class="w">  </span><span class="c1">// local size</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myNum</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">         </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">myNum</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">());</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+
+<span class="w">    </span><span class="cp">#pragma omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">lNorm</span><span class="p">;</span>
+<span class="p">}</span><span class="w">  </span><span class="c1">// synchronize at end parallel</span>
+
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Mathematical notation: <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i) \cdot v(i)}\)</span></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each thread computes a local sum (<code class="docutils literal notranslate"><span class="pre">lNorm</span></code>), then atomically adds it to the global <code class="docutils literal notranslate"><span class="pre">norm</span></code>.</p>
+</div>
+<p><em>Atomic Capture</em></p>
+<p>Atomic capture allows you to:</p>
+<ul class="simple">
+<li><p>Update a shared variable atomically</p></li>
+<li><p>Keep a thread-private copy of <strong>either</strong> (but not both):</p>
+<ul>
+<li><p>The old value before update</p></li>
+<li><p>The new value after update</p></li>
+</ul>
+</li>
+</ul>
+<p>Restrictions apply to the allowed statement forms.</p>
+<p><em>Atomic Capture: C Statements</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp atomic capture</span>
+<span class="n">statement_or_structured_block</span>
+</pre></div>
+</div>
+<p><em>Allowed Statements (OpenMP 4.0)</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="o">++</span><span class="p">;</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="o">--</span><span class="p">;</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">++</span><span class="n">x</span><span class="p">;</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">--</span><span class="n">x</span><span class="p">;</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="p">;</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="w"> </span><span class="n">expr</span><span class="p">;</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="n">binop</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><em>Allowed Structured Blocks</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="w"> </span><span class="n">expr</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="n">binop</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">binop</span><span class="w"> </span><span class="n">expr</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="n">binop</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="o">++</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="o">++</span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="o">++</span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">x</span><span class="o">++</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">x</span><span class="o">--</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="o">--</span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="o">--</span><span class="n">x</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+<span class="p">{</span><span class="n">x</span><span class="o">--</span><span class="p">;</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;}</span>
+</pre></div>
+</div>
+<p><em>Atomic Capture: Fortran Statements</em></p>
+<p><em>Syntax Form 1</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp atomic capture</span>
+<span class="w">    </span><span class="n">update</span><span class="o">-</span><span class="n">statement</span>
+<span class="w">    </span><span class="n">capture</span><span class="o">-</span><span class="n">statement</span>
+<span class="c">!$omp end atomic</span>
+</pre></div>
+</div>
+<p><em>Syntax Form 2</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp atomic capture</span>
+<span class="w">    </span><span class="n">capture</span><span class="o">-</span><span class="n">statement</span>
+<span class="w">    </span><span class="n">update</span><span class="o">-</span><span class="n">statement</span>
+<span class="c">!$omp end atomic</span>
+</pre></div>
+</div>
+<p><em>Allowed Update Statements</em></p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="n">operator</span><span class="w"> </span><span class="n">expr</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">expr</span><span class="w"> </span><span class="n">operator</span><span class="w"> </span><span class="n">x</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">intr_proc</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">expr_list</span><span class="p">)</span>
+<span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">intr_proc</span><span class="p">(</span><span class="n">expr_list</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><em>Example (C)</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp atomic capture</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span><span class="w">      </span><span class="c1">// v gets the OLD value</span>
+<span class="w">    </span><span class="n">x</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w">     </span><span class="c1">// then x is updated</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Without <em>atomic capture</em> one would need to operations which could lead to race coditions:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// WRONG - race condition!</span>
+<span class="cp">#pragma omp atomic read</span>
+<span class="n">v</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">x</span><span class="p">;</span>
+<span class="cp">#pragma omp atomic update</span>
+<span class="n">x</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+<span class="c1">// Another thread could modify x between these two operations!</span>
+</pre></div>
+</div>
+<div class="admonition-exercise exercise important admonition" id="exercise-0">
+<p class="admonition-title">Exercise</p>
+<p>Monitor the race condition in the following code:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1">// On cluster Kebnekaise</span>
+<span class="linenos"> 2</span><span class="c1">// ml foss</span>
+<span class="linenos"> 3</span><span class="c1">// export OMP_NUM_THREADS=4</span>
+<span class="linenos"> 4</span><span class="c1">// gcc -O3 -march=native -fopenmp -o test.x 3-codestructure-openmp.c -lm</span>
+<span class="linenos"> 5</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="linenos"> 6</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos"> 7</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span>
+<span class="linenos"> 8</span><span class="cp">#endif</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="linenos">11</span><span class="p">{</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="kt">int</span><span class="w"> </span><span class="n">var1</span><span class="p">,</span><span class="w"> </span><span class="n">var2</span><span class="p">,</span><span class="w"> </span><span class="n">var3</span><span class="p">;</span><span class="w">   </span><span class="c1">// Three variables</span>
+<span class="linenos">14</span><span class="n">var1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="linenos">15</span><span class="n">var2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="linenos">16</span><span class="n">var3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="linenos">17</span>
+<span class="linenos">18</span><span class="cp">#pragma omp parallel private(var1,var2) shared(var3)</span>
+<span class="linenos">19</span><span class="w">    </span><span class="p">{</span>
+<span class="linenos">20</span>
+<span class="linenos">21</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos">22</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;var1 =  %i , var2 = %i , var3 = %i </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">var1</span><span class="p">,</span><span class="n">var2</span><span class="p">,</span><span class="n">var3</span><span class="p">);</span>
+<span class="linenos">23</span><span class="w">    </span><span class="n">var1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
+<span class="linenos">24</span><span class="w">    </span><span class="n">var2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span>
+<span class="linenos">25</span><span class="w">    </span><span class="n">var3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span><span class="w">    </span><span class="c1">// RACE CONDITION!!</span>
+<span class="linenos">26</span><span class="cp">#else</span>
+<span class="linenos">27</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Serial code!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="linenos">28</span><span class="cp">#endif</span>
+<span class="linenos">29</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">30</span>
+<span class="linenos">31</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;var1 =  %i , var2 = %i , var3 = %i </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="linenos">32</span>
+<span class="linenos">33</span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">34</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition-exercise exercise important admonition" id="exercise-1">
+<p class="admonition-title">Exercise</p>
+<p>Repair the race condition in the previous code for <em>var3</em> and set this variable with the number of threads available.</p>
+</div>
+<div class="admonition-solution solution important dropdown admonition" id="solution-0">
+<p class="admonition-title">Solution</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1">// On cluster Kebnekaise</span>
+<span class="linenos"> 2</span><span class="c1">// ml foss</span>
+<span class="linenos"> 3</span><span class="c1">// export OMP_NUM_THREADS=4</span>
+<span class="linenos"> 4</span><span class="c1">// gcc -O3 -march=native -fopenmp -o test.x 3-codestructure-openmp.c -lm</span>
+<span class="linenos"> 5</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="linenos"> 6</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos"> 7</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span>
+<span class="linenos"> 8</span><span class="cp">#endif</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="linenos">11</span><span class="p">{</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="kt">int</span><span class="w"> </span><span class="n">var1</span><span class="p">,</span><span class="w"> </span><span class="n">var2</span><span class="p">,</span><span class="w"> </span><span class="n">var3</span><span class="p">;</span><span class="w">   </span><span class="c1">// Three variables</span>
+<span class="linenos">14</span><span class="n">var1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="linenos">15</span><span class="n">var2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="linenos">16</span><span class="n">var3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="linenos">17</span>
+<span class="linenos">18</span><span class="cp">#pragma omp parallel private(var1,var2) shared(var3)</span>
+<span class="linenos">19</span><span class="w">    </span><span class="p">{</span>
+<span class="linenos">20</span>
+<span class="linenos">21</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos">22</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;var1 =  %i , var2 = %i , var3 = %i </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">var1</span><span class="p">,</span><span class="n">var2</span><span class="p">,</span><span class="n">var3</span><span class="p">);</span>
+<span class="linenos">23</span><span class="w">    </span><span class="n">var1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
+<span class="linenos">24</span><span class="w">    </span><span class="n">var2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span>
+<span class="linenos">25</span><span class="w">    </span><span class="cp">#pragma omp atomic write</span>
+<span class="linenos">26</span><span class="w">    </span><span class="n">var3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span><span class="w">    </span><span class="c1">// RACE CONDITION REPAIRED!!</span>
+<span class="linenos">27</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;In parallel region var1 =  %i , var2 = %i , var3 = %i </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="n">var1</span><span class="p">,</span><span class="n">var2</span><span class="p">,</span><span class="n">var3</span><span class="p">);</span>
+<span class="linenos">28</span><span class="cp">#else</span>
+<span class="linenos">29</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Serial code!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="linenos">30</span><span class="cp">#endif</span>
+<span class="linenos">31</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">32</span>
+<span class="linenos">33</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;var1 =  %i , var2 = %i , var3 = %i </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="linenos">34</span>
+<span class="linenos">35</span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">36</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition-exercise exercise important admonition" id="exercise-2">
+<p class="admonition-title">Exercise</p>
+<p>Use the <em>atomic</em> operation to update a variable <em>counter</em> that counts the available number of threads in a parallel region.</p>
+</div>
+<div class="admonition-solution solution important dropdown admonition" id="solution-1">
+<p class="admonition-title">Solution</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1">// On cluster Kebnekaise</span>
+<span class="linenos"> 2</span><span class="c1">// ml foss</span>
+<span class="linenos"> 3</span><span class="c1">// export OMP_NUM_THREADS=1</span>
+<span class="linenos"> 4</span><span class="c1">// gcc -O3 -march=native -fopenmp -o test.x 10a-atomic-openmp.c -lm</span>
+<span class="linenos"> 5</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="linenos"> 6</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span>
+<span class="linenos"> 7</span>
+<span class="linenos"> 8</span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos"> 9</span><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">counter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">// Shared variable to be updated by threads</span>
+<span class="linenos">10</span>
+<span class="linenos">11</span><span class="w">    </span><span class="cp">#pragma omp parallel num_threads(4)</span>
+<span class="linenos">12</span><span class="w">    </span><span class="p">{</span>
+<span class="linenos">13</span><span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">thread_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="linenos">14</span>
+<span class="linenos">15</span><span class="w">        </span><span class="c1">// safely increment the counter with the atomic</span>
+<span class="linenos">16</span><span class="w">        </span><span class="cp">#pragma omp atomic</span>
+<span class="linenos">17</span><span class="w">        </span><span class="n">counter</span><span class="o">++</span><span class="p">;</span>
+<span class="linenos">18</span>
+<span class="linenos">19</span><span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Thread %d incremented counter to %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">thread_id</span><span class="p">,</span><span class="w"> </span><span class="n">counter</span><span class="p">);</span>
+<span class="linenos">20</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">21</span>
+<span class="linenos">22</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Counter value: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">counter</span><span class="p">);</span>
+<span class="linenos">23</span>
+<span class="linenos">24</span><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">25</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Permalink to this heading"></a></h2>
+<p>This guide covered the following OpenMP concepts:</p>
+<p><strong>Data Management:</strong></p>
+<ul class="simple">
+<li><p>Private data: each thread has its own copy</p></li>
+<li><p>Shared data: accessible by all threads</p></li>
+<li><p>Controlling data attributes with clauses</p></li>
+</ul>
+<p><strong>Preventing Race Conditions:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">barrier</span></code>: synchronization point for all threads</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">critical</span></code>: mutual exclusion for code regions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">atomic</span></code>: lightweight protection for simple operations</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">read</span></code>, <code class="docutils literal notranslate"><span class="pre">write</span></code>, <code class="docutils literal notranslate"><span class="pre">update</span></code>, <code class="docutils literal notranslate"><span class="pre">capture</span></code></p></li>
+</ul>
+</li>
+</ul>
+<p><strong>Parallelization Strategies:</strong></p>
+<ul class="simple">
+<li><p>Examples demonstrated various approaches to parallel data management</p></li>
+<li><p>Techniques for avoiding data races while maintaining performance</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../first-steps/" class="btn btn-neutral float-left" title="First Steps in OpenMP" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../worksharing/" class="btn btn-neutral float-right" title="Worksharing and Scheduling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, The contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
