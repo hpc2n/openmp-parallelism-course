@@ -36,6 +36,8 @@ extensions = [
     # githubpages just adds a .nojekyll file
     'sphinx_lesson',
     'sphinx.ext.githubpages',
+    "sphinx_tabs.tabs",
+    "sphinx_design",    
 ]
 
 # Settings for myst_nb:

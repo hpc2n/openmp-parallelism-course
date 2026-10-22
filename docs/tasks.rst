@@ -1723,7 +1723,8 @@ First, the task writing ``a`` completes; afterward, the two tasks reading ``a`` 
             return 0;
         }
 
-.. challenge::
+.. dropdown:: Challenge: Fibonacci task dependencies
+   :color: warning
 
     In the previous implementation of the Fibonacci generator code, we noticed that the values of
     Fibonacci numbers are computed several times during recursion. This situation can be avoided by using
