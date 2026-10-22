@@ -273,7 +273,6 @@ Here each generated task starts with its own copy of ``number``. With ``firstpri
 .. challenge::
 
     Replace the *fixme* strings with the types of the variables in the code when the defaults are used.
-
     (Exercise inspired in an example of `Christian Terboven <https://hpc-wiki.info/hpc/OpenMP_in_Small_Bites>`_).
 
     .. code-block:: c
@@ -361,7 +360,7 @@ Here each generated task starts with its own copy of ``number``. With ``firstpri
 
     And not using defaults **default(none)**, the variables will need to be declared as follows to have
     the same behavior as in the previous code:
-    
+
     .. code-block:: c
         :linenos:
 
@@ -418,9 +417,7 @@ The ``nowait`` clause removes the implicit barrier at the end of ``single``; the
 .. challenge::
 
     Write a program that creates 10 tasks.
-
     Each task should print the thread number of the calling thread.
-
     **Hint:** From the :code:`omp.h` header file:
 
     .. code-block:: c
@@ -465,7 +462,6 @@ The ``nowait`` clause removes the implicit barrier at the end of ``single``; the
 .. challenge::
 
     Inspect and run the following code to see the behavior of shared, private, and first private variables in the context of tasks.
-
     Notice that one can use **atomic updates** together with tasks.
 
     .. code-block:: c
@@ -545,9 +541,7 @@ The ``nowait`` clause removes the implicit barrier at the end of ``single``; the
 .. challenge::
 
     The following function takes an integer as input, and writes the thread number that handles
-
     the execution of the function. Use ``tasks`` to parallelize a *for* loop where each task
-
     executes this function:
 
     .. code-block:: c
@@ -1732,11 +1726,8 @@ First, the task writing ``a`` completes; afterward, the two tasks reading ``a`` 
 .. challenge::
 
     In the previous implementation of the Fibonacci generator code, we noticed that the values of
-
     Fibonacci numbers are computed several times during recursion. This situation can be avoided by using
-
     task dependencies, as in the following graph which shows the dependencies that we can create explicitl
-
     for the Fibonacci number 6:
 
     .. code-block:: text
