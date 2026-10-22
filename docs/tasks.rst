@@ -309,6 +309,7 @@ Here each generated task starts with its own copy of ``number``. With ``firstpri
 
     Now, use default(none) and write the types of the variables in the *fixme* strings to have the
     same behavior as in the previous code:
+
     .. code-block:: c
         :linenos:
 
@@ -360,6 +361,7 @@ Here each generated task starts with its own copy of ``number``. With ``firstpri
 
     And not using defaults **default(none)**, the variables will need to be declared as follows to have
     the same behavior as in the previous code:
+    
     .. code-block:: c
         :linenos:
 
