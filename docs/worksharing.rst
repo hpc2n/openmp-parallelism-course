@@ -7,862 +7,835 @@ Worksharing and Scheduling
     - Workshare construct 
     - Section construct
 
-Worksharing constructs allow easy distribution of work onto threads:
+Worksharing constructs distribute work among the threads of a team.
 
-**Loop Construct:**
-
-- Easy distribution of loops onto threads
-- Avoiding load imbalance using the ``schedule`` clause
-
-**Workshare Construct (Fortran):**
-
-- Parallelization of Fortran array syntax
-
-**Sections Construct:**
-
-- Distributing independent code blocks
-- Modern alternative: task construct
-
-
+- The **loop worksharing construct** distributes iterations of a loop and can
+  use the ``schedule`` clause to reduce load imbalance.
+- The **workshare construct** distributes Fortran array operations. It has no
+  direct C/C++ equivalent.
+- The **sections construct** distributes independent blocks of code. OpenMP
+  tasks are another option for expressing independent work.
 
 Distributing Loops
-^^^^^^^^^^^^^^^^^^
+------------------
 
 Distributing large loops is a typical target for OpenMP parallelization.
 
-*Traditional Approach*
+**Traditional approach**
 
-As seen in previous lectures, loop distribution can be accomplished manually but requires management code:
+Manual loop distribution requires the programmer to calculate the number of
+iterations assigned to each thread, the starting index, and the final index.
+Special care is needed when the iteration count is not divisible by the
+number of threads.
 
-- Number of iterations per thread (may be unequal)
-- Starting index of current thread
-- Final index of current thread
+**OpenMP loop construct**
 
-**OpenMP Loop Construct**
+A worksharing loop simplifies the code by assigning iterations to threads.
+It automatically handles the iteration distribution, makes the associated
+loop iteration variable private, and supports different scheduling policies.
+An implicit barrier occurs at the end unless ``nowait`` is specified.
+There is no implicit barrier at the beginning of the loop construct.
 
-OpenMP offers the "loop construct" to ease loop parallelization:
+**Basic syntax**
 
-- Convenience: reduces code complexity
-- Maintainability: cleaner, more readable code
+.. tabs::
 
+   .. tab:: C/C++
 
-*The Loop Construct Features*
+      The ``for`` worksharing directive applies to an eligible canonical
+      ``for`` loop. The initialization, comparison, and increment must follow
+      the OpenMP loop requirements, and loop bounds must be invariant during
+      execution.
 
-- Distributes the following loop (C/C++/Fortran) onto threads
-- Makes the iteration variable automatically private
-- Determines automatically (without management code):
-  
-  - Number of iterations per thread
-  - Start index of current thread
-  - Final index of current thread
+      .. code-block:: c
 
-- Flushes registers to memory at exit, unless ``nowait`` is specified
-  
-  - **Note:** No flush on entry!
+         #pragma omp parallel
+         {
+             #pragma omp for
+             for (int i = 0; i < N; ++i) {
+                 /* loop body */
+             }
+         }
 
-- Offers mechanisms to balance the load for various situations
+      Supported canonical forms include integer or pointer-based induction
+      variables (and random-access iterators in C++), appropriate comparison
+      operators, and permitted increments.
 
+   .. tab:: Fortran
 
-*Loop Construct in Fortran*
+      The ``do`` worksharing directive applies to a counted ``do`` loop;
+      an uncontrolled ``do`` or ``do while`` loop is not supported by this
+      form of the construct.
 
-Works on Fortran standard-compliant do-construct:
+      .. code-block:: fortran
 
-- **Not supported:** ``do while``
-- **Not supported:** ``do`` without loop control
+         !$omp parallel
+         !$omp do
+         do i = 1, N
+             ! loop body
+         end do
+         !$omp end do
+         !$omp end parallel
 
+      The ``!$omp end do`` directive is optional when no end-directive
+      clauses are needed.
 
-.. code-block:: fortran
+**Example: Vector Norm**
 
-    !$omp parallel &
-    !$omp shared(…) &
-    !$omp private(…)
-        !$omp do
-        do i = 1, N
-            loop-body
-        end do
-    !$omp end parallel
+The vector norm is :math:`\sqrt{\sum_i v_i^2}`. The next two approaches
+calculate it by first accumulating the sum of squares and then taking the
+square root. These are *code fragments*: assume the arrays and scalar
+variables have been declared, and that the OpenMP runtime has been made
+available.
+
+**Manual loop management**
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         norm = 0.0;
+         #pragma omp parallel default(none) shared(vect, vleng, norm)
+         {
+             int tid = omp_get_thread_num();
+             int nthreads = omp_get_num_threads();
+             int begin = (tid * vleng) / nthreads;
+             int end = ((tid + 1) * vleng) / nthreads;
+             double local_norm = 0.0;
+
+             for (int i = begin; i < end; ++i)
+                 local_norm += vect[i] * vect[i];
+
+             #pragma omp atomic update
+             norm += local_norm;
+         }
+         norm = sqrt(norm);
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         norm = 0.0d0
+         !$omp parallel default(none) shared(vect, vleng, norm) &
+         !$omp private(tid, nthreads, first, last, i, local_norm)
+             tid = omp_get_thread_num()
+             nthreads = omp_get_num_threads()
+             first = 1 + (tid * vleng) / nthreads
+             last = ((tid + 1) * vleng) / nthreads
+             local_norm = 0.0d0
+
+             do i = first, last
+                 local_norm = local_norm + vect(i) * vect(i)
+             end do
+
+             !$omp atomic update
+             norm = norm + local_norm
+         !$omp end parallel
+         norm = sqrt(norm)
 
 .. note::
-   ``!$omp end do`` is not required but optional.
 
+   This approach explicitly calculates each thread's range. The example
+   handles a vector length that is not divisible by the number of threads,
+   rather than dropping the remainder.
 
-*Example: Vector Norm - Manual Loop Management (Fortran)*
+**Using the OpenMP loop construct**
 
-.. code-block:: fortran
+.. tabs::
 
-    norm = 0.0D0
-    
-    !$omp parallel default(none) &
-    !$omp shared(vect, norm) private(myNum, i, lNorm)
-        lNorm = 0.0D0
-        myNum = vleng / omp_get_num_threads()  ! local size
-        
-        do i = 1 + myNum * omp_get_thread_num(), &
-                myNum * (1 + omp_get_thread_num())
-            lNorm = lNorm + vect(i) * vect(i)
-        enddo
-        
-        !$omp atomic update
-        norm = norm + lNorm
-    !$omp end parallel
-    
-    norm = sqrt(norm)
+   .. tab:: C/C++
 
-Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
+      .. code-block:: c
 
-.. note::
-   This version requires explicit calculation of loop bounds for each thread.
+         norm = 0.0;
+         #pragma omp parallel default(none) shared(vect, vleng, norm)
+         {
+             double local_norm = 0.0;
 
+             #pragma omp for
+             for (int i = 0; i < vleng; ++i)
+                 local_norm += vect[i] * vect[i];
 
-*Example: Vector Norm - Loop Construct (Fortran)*
+             #pragma omp atomic update
+             norm += local_norm;
+         }
+         norm = sqrt(norm);
 
-.. code-block:: fortran
+   .. tab:: Fortran
 
-    norm = 0.0d0
-    
-    !$omp parallel default(none) &
-    !$omp shared(vect, norm) private(i, lNorm)
-        lNorm = 0.0d0
-        
-        !$omp do
-        do i = 1, vleng  ! same as serial case
-            lNorm = lNorm + vect(i) * vect(i)
-        enddo
-        
-        !$omp atomic update
-        norm = norm + lNorm
-    !$omp end parallel
-    
-    norm = sqrt(norm)
+      .. code-block:: fortran
 
-Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
+         norm = 0.0d0
+         !$omp parallel default(none) shared(vect, vleng, norm) &
+         !$omp private(i, local_norm)
+             local_norm = 0.0d0
+
+             !$omp do
+             do i = 1, vleng
+                 local_norm = local_norm + vect(i) * vect(i)
+             end do
+             !$omp end do
+
+             !$omp atomic update
+             norm = norm + local_norm
+         !$omp end parallel
+         norm = sqrt(norm)
 
 .. important::
-   The loop bounds are the same as in the serial case. OpenMP handles the distribution automatically.
 
+   The loop bounds now match the serial code, while OpenMP handles iteration
+   distribution. The accumulation uses a thread-local partial sum and an
+   atomic update of the global sum. A ``reduction`` clause is another common
+   approach to this operation.
 
-*Loop Construct in C*
+Parallel Loop Construct
+-----------------------
 
-The loop construct in C is limited to "canonical" loops:
+When a parallel region contains only a worksharing loop, OpenMP provides a
+combined ``parallel for`` (C/C++) or ``parallel do`` (Fortran) construct.
 
-**First Argument (Initialization):**
+.. tabs::
 
-Assignment to:
+   .. tab:: C/C++
 
-- ``int``
-- pointer
-- random-access-iterator-type (C++)
+      .. code-block:: c
 
-**Second Argument (Condition):**
+         #pragma omp parallel for
+         for (int i = 0; i < N; ++i) {
+             /* loop body */
+         }
 
-Comparison using: ``<=``, ``<``, ``>``, ``>=``
+   .. tab:: Fortran
 
-**Third Argument (Increment):**
+      .. code-block:: fortran
 
-- ``i++``, ``++i``, ``i--``, ``--i``
-- ``i += inc``, ``i -= inc``
-- ``i = i + inc``, ``i = inc + i``, ``i = i - inc``
+         !$omp parallel do
+         do i = 1, N
+             ! loop body
+         end do
+         !$omp end parallel do
 
-**Additional Requirements:**
+      ``!$omp end parallel do`` can be omitted if it has no required
+      end-directive clauses.
 
-All bounds and increments must be loop-invariant.
+The rules of both the parallel region and the worksharing loop apply to
+the combined construct.
 
+Loop Reordering and Data Dependencies
+-------------------------------------
 
-.. code-block:: c
+Iterations of a parallel loop are not guaranteed to execute in serial order.
+The result is correct only if loop-carried dependencies are absent, or if
+those dependencies are handled explicitly.
 
-    #pragma omp parallel \
-        shared(…) \
-        private(…)
-    {
-        #pragma omp for
-        for (i = 0; i < N; i++)
-        {
-            loop-body
-        }
-    }
+When dependencies exist, possible approaches are to change the algorithm,
+protect or order dependent operations with suitable OpenMP constructs, or
+keep the loop serial.
 
+**Example: Loop-carried dependency**
 
-*Example: Vector Norm - Manual Loop Management (C)*
+.. tabs::
 
-.. code-block:: c
+   .. tab:: C/C++
 
-    norm = 0.0;
-    
-    #pragma omp parallel default(none) \
-        shared(vect, norm) private(myNum, i, lNorm)
-    {
-        lNorm = 0.0;
-        myNum = vleng / omp_get_num_threads();  // local size
-        
-        for (i = myNum * omp_get_thread_num();
-             i < myNum * (1 + omp_get_thread_num()); i++)
-            lNorm += vect[i] * vect[i];
-        
-        #pragma omp atomic update
-        norm += lNorm;
-    }
-    
-    norm = sqrt(norm);
+      The current iteration depends on the previous iteration:
 
-Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
+      .. code-block:: c
 
-.. note::
-   This version requires explicit calculation of loop bounds for each thread.
+         a[0] = 0;
+         for (int i = 1; i < N; ++i)
+             a[i] = a[i - 1] + i;
 
+      An independent closed-form computation avoids that dependency:
 
+      .. code-block:: c
 
-*Example: Vector Norm - Loop Construct (C)*
+         for (int i = 0; i < N; ++i)
+             a[i] = i * (i + 1) / 2;
 
-.. code-block:: c
+   .. tab:: Fortran
 
-    norm = 0.0;
-    
-    #pragma omp parallel default(none) \
-        shared(vect, norm) private(i, lNorm)
-    {
-        lNorm = 0.0;
-        
-        #pragma omp for
-        for (i = 0; i < vleng; i++)  // same as serial case
-            lNorm += vect[i] * vect[i];
-        
-        #pragma omp atomic update
-        norm += lNorm;
-    }
-    
-    norm = sqrt(norm);
+      The current iteration depends on the previous iteration:
 
-Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
+      .. code-block:: fortran
 
-.. important::
-   The loop bounds are the same as in the serial case. OpenMP handles the distribution automatically.
+         a(1) = 0
+         do i = 2, N
+             a(i) = a(i - 1) + (i - 1)
+         end do
 
+      An independent closed-form computation avoids that dependency:
 
-Parallel Loop Construct 
-^^^^^^^^^^^^^^^^^^^^^^^
+      .. code-block:: fortran
 
-*Parallel Loop Construct in Fortran*
-
-When a parallel region contains only a loop construct, you can use a shorthand:
-
-.. code-block:: fortran
-
-    !$omp parallel do
-    do i = 1, N
-        loop-body
-    enddo  ! parallel region ends here!
-
-.. note::
-   - ``!$omp end parallel do`` is not required (optional)
-   - Features of parallel region and normal loop construct apply similarly
-
-
-
-*Parallel Loop Construct in C*
-
-
-When a parallel region contains only a loop construct, you can use a shorthand:
-
-.. code-block:: c
-
-    #pragma omp parallel for
-    for (int i = 0; i < N; i++)
-    {
-        loop-body
-    }  // parallel region & loop construct end here!
-
-.. note::
-   Features of parallel region and normal loop construct apply similarly.
-
-
-
-**Loop Reordering and Data Dependency**
-
-*Order of Execution*
-
-
-In a parallel loop, iterations are executed in a different order from serial code.
-
-*Data Dependency Requirement*
-
-
-A correct result is only obtained if the current iteration is independent of previous iterations (no data dependency).
-
-*Handling Data Dependencies*
-
-
-If data dependency exists:
-
-1. Modify/change the algorithm
-2. Serialize relevant part of the loop using special OpenMP features (covered later in course)
-3. Execute loop serially
-
-*Example with Dependency*
-
-
-**Problem (has dependency):**
-
-.. code-block:: c
-
-    a[0] = 0;
-    for (i = 1; i < N; i++)
-        a[i] = a[i-1] + i;
-
-**Possible Fix (algorithm change):**
-
-.. code-block:: c
-
-    for (i = 0; i < N; i++)
-        a[i] = 0.5 * i * (i + 1);
+         do i = 1, N
+             a(i) = (i - 1) * i / 2
+         end do
 
 .. warning::
-   Always verify that loop iterations are independent before parallelizing!
 
-
+   Verify that iterations are independent before adding an OpenMP
+   worksharing directive. In the original example, simply adding a
+   ``parallel for`` or ``parallel do`` would be incorrect.
 
 Scheduling Loop Iterations
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
-*Work Per Loop Iteration*
+Previous examples assumed approximately equal work per iteration, but
+real-world workloads can vary substantially. Some threads may finish well
+before others, reducing performance.
 
-Previous examples assumed the same amount of work for each loop iteration. This is not always the case.
+**Example: A triangular iteration space**
 
-**Examples of Uneven Work**
+.. tabs::
 
-*Summing over triangular area:*
+   .. tab:: C/C++
 
-.. code-block:: c
+      .. code-block:: c
 
-    for (i = 0; i < N; i++)
-        for (j = 0; j < i + 1; j++)
-            // work here
+         for (int i = 0; i < N; ++i) {
+             for (int j = 0; j <= i; ++j) {
+                 /* work */
+             }
+         }
 
-**Loop body iterates until required accuracy is achieved**
+   .. tab:: Fortran
 
-*Load Imbalance Problem*
+      .. code-block:: fortran
 
-Uneven work distribution often causes load imbalance:
+         do i = 1, N
+             do j = 1, i
+                 ! work
+             end do
+         end do
 
-- Some threads finish while others still work
-- Results in **poor performance**
+The later outer iterations do more work. Similar imbalances arise when a
+loop body runs until a requested accuracy is reached. Handling uneven
+workloads is often simpler in shared-memory than distributed-memory code.
 
-.. note::
-   Dealing with such problems is typically easier in shared memory than in distributed memory programming.
+**The schedule clause**
 
+The ``schedule(kind [, chunk_size])`` clause controls how loop iterations
+are assigned to threads. Common schedule kinds include ``static``,
+``dynamic``, ``guided``, ``auto``, and ``runtime``. If no schedule clause is
+provided, the exact policy is implementation dependent.
 
+Static Scheduling
+~~~~~~~~~~~~~~~~~
 
-**Schedule Clause**
+With ``static`` scheduling, iterations are assigned to threads before loop
+execution. If a chunk size is specified, the chunks are assigned to threads
+in round-robin order. The last chunk can be smaller than the others.
+Without an explicit chunk size, implementations typically assign roughly
+contiguous blocks. Static scheduling usually has little runtime overhead.
 
+For illustration, with four threads and ``schedule(static, 2)``, successive
+two-iteration chunks are assigned to threads 0, 1, 2, 3, 0, 1, etc.
 
-To help load balance in a loop construct, use the ``schedule`` clause:
+**Example: Triangular matrix operation, static schedule**
 
-.. code-block:: fortran
+.. tabs::
 
-    schedule(kind, [chunk_size])
+   .. tab:: C/C++
 
-Default schedule is implementation-dependent (OpenMP 3.0). Choices for ``kind``:
+      .. code-block:: c
 
-- ``static``
-- ``dynamic``
-- ``guided``
-- ``auto``
-- ``runtime``
+         #pragma omp parallel for shared(a) schedule(static, 100)
+         for (int j = 0; j < 1200; ++j) {
+             for (int i = j + 1; i < 1200; ++i) {
+                 a[i][j] = func(i, j);
+                 a[j][i] = -a[i][j];
+             }
+         }
 
-**Static Scheduling**
+   .. tab:: Fortran
 
-1. Divide iteration count into chunks of equal size
-   
-   - Last chunk may be smaller if needed
+      .. code-block:: fortran
 
-2. Thread assignment uses "round robin" distribution
+         !$omp parallel do private(i) shared(a) schedule(static, 100)
+         do j = 1, 1200
+             do i = j + 1, 1200
+                 a(i,j) = func(i,j)
+                 a(j,i) = -a(i,j)
+             end do
+         end do
+         !$omp end parallel do
 
-*Default Chunk Size*
+For this triangular workload, smaller chunks can improve balance, at the
+cost of more scheduling overhead. The original course example compares a
+maximum work share of ``7/16`` for a default static distribution against
+``5/16`` for a chunk size of 100; these are illustrative workload estimates,
+not general guarantees for every thread count or scheduling implementation.
 
-Default chunk size divides iteration count by number of threads.
+Dynamic Scheduling
+~~~~~~~~~~~~~~~~~~
 
-*Performance*
+With ``dynamic`` scheduling, threads request more iterations as they finish
+their current chunks. Its default chunk size is one iteration. It often
+balances unpredictable work better than static scheduling, but incurs more
+runtime overhead.
 
-Static scheduling has the **least overhead** compared to other schedules.
+**Example: Triangular matrix operation, dynamic schedule**
 
-*Visual Representation*
+.. tabs::
 
-.. code-block:: text
+   .. tab:: C/C++
 
-    Default static schedule (≈n/4 per thread):
-    Thread 0: [===============]
-    Thread 1: [===============]
-    Thread 2: [===============]
-    Thread 3: [===============]
-    
-    Static schedule with chunk size:
-    T0 T1 T2 T3 T0 T1 T2 T3 T0 T1 T2 ...
+      .. code-block:: c
 
+         #pragma omp parallel for shared(a) schedule(dynamic, 100)
+         for (int j = 0; j < 1200; ++j) {
+             for (int i = j + 1; i < 1200; ++i) {
+                 a[i][j] = func(i, j);
+                 a[j][i] = -a[i][j];
+             }
+         }
 
-*Example: Summation Over Triangular Area (Static)*
+   .. tab:: Fortran
 
-.. code-block:: fortran
+      .. code-block:: fortran
 
-    !$omp parallel do &
-    !$omp private(i, j) shared(a) &
-    !$omp schedule(static, 100)
-    do j = 1, 1200
-        do i = j + 1, 1200
-            a(i,j) = func(i,j)
-            a(j,i) = -a(i,j)
-        enddo
-    enddo
+         !$omp parallel do private(i) shared(a) schedule(dynamic, 100)
+         do j = 1, 1200
+             do i = j + 1, 1200
+                 a(i,j) = func(i,j)
+                 a(j,i) = -a(i,j)
+             end do
+         end do
+         !$omp end parallel do
 
-*Performance Comparison*
+For the original triangular example, the course estimates that the largest
+thread share falls to about ``0.27`` with ``schedule(dynamic, 100)``.
+Dynamic scheduling can improve load balance but has more dispatch overhead.
 
-- **Default static:** maximum 7/16 of work area per thread
-- **Static with chunk=100:** maximum 5/16 of work area per thread
+Guided Scheduling
+~~~~~~~~~~~~~~~~~
 
-*Trade-offs*
+``guided`` is similar to ``dynamic``, but the chunk sizes generally start
+larger and decrease as work is assigned. The amount of remaining work and
+the number of threads influence the size of a new chunk. The specified
+chunk size is a lower bound (except for a possible final chunk), and the
+default is one iteration.
 
-- **Smaller chunks:** better load balance
-- **More chunks:** larger overhead
+The goal is to reduce scheduling overhead early while still improving load
+balance toward the end of the loop.
 
+Auto and Runtime Schedules
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
+With ``schedule(auto)``, the OpenMP implementation chooses the scheduling
+policy. With ``schedule(runtime)``, the policy is chosen at runtime, for
+example through an API call or the ``OMP_SCHEDULE`` environment variable.
 
-**Dynamic Scheduling**
+.. tabs::
 
+   .. tab:: C/C++
 
-1. Loop is split into work packages of ``chunk_size`` iterations
-2. Each thread requests a new work package once done with the current one
-3. Default ``chunk_size``: 1 iteration
+      **Auto schedule**
 
-*When to Use*
+      .. code-block:: c
 
-Use dynamic scheduling when:
+         #pragma omp parallel for schedule(auto)
+         for (int i = 0; i < N; ++i) {
+             /* work */
+         }
 
-- Work per iteration varies significantly
-- The pattern of work is unpredictable
+      **Runtime schedule**
 
-*Performance*
+      .. code-block:: c
 
-- Better load balance than static (for uneven work)
-- Higher overhead than static due to runtime work distribution
+         #include <omp.h>
 
+         omp_set_schedule(omp_sched_static, 10);
+         #pragma omp parallel for schedule(runtime)
+         for (int i = 0; i < N; ++i) {
+             /* work */
+         }
 
-*Example: Summation Over Triangular Area (Dynamic)*
+   .. tab:: Fortran
 
-.. code-block:: fortran
+      **Auto schedule**
 
-    !$omp parallel do &
-    !$omp private(i, j) shared(a) &
-    !$omp schedule(dynamic, 100)
-    do j = 1, 1200
-        do i = j + 1, 1200
-            a(i,j) = func(i,j)
-            a(j,i) = -a(i,j)
-        enddo
-    enddo
+      .. code-block:: fortran
 
-*Performance Comparison*
+         !$omp parallel do schedule(auto)
+         do i = 1, N
+             ! work
+         end do
+         !$omp end parallel do
 
-- **Default static:** maximum 7/16 of work area per thread
-- **Dynamic with chunk=100:** maximum ≈0.27 of work area per thread
+      **Runtime schedule** (with ``use omp_lib`` in the containing scope)
 
-*Trade-offs*
+      .. code-block:: fortran
 
-- **Better balance** than static scheduling
-- **Larger overhead** than static scheduling
+         call omp_set_schedule(omp_sched_static, 10)
+         !$omp parallel do schedule(runtime)
+         do i = 1, N
+             ! work
+         end do
+         !$omp end parallel do
 
+**Runtime schedule environment variables**
 
-**Guided Scheduling**
-
-Similar to dynamic, but with adaptive chunk sizes:
-
-1. Threads request new work packages once done
-2. Work package size is proportional to:
-   
-   .. code-block:: text
-   
-       (number of unassigned iterations) / (number of threads)
-
-3. Package size never smaller than ``chunk_size`` (unless last package)
-4. Default ``chunk_size`` = 1
-
-*Purpose*
-
-The idea is to **prevent expensive work packages at the end** of the loop.
-
-*Performance*
-
-- Starts with large chunks (low overhead)
-- Gradually decreases chunk size (better balance toward the end)
-
-
-**Schedules: Auto and Runtime**
-
-
-*Auto Schedule*
-
-
-For ``auto``, the implementation decides the scheduling strategy.
-
-.. code-block:: fortran
-
-    !$omp parallel do schedule(auto)
-
-*Runtime Schedule*
-
-For ``runtime``, the schedule can be controlled at runtime:
-
-**Method 1: Using Function (OpenMP 3.0)**
-
-.. code-block:: c
-
-    omp_set_schedule(omp_sched_static, 10);
-
-**Method 2: Using Environment Variable**
-
-Bash:
+For Bash:
 
 .. code-block:: bash
 
-    export OMP_SCHEDULE="guided,4"
+   export OMP_SCHEDULE="guided,4"
 
-C-shell:
+For C-shell:
 
 .. code-block:: csh
 
-    setenv OMP_SCHEDULE "guided,4"
+   setenv OMP_SCHEDULE "guided,4"
 
 .. warning::
-   Do not specify ``chunk_size`` with ``auto`` or ``runtime`` in the directive itself.
 
-
+   Do not specify a ``chunk_size`` on a ``schedule(auto)`` or
+   ``schedule(runtime)`` directive. For ``runtime``, the chunk size is
+   instead supplied by the runtime setting.
 
 Multiple Loop Parallelization
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 
-Simple Example with Nested Loops
+Consider two nested loops with 3 outer iterations and 4 inner iterations.
+Three common choices are to distribute the outer loop, distribute the inner
+loop, or collapse them into one larger iteration space.
 
-Consider this nested loop structure:
+**Serial nested loop**
 
-.. code-block:: fortran
+.. tabs::
 
-    do j = 1, 3
-        do i = 1, 4
-            a(i,j) = expensiveFunc(i,j)
-        enddo
-    enddo
+   .. tab:: C/C++
 
-There are **three basic options** to parallelize nested loops. Which one is best depends on the specific situation.
+      .. code-block:: c
 
+         for (int i = 0; i < 3; ++i) {
+             for (int j = 0; j < 4; ++j) {
+                 a[i][j] = expensiveFunc(i, j);
+             }
+         }
 
-*Option 1: Distribute Outer Loop (Fortran)*
+   .. tab:: Fortran
 
+      .. code-block:: fortran
 
-.. code-block:: fortran
+         do j = 1, 3
+             do i = 1, 4
+                 a(i,j) = expensiveFunc(i,j)
+             end do
+         end do
 
-    !$omp parallel do
-    do j = 1, 3
-        do i = 1, 4
-            a(i,j) = expensiveFunc(i,j)
-        enddo
-    enddo
+Option 1: Distribute the Outer Loop
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. tabs::
 
-- Distributes the j-loop
-- Maximally **3 work packages**
+   .. tab:: C/C++
 
-*When to Use*
+      .. code-block:: c
 
-Use when the outer loop has sufficient iterations for good load balance.
+         #pragma omp parallel for
+         for (int i = 0; i < 3; ++i) {
+             for (int j = 0; j < 4; ++j) {
+                 a[i][j] = expensiveFunc(i, j);
+             }
+         }
 
+   .. tab:: Fortran
 
-*Option 2: Distribute Inner Loop (Fortran)*
+      .. code-block:: fortran
 
-.. code-block:: fortran
+         !$omp parallel do
+         do j = 1, 3
+             do i = 1, 4
+                 a(i,j) = expensiveFunc(i,j)
+             end do
+         end do
+         !$omp end parallel do
 
-    !$omp parallel private(j)
-    do j = 1, 3
-        !$omp do
-        do i = 1, 4
-            a(i,j) = expensiveFunc(i,j)
-        enddo
-        !$omp end do
-    enddo
-    !$omp end parallel
+This distributes the outer loop, exposing at most three outer-loop
+iterations for worksharing. It works well when the outer loop has enough
+iterations for good load balance.
 
+Option 2: Distribute the Inner Loop
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. tabs::
 
-- Distributes the i-loop
-- Now **four work packages**
-- Parallel region before j-loop provides better performance
-- Requires ``i`` to be private (automatic for loop variable)
-- Starts loop construct 3 times
-- May cause more cache line conflicts when writing to ``a``
+   .. tab:: C/C++
 
+      .. code-block:: c
 
+         #pragma omp parallel
+         {
+             for (int i = 0; i < 3; ++i) {
+                 #pragma omp for
+                 for (int j = 0; j < 4; ++j) {
+                     a[i][j] = expensiveFunc(i, j);
+                 }
+             }
+         }
 
-*Option 3: Collapse Clause (Fortran)*
+   .. tab:: Fortran
 
-.. code-block:: fortran
+      .. code-block:: fortran
 
-    !$omp parallel
-    !$omp do collapse(2)
-    do j = 1, 3
-        do i = 1, 4
-            a(i,j) = expensiveFunc(i,j)
-        enddo
-    enddo
+         !$omp parallel private(j)
+         do j = 1, 3
+             !$omp do
+             do i = 1, 4
+                 a(i,j) = expensiveFunc(i,j)
+             end do
+             !$omp end do
+         end do
+         !$omp end parallel
 
+This distributes the inner loop, exposing four iterations per outer-loop
+step. The worksharing directive is encountered three times, and each
+encounter has a synchronization cost unless ``nowait`` is used appropriately.
+Depending on data layout, it can also increase cache-line contention.
 
+.. note::
 
-- Use ``collapse`` clause to specify number of loops to collapse
-- Available since **OpenMP 3.0**
-- Distributes both loops by creating a single combined loop
-- Schedules as specified (default in this case)
-- Now: **12 work packages**
-- May cause more cache line conflicts when writing to ``a``
+   Here, the outer loop is executed by every thread in the team, while the
+   inner loop's iterations are shared. The outer-loop index must be
+   thread-private (as written in the examples).
 
-*Benefits*
+Option 3: Collapse Two Loops
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- Maximum parallelism exposure
-- Best for cases where individual loops have few iterations
+.. tabs::
 
+   .. tab:: C/C++
 
-*Option 1: Distribute Outer Loop (C)*
+      .. code-block:: c
 
-.. code-block:: c
+         #pragma omp parallel for collapse(2)
+         for (int i = 0; i < 3; ++i) {
+             for (int j = 0; j < 4; ++j) {
+                 a[i][j] = expensiveFunc(i, j);
+             }
+         }
 
-    #pragma omp parallel for
-    for (int i = 0; i < 3; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            a[i][j] = expensiveFunc(i,j);
-        }
-    }
+   .. tab:: Fortran
 
+      .. code-block:: fortran
 
-- Distributes the i-loop
-- Maximally **3 work packages**
+         !$omp parallel do collapse(2)
+         do j = 1, 3
+             do i = 1, 4
+                 a(i,j) = expensiveFunc(i,j)
+             end do
+         end do
+         !$omp end parallel do
 
-*When to Use*
-
-Use when the outer loop has sufficient iterations for good load balance.
-
-
-*Option 2: Distribute Inner Loop (C)*
-
-.. code-block:: c
-
-    #pragma omp parallel
-    {
-        for (int i = 0; i < 3; i++)
-        {
-            #pragma omp for
-            for (int j = 0; j < 4; j++)
-            {
-                a[i][j] = expensiveFunc(i,j);
-            }
-        }
-    }
-
-
-- Distributes the j-loop
-- Now **four work packages**
-- Parallel region before i-loop provides better performance
-- Requires ``i`` to be private (automatic for loop variable)
-- Starts loop construct 3 times
-- May cause more cache line conflicts when writing to ``a``
-
-
-*Option 3: Collapse Clause (C)*
-
-
-.. code-block:: c
-
-    #pragma omp parallel
-    #pragma omp for collapse(2)
-    for (int i = 0; i < 3; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            a[i][j] = expensiveFunc(i,j);
-        }
-    }
-
-
-
-- Use ``collapse`` clause to specify number of loops to collapse
-- Available since **OpenMP 3.0**
-- Distributes both loops by creating a single combined loop
-- Schedules as specified (default in this case)
-- Now: **12 work packages**
-- May cause more cache line conflicts when writing to ``a``
-
-*Benefits*
-
-- Maximum parallelism exposure
-- Best for cases where individual loops have few iterations
-
-
+``collapse(2)`` makes both loops one logical iteration space (12
+iterations in this example). The clause has been available since OpenMP
+3.0. This can expose more parallelism when the individual loops are short,
+but memory-access patterns and cache contention still matter.
 
 Workshare in Fortran
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
-*Workshare Construct*
+The OpenMP ``workshare`` construct is **Fortran-only**. It can distribute
+Fortran array syntax, ``FORALL``, ``WHERE``, and permitted scalar
+assignments. There is **no direct equivalent** directive in C/C++. The
+following tabs show a related *element-wise parallel loop* in C/C++ and the
+original ``workshare`` construct in Fortran; the two mechanisms are not
+identical.
 
-OpenMP provides the ``workshare`` construct specifically for Fortran.
+**Example: Updating arrays**
 
-*Supported Constructs*
+.. tabs::
 
-This allows distribution of:
+   .. tab:: C/C++
 
-- **Fortran array syntax**
-  
-  .. code-block:: fortran
-  
-      a(1:n, 1:m) = b(1:n, 1:m) + c(1:n, 1:m)
+      **Analogous array-element loop, not an OpenMP workshare directive**
 
-- **Fortran statements:** ``FORALL``, ``WHERE``
+      .. code-block:: c
+
+         #pragma omp parallel for
+         for (int i = 0; i < n; ++i) {
+             b[i] = b[i] + 1;
+             c[i] = c[i] + 2;
+             a[i] = b[i] + c[i];
+         }
+
+      This is valid for element-wise independent operations, but does not
+      provide the general semantics of Fortran ``workshare``.
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         !$omp parallel shared(n, a, b, c)
+         !$omp workshare
+             b(1:n) = b(1:n) + 1
+             c(1:n) = c(1:n) + 2
+             a(1:n) = b(1:n) + c(1:n)
+         !$omp end workshare
+         !$omp end parallel
+
+      The implementation must preserve the dependencies between these
+      statements, so the array assignments have their normal Fortran
+      meaning. User-defined functions in the ``workshare`` region are
+      subject to OpenMP restrictions, for example requiring elemental
+      functions where applicable.
 
 .. note::
-   This construct is **Fortran-only** and has no C/C++ equivalent.
 
+   A ``workshare`` region has an implicit barrier at the end unless its
+   ``end workshare`` directive specifies ``nowait``.
 
+Scalar Assignments in Fortran Workshare
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*Example: Workshare*
+This subsection is specific to Fortran. A scalar assignment is performed as
+one unit of work, which can be executed by a single participating thread.
 
-
-.. code-block:: fortran
-
-    !$OMP PARALLEL SHARED(n, a, b, c)
-    !$OMP WORKSHARE
-        b(1:n) = b(1:n) + 1
-        c(1:n) = c(1:n) + 2
-        a(1:n) = b(1:n) + c(1:n)
-    !$OMP END WORKSHARE
-    !$OMP END PARALLEL
-
-
-
-- OpenMP ensures there is no data race
-- Arrays ``b`` and ``c`` are ready before assignment to ``a``
-- Can include user-defined functions if declared ``ELEMENTAL``
-
-
-
-*Scalar Assignment in Workshare*
-
-Shared Scalar (Legal)
+**Shared scalar (valid)**
 
 .. code-block:: fortran
 
-    REAL :: AA(N,N), BB(N,N), CC(N,N), DD(N,N)
-    INTEGER :: SHR
-    
-    !$OMP PARALLEL SHARED(SHR)
-    !$OMP WORKSHARE
-        AA = BB
-        SHR = 1
-        CC = DD * SHR
-    !$OMP END WORKSHARE
-    !$OMP END PARALLEL
+   real :: AA(N,N), BB(N,N), CC(N,N), DD(N,N)
+   integer :: SHR
 
-This is **legal OpenMP**. A single thread performs the scalar assignment to ``SHR``.
+   !$omp parallel shared(SHR)
+   !$omp workshare
+       AA = BB
+       SHR = 1
+       CC = DD * SHR
+   !$omp end workshare
+   !$omp end parallel
 
-*Private Scalar (Illegal!)*
+This is legal when ``SHR`` is shared: all threads refer to the same scalar,
+and the implementation preserves the necessary statement dependencies.
 
+**Private scalar (unsafe / unspecified result)**
 
 .. code-block:: fortran
 
-    REAL :: AA(N,N), BB(N,N), CC(N,N), DD(N,N)
-    INTEGER :: PRI
-    
-    !$OMP PARALLEL PRIVATE(PRI)
-    !$OMP WORKSHARE
-        AA = BB
-        PRI = 1
-        CC = DD * PRI
-    !$OMP END WORKSHARE
-    !$OMP END PARALLEL
+   real :: AA(N,N), BB(N,N), CC(N,N), DD(N,N)
+   integer :: PRI
+
+   !$omp parallel private(PRI)
+   !$omp workshare
+       AA = BB
+       PRI = 1
+       CC = DD * PRI
+   !$omp end workshare
+   !$omp end parallel
 
 .. danger::
-   This is **ILLEGAL**!
-   
-   - Single thread performs scalar assignment to ``PRI``
-   - ``PRI`` is undefined on other threads
 
-
+   Do not write the second version. A scalar assignment may be performed
+   by only one thread, so the values of private copies belonging to other
+   threads are not established. The result is unspecified, not a safe
+   parallel assignment.
 
 Sections
-^^^^^^^^
+--------
 
+The ``sections`` construct distributes independent blocks of code among
+threads. Typical uses include initialization of different data structures
+or execution of different independent operations. A thread may execute
+multiple sections, and some threads may execute none.
 
-*Sections Construct*
+**Potential load imbalance**
 
-The ``sections`` construct allows parallelization when code blocks can be executed independently.
+The sections can require different amounts of work, and their count may
+not match the number of threads. There is an implicit barrier at the end
+of ``sections`` unless ``nowait`` is specified.
 
+A research application mentioned in the original material is
+*Acceleration of Semiempirical QM/MM Methods*, JCTC 13, 3525--3536 (2017).
 
-- Initialization of multiple data structures
-- Different tasks executing different code
+**Example: Two independent sections**
 
-*Considerations*
+.. tabs::
 
-**Mismatch between blocks and threads:**
+   .. tab:: C/C++
 
-- Individual threads might execute multiple code blocks
-- Not every thread necessarily gets a code block
+      .. code-block:: c
 
-**Danger of load imbalance:**
+         #pragma omp parallel shared(a, b, N, M)
+         {
+             #pragma omp sections
+             {
+                 #pragma omp section
+                 {
+                     for (int i = 0; i < N; ++i)
+                         a[i] = i;
+                 }
 
-- Code blocks may have different amounts of work
-- Mismatch between number of blocks and number of threads
+                 #pragma omp section
+                 {
+                     for (int i = 0; i < M; ++i)
+                         b[i] = initBmatrix(i, M);
+                 }
+             }
+         }
 
-*Real-World Application*
+      **Alternative: combined parallel sections**
 
-Example from research: "Acceleration of Semiempirical QM/MM methods," JCTC, 13, 3525-3536 (2017)
+      .. code-block:: c
 
+         #pragma omp parallel sections shared(a, b, N, M)
+         {
+             #pragma omp section
+             {
+                 for (int i = 0; i < N; ++i)
+                     a[i] = i;
+             }
 
-*Example: Sections Construct (C)*
+             #pragma omp section
+             {
+                 for (int i = 0; i < M; ++i)
+                     b[i] = initBmatrix(i, M);
+             }
+         }
 
-.. code-block:: c
+   .. tab:: Fortran
 
-    #pragma omp parallel shared(a, b, N, M)
-    {
-        #pragma omp sections
-        {
-            #pragma omp section
-            {
-                for (int i = 0; i < N; i++)
-                    a[i] = i;
-            }
-            
-            #pragma omp section
-            {
-                for (int i = 0; i < M; i++)
-                    b[i] = initBmatrix(i, M);
-            }
-        }
-    }
+      .. code-block:: fortran
 
-*Alternative: Parallel Sections*
+         !$omp parallel shared(a, b, N, M) private(i)
+         !$omp sections
+         !$omp section
+             do i = 1, N
+                 a(i) = i
+             end do
+         !$omp section
+             do i = 1, M
+                 b(i) = initBmatrix(i, M)
+             end do
+         !$omp end sections
+         !$omp end parallel
 
-.. code-block:: c
+      **Alternative: combined parallel sections**
 
-    #pragma omp parallel sections shared(a, b, N, M)
-    {
-        #pragma omp section
-        {
-            for (int i = 0; i < N; i++)
-                a[i] = i;
-        }
-        
-        #pragma omp section
-        {
-            for (int i = 0; i < M; i++)
-                b[i] = initBmatrix(i, M);
-        }
-    }
+      .. code-block:: fortran
+
+         !$omp parallel sections shared(a, b, N, M) private(i)
+         !$omp section
+             do i = 1, N
+                 a(i) = i
+             end do
+         !$omp section
+             do i = 1, M
+                 b(i) = initBmatrix(i, M)
+             end do
+         !$omp end parallel sections
 
 .. note::
-   The ``parallel sections`` directive combines the ``parallel`` and ``sections`` directives for convenience.
+
+   ``parallel sections`` combines the creation of a parallel region and
+   the distribution of independent sections into one construct. In the
+   Fortran examples, the section loop variable is explicitly private to
+   avoid concurrent writes to a shared loop index.
 
 
 .. challenge::
