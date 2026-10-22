@@ -12,244 +12,155 @@ The Task Directive
 
 Beyond Regular Loops
 
-
 Regular vs. Irregular Structures
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------
 
-**So far we've discussed regular structures:**
+**Regular structures considered so far** include loops with known bounds and Fortran array constructs.
 
-- Loops with known start and end
-- Fortran array constructs
-
-**Many problems have irregular structures:**
-
-- Recursive algorithms
-- Linked lists
-- Loops with unknown end (e.g., ``while`` loops)
-- Divide and conquer algorithms
-- And more...
+Many problems have **irregular structures**, including recursive algorithms, linked lists, loops with unknown bounds (such as ``while`` loops), and divide-and-conquer algorithms.
 
 .. note::
+
    Depending on the details, irregular structures might still be parallelizable using tasks.
 
-
-
 The Task Construct
-^^^^^^^^^^^^^^^^^^
+------------------
 
+The task construct provides a flexible way to express parallelism for irregular problems. A task creates a unit of work that can run immediately or later on the encountering thread or another thread in the team. An explicit task contains the structured block and its associated data environment.
 
-The task construct provides a flexible way to express parallelism for irregular problems.
+The encountering thread can execute the task immediately or defer it. A task binds to the innermost parallel region; without an enclosing parallel region it executes in the initial team, without team-level parallelism.
 
-*Key Concept*
+**Task directive syntax**
 
-Tasks allow you to create units of work that can be executed by any thread in the team, now or later.
+.. tabs::
 
+   .. tab:: C/C++
 
-*The Task Directive in Fortran*
+      .. code-block:: c
 
-Syntax
+         #pragma omp task
+         {
+             /* code body */
+         }
 
-.. code-block:: fortran
+   .. tab:: Fortran
 
-    !$omp task [clauses]
-        code body
-    !$omp end task
+      .. code-block:: fortran
 
-*What It Does*
+         !$omp task
+             ! code body
+         !$omp end task
 
-Creates an "explicit task" from:
+Common task clauses include ``if``, ``final``, ``untied``, ``default``, ``mergeable``, ``private``, ``firstprivate``, ``shared``, ``in_reduction``, ``depend``, ``priority``, ``allocate`` and ``affinity``. ``detach`` is supported for C/C++ tasks but not Fortran tasks. Clause availability depends on the OpenMP version.
 
-- Code body
-- Data environment at that point
-- Place inside a parallel region
+The familiar ``if``, ``private``, ``firstprivate``, and ``shared`` clauses can have task-specific data-sharing behavior.
 
-*Execution*
+**Hello world: one task created by each thread**
 
-The task may execute:
+.. tabs::
 
-- **When:** Now or later
-- **By whom:** Encountering thread or other thread
+   .. tab:: C/C++
 
-The thread that encounters the :code:`task` construct creates an explicit task from the structured block.
-The encountering thread 
+      .. code-block:: c
 
- - may execute the task **immediately** or 
- - **defer its execution** to one of the other threads in the team.
- 
-A task is always **bound to the innermost parallel region**.
-If a task construct is encountered outside a parallel region, then the structured block is executed immediately by the encountering thread.
+         #include <stdio.h>
+         int main() {
+             #pragma omp parallel
+             {
+                 #pragma omp task
+                 printf("Hello world!\n");
+             }
+             return 0;
+         }
 
-The :code:`task` construct accepts a set of clauses:
+   .. tab:: Fortran
 
-.. code-block:: c
-    :emphasize-lines: 1,4,6,7,8
+      .. code-block:: fortran
 
-    if([ task :] scalar-expression) 
-    final(scalar-expression) 
-    untied 
-    default(shared | none) 
-    mergeable 
-    private(list) 
-    firstprivate(list) 
-    shared(list) 
-    in_reduction(reduction-identifier : list) 
-    depend([depend-modifier,] dependence-type : locator-list) 
-    priority(priority-value) 
-    allocate([allocator :] list) 
-    affinity([aff-modifier :] locator-list) 
-    detach(event-handle)
+         program hello_tasks
+             use omp_lib
+             implicit none
+             !$omp parallel
+                 !$omp task
+                     print *, "Hello world!"
+                 !$omp end task
+             !$omp end parallel
+         end program hello_tasks
 
-We can already recognise some of the clauses.
-For example, the :code:`if` clause can be used to enable/disable the creation of the corresponding task, and the :code:`default`, :code:`private`, :code:`firstprivate`, and :code:`shared` clauses are used to control the data sharing rules.
-It should be noted that some of these clauses behave slightly differently when compared to the traditional OpenMP constructs.
+In this example, **each thread encounters the task construct**, producing one explicit task per thread. Any thread in the team can execute any of those tasks. Thus, with *N* threads, exactly *N* tasks are created.
 
-Let us return to the earlier "Hello world" program:
-    
-.. code-block:: c
-    :linenos:
-    :emphasize-lines: 4,6
-
-    #include <stdio.h>
-
-    int main() {
-        #pragma omp parallel
-        {
-            #pragma omp task
-            printf("Hello world!\n");
-        }
-        return 0;
-    }
-
-Note that the :code:`task` pragma is **inside a parallel construct**.
-Each thread in the team 
-
- - encounters the task construct, 
- - creates the corresponding task and 
- - either executes the task immediately or defer its execution to one of the other threads in the team:
- 
 .. figure:: img/task.png
 
-Therefore, the number of tasks, and lines printed, are the same as the number of threads in the team:
-    
-.. code-block:: bash
-    :emphasize-lines: 3-6
-
-    $ gcc -o my_program my_program.c -Wall -fopenmp
-    $ ./my_program 
-    Hello world!
-    Hello world!
-    ...
-    Hello world!
-    
-
-*The Task Directive in C*
-
-Syntax
-
-.. code-block:: c
-
-    #pragma omp task [clauses]
-    {
-        code body
-    }
-
-*What It Does*
-
-Creates an "explicit task" from:
-
-- Code body
-- Data environment at that point
-- Place inside a parallel region
-
-*Execution*
-
-The task may execute:
-
-- **When:** Now or later
-- **By whom:** Encountering thread or other thread
-
+The order in which the lines are printed is unspecified. For example, compiling C with ``gcc -fopenmp -o my_program my_program.c`` and running the program may print several ``Hello world!`` lines.
 
 Allowed Data Sharing Attributes for Tasks
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------------------
 
-*Available Attributes*
+- ``private``: a task-local copy, without initialization from the original value.
+- ``firstprivate``: a task-local copy initialized when the task is encountered.
+- ``shared``: tasks refer to the same variable; useful when tasks write results for later consumption.
+- ``default``: controls implicit data-sharing attributes.
 
-**private:**
+**Language-specific default-clause syntax (illustrative)**
 
-- Data is private to the task
+.. tabs::
 
-**firstprivate:**
+   .. tab:: C/C++
 
-- Data is private to the task
-- Data initialized when task directive is encountered
+      .. code-block:: c
 
-**shared:**
+         #pragma omp task default(shared)
+         { /* work */ }
+         /* or: default(none), with explicit scoping */
 
-- Data is shared
-- **Only way to return a result from a task!**
+   .. tab:: Fortran
 
-**default:**
+      .. code-block:: fortran
 
-- **Fortran:** ``shared | private | firstprivate | none``
-- **C:** ``shared | none``
-
-
+         !$omp task default(shared)
+             ! work
+         !$omp end task
+         ! Alternatively: default(private), default(firstprivate) or default(none)
 
 Data Sharing Without a default Clause
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------
 
-When no ``default`` is declared on a task directive:
-
-*Default Rules*
-
-**If variable is shared by all implicit tasks in the current team:**
-
-Variable is: ``shared``
-
-**Otherwise:**
-
-Variable is: ``firstprivate``
-
-*Recommendation*
+If a variable is shared by all implicit tasks in the current team, the variable is generally ``shared`` in an explicit task. Otherwise, it generally becomes ``firstprivate``. Variables declared within the task body are local to that task.
 
 .. important::
-   Use ``default(none)`` to be explicit about data sharing!
 
+   Use ``default(none)`` and explicit data-sharing clauses when teaching or auditing task code; consider predetermined attributes as well.
 
+**Example: task execution flow**
 
-*Example: Task Execution Flow*
+.. tabs::
 
-Consider this code:
+   .. tab:: C/C++
 
-.. code-block:: fortran
+      .. code-block:: c
 
-    code block 1
-    !$omp task
-        code block 2
-    !$omp end task
-    code block 3
+         /* code block 1 */
+         #pragma omp task
+         {
+             /* code block 2 */
+         }
+         /* code block 3 */
 
-*Thread Encountering This Code*
+   .. tab:: Fortran
 
-1. **Executes** "code block 1"
-2. **Creates a task** for "code block 2"
-3. **May:**
-   
-   - Execute the task for "code block 2"
-   - Pick up another task
-   - Continue with "code block 3"
+      .. code-block:: fortran
 
-4. **At some point:** Has to execute code block 3
+         ! code block 1
+         !$omp task
+             ! code block 2
+         !$omp end task
+         ! code block 3
 
-*No Control Over*
-
-.. warning::
-   - Who executes code block 2
-   - When code block 2 is finished
+The encountering thread performs block 1, generates a task for block 2, and eventually executes block 3. It may execute or defer block 2; neither the executing thread nor the completion time of block 2 is generally fixed.
 
 .. challenge::
 
-    Use two tasks where each prints out *Hello* and *World* strings. Use 4 threads. 
+    Use two tasks where each prints out *Hello* and *World* strings. Use 4 threads.
 
 .. solution::
 
@@ -258,101 +169,111 @@ Consider this code:
 
         // On cluster Kebnekaise
         // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 12a-task-openmp.c -lm 
+        // export OMP_NUM_THREADS=1
+        // gcc -O3 -march=native -fopenmp -o test.x 12a-task-openmp.c -lm
         #include <stdio.h>
         #include <omp.h>
-
         int main() {
-
             #pragma omp parallel num_threads(4)
             {
-
                 #pragma omp task
                 {printf("Hello\n");}
-
                 #pragma omp task
                 {printf("World\n");}
-
             }
-
             return 0;
         }
 
-Let us consider the data sharing rules with the following example:
+**Example: shared variable declared outside the parallel region**
 
-.. code-block:: c
-    :linenos:
-    :emphasize-lines: 5,7
+The following deliberately shows unsynchronized increments to teach how task data-sharing attributes work. Its results are not deterministic; do not use it as a race-free increment pattern.
 
-    #include <stdio.h>
-    
-    int main() {
-        int number = 1;
-        #pragma omp parallel
-        {
-            #pragma omp task
-            {
-                printf("I think the number is %d.\n", number);
-                number++;
-            }
-        }
-        return 0;
-    }
-    
-The output of the program is not that surprising:
+.. tabs::
 
-.. code-block::
-    :emphasize-lines: 3-6
+   .. tab:: C/C++
 
-    $ gcc -o my_program my_program.c -Wall -fopenmp
-    $ ./my_program 
-    I think the number is 1.
-    I think the number is 2.
-    I think the number is 2.
-    I think the number is 3.
-    ...
+      .. code-block:: c
 
-That is, variables declared outside the parallel construct are still :code:`shared` by default.
-This is consistent with the three basic data sharing rules.
+         #include <stdio.h>
+         int main() {
+             int number = 1;
+             #pragma omp parallel
+             {
+                 #pragma omp task
+                 {
+                     printf("I think the number is %d.\n", number);
+                     number++;
+                 }
+             }
+             return 0;
+         }
 
-If we move the variable :code:`number` inside the parallel construct, then the variable becomes :code:`firstprivate` by default:
+   .. tab:: Fortran
 
-.. code-block:: c
-    :linenos:
-    :emphasize-lines: 6
+      .. code-block:: fortran
 
-    #include <stdio.h>
-    
-    int main() {
-        #pragma omp parallel
-        {
-            int number = 1;
-            #pragma omp task
-            {
-                printf("I think the number is %d.\n", number);
-                number++;
-            }
-        }
-        return 0;
-    }
+         program shared_number
+             use omp_lib
+             implicit none
+             integer :: number
+             number = 1
+             !$omp parallel shared(number)
+                 !$omp task shared(number)
+                     print *, "I think the number is", number
+                     number = number + 1
+                 !$omp end task
+             !$omp end parallel
+         end program shared_number
 
-.. code-block::
-    :emphasize-lines: 3-6
+The original variable belongs to the enclosing shared data environment, so tasks may see each other's writes. Without synchronization, increments race and some updates may be lost.
 
-    $ gcc -o my_program my_program.c -Wall -fopenmp
-    $ ./my_program 
-    I think the number is 1.
-    I think the number is 1.
-    I think the number is 1.
-    I think the number is 1.
-    ...
+**Example: variable local to the parallel region**
 
-The value of the variable is copied when the task is created.
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         #include <stdio.h>
+         int main() {
+             #pragma omp parallel
+             {
+                 int number = 1;
+                 #pragma omp task
+                 {
+                     printf("I think the number is %d.\n", number);
+                     number++;
+                 }
+             }
+             return 0;
+         }
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         program firstprivate_number
+             use omp_lib
+             implicit none
+             !$omp parallel
+                 block
+                     integer :: number
+                     number = 1
+                     !$omp task firstprivate(number)
+                         print *, "I think the number is", number
+                         number = number + 1
+                     !$omp end task
+                 end block
+             !$omp end parallel
+         end program firstprivate_number
+
+Here each generated task starts with its own copy of ``number``. With ``firstprivate`` the value is captured at task creation; all tasks print the initial value 1 (the order of output may vary).
 
 .. challenge::
 
     Replace the *fixme* strings with the types of the variables in the code when the defaults are used.
+
     (Exercise inspired in an example of `Christian Terboven <https://hpc-wiki.info/hpc/OpenMP_in_Small_Bites>`_).
 
     .. code-block:: c
@@ -360,57 +281,47 @@ The value of the variable is copied when the task is created.
 
         #include <stdio.h>
         #include <omp.h>
-
         static int first = 1;  // File scope (static global)
-
         int main() {
             // Variables in main scope
-            int second = 2; 
-            int third = 3; 
-            
+            int second = 2;
+            int third = 3;
             #pragma omp parallel private(second)
             {
                 // Variable in parallel region scope
-                int fourth = 4; 
-                
-                #pragma omp task 
+                int fourth = 4;
+                #pragma omp task
                 {
                     // Variable in task scope
                     int fifth = 5;
-                    
                     // Data scoping in this task:
                     // "first":  *fixme*    (static global)
                     // "second": *fixme*    (private in parallel, becomes firstprivate in task)
                     // "third":  *fixme*    (declared outside parallel)
                     // "fourth": *fixme*    (declared in parallel region)
                     // "fifth":  *fixme*    (declared in task)
-                    
-                    printf("1=%d, 2=%d, 3=%d, 4=%d, 5=%d\n", 
+                    printf("1=%d, 2=%d, 3=%d, 4=%d, 5=%d\n",
                         first, second, third, fourth, fifth);
                 }
             }
             return 0;
-        }    
+        }
 
-    Now, use default(none) and write the types of the variables in the *fixme* strings to have the 
+    Now, use default(none) and write the types of the variables in the *fixme* strings to have the
     same behavior as in the previous code:
-
     .. code-block:: c
         :linenos:
 
         #pragma omp parallel private(*fixme*) default(none) shared(*fixme*, *fixme*)
         {
-            int fourth = 4; 
-            
+            int fourth = 4;
             #pragma omp task default(none) firstprivate(*fixme*,*fixme*) shared(*fixme*, *fixme*)
             {
                 int fifth = 5;
-                printf("1=%d, 2=%d, 3=%d, 4=%d, 5=%d\n", 
+                printf("1=%d, 2=%d, 3=%d, 4=%d, 5=%d\n",
                     first, second, third, fourth, fifth);
             }
-        }        
-
-        
+        }
 
 .. solution::
 
@@ -421,32 +332,26 @@ The value of the variable is copied when the task is created.
 
         #include <stdio.h>
         #include <omp.h>
-
         static int first = 1;  // File scope (static global)
-
         int main() {
             // Variables in main scope
-            int second = 2; 
-            int third = 3; 
-            
+            int second = 2;
+            int third = 3;
             #pragma omp parallel private(second)
             {
                 // Variable in parallel region scope
-                int fourth = 4; 
-                
-                #pragma omp task 
+                int fourth = 4;
+                #pragma omp task
                 {
                     // Variable in task scope
                     int fifth = 5;
-                    
                     // Data scoping in this task:
                     // "first":  shared        (static global)
                     // "second": firstprivate  (private in parallel, becomes firstprivate in task)
                     // "third":  shared        (declared outside parallel)
                     // "fourth": firstprivate  (declared in parallel region)
                     // "fifth":  private       (declared in task)
-                    
-                    printf("1=%d, 2=%d, 3=%d, 4=%d, 5=%d\n", 
+                    printf("1=%d, 2=%d, 3=%d, 4=%d, 5=%d\n",
                         first, second, third, fourth, fifth);
                 }
             }
@@ -454,78 +359,79 @@ The value of the variable is copied when the task is created.
         }
 
     And not using defaults **default(none)**, the variables will need to be declared as follows to have
-    the same behavior as in the previous code: 
-
+    the same behavior as in the previous code:
     .. code-block:: c
         :linenos:
 
         #pragma omp parallel private(second) default(none) shared(first, third)
         {
-            int fourth = 4; 
-            
+            int fourth = 4;
             #pragma omp task default(none) firstprivate(second, fourth) shared(first, third)
             {
                 int fifth = 5;
-                printf("1=%d, 2=%d, 3=%d, 4=%d, 5=%d\n", 
+                printf("1=%d, 2=%d, 3=%d, 4=%d, 5=%d\n",
                     first, second, third, fourth, fifth);
             }
         }
 
-Single construct
-^^^^^^^^^^^^^^^^
+Single Construct
+----------------
 
-In the earlier examples, **each thread in the team created a task**. 
-This is sometimes very convenient as the need for new tasks might arise gradually.
-However, it is more likely that we want to generate the task graph in a centralized manner, i.e. **only one thread should generate the task**.
-This can be accomplished by combining the :code:`parallel` and :code:`single` constructs:
+In the previous examples every team thread created a task. Often, however, **only one thread should generate the task graph**. Use ``single`` inside ``parallel`` to arrange that. Any thread may execute the generated tasks.
 
-.. code-block:: c
-    :linenos:
-    :emphasize-lines: 4-5,7
+.. tabs::
 
-    #include <stdio.h>
+   .. tab:: C/C++
 
-    int main() {
-        #pragma omp parallel
-        #pragma omp single nowait
-        {
-            #pragma omp task
-            printf("Hello world!\n");
-        }
-        return 0;
-    }
+      .. code-block:: c
 
-The :code:`nowait` clause removes the redundant barrier from the end of the :code:`single` construct. 
-    
-.. code-block:: bash
-    :emphasize-lines: 3
+         #include <stdio.h>
+         int main() {
+             #pragma omp parallel
+             #pragma omp single nowait
+             {
+                 #pragma omp task
+                 printf("Hello world!\n");
+             }
+             return 0;
+         }
 
-    $ gcc -o my_program my_program.c -Wall -fopenmp
-    $ ./my_program 
-    Hello world!
-    
-Note that the binding thread set for a :code:`single` region is the current team.
-That is, any tasks in the current team can execute the task.
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         program single_task
+             implicit none
+             !$omp parallel
+                 !$omp single
+                     !$omp task
+                         print *, "Hello world!"
+                     !$omp end task
+                 !$omp end single nowait
+             !$omp end parallel
+         end program single_task
+
+The ``nowait`` clause removes the implicit barrier at the end of ``single``; the end of the parallel region still waits for outstanding tasks. This creates only one ``Hello world!`` task.
 
 .. challenge::
 
-    Write a program that creates 10 tasks. 
+    Write a program that creates 10 tasks.
+
     Each task should print the thread number of the calling thread.
-    
+
     **Hint:** From the :code:`omp.h` header file:
-    
+
     .. code-block:: c
-    
+
         int omp_get_thread_num (void);
-    
+
 .. solution::
 
     .. code-block:: c
         :linenos:
-        
+
         #include <stdio.h>
         #include <omp.h>
-
         int main() {
             #pragma omp parallel
             #pragma omp single nowait
@@ -537,12 +443,12 @@ That is, any tasks in the current team can execute the task.
             }
             return 0;
         }
-        
+
     .. code-block:: bash
         :emphasize-lines: 3-12
-    
-        $ gcc -o my_program my_program.c -Wall -fopenmp                       
-        $ ./my_program                                 
+
+        $ gcc -o my_program my_program.c -Wall -fopenmp
+        $ ./my_program
         I am thread no. 5.
         I am thread no. 13.
         I am thread no. 6.
@@ -557,6 +463,7 @@ That is, any tasks in the current team can execute the task.
 .. challenge::
 
     Inspect and run the following code to see the behavior of shared, private, and first private variables in the context of tasks.
+
     Notice that one can use **atomic updates** together with tasks.
 
     .. code-block:: c
@@ -564,35 +471,29 @@ That is, any tasks in the current team can execute the task.
 
         // On cluster Kebnekaise
         // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 13a-sharedprivate-task-openmp.c -lm 
+        // export OMP_NUM_THREADS=1
+        // gcc -O3 -march=native -fopenmp -o test.x 13a-sharedprivate-task-openmp.c -lm
         #include <stdio.h>
         #include <omp.h>
-
         void process_task(int id, int *shared_data) {
             printf("Task %d: shared_data = %d\n", id, *shared_data);
         }
-
         int main() {
             int shared_data = 100; // variable that is shared across tasks
             int private_data = 200; // variable is private to each task
-
             #pragma omp parallel
             {
                 #pragma omp single
                 {
                     for (int i = 0; i < 4; i++) {
                         int firstprivate_data = i * 10; // firstprivate variable: unique for each task but initialized with i * 10
-
-                        #pragma omp task shared(shared_data) private(private_data) firstprivate(firstprivate_data)
+                        #pragma omp task shared(shared_data) private(private_data) firstprivate(firstprivate_data, i)
                         {
                             // here we modify the private_data variable, which is unique to each task
                             private_data = i * 100;
                             printf("Task %d: private_data = %d, firstprivate_data = %d\n", i, private_data, firstprivate_data);
-                            
                             // Calling a function with shared data
                             process_task(i, &shared_data);
-
                             // Use an atomic op. for shared_data  or critical?
                             #pragma omp atomic
                             shared_data += 1;
@@ -600,9 +501,7 @@ That is, any tasks in the current team can execute the task.
                     }
                 }
             }
-
             printf("Final value of shared_data: %d\n", shared_data);
-
             return 0;
         }
 
@@ -615,20 +514,18 @@ That is, any tasks in the current team can execute the task.
 
         // On cluster Kebnekaise
         // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 13b-firstprivate-task-openmp.c -lm 
+        // export OMP_NUM_THREADS=1
+        // gcc -O3 -march=native -fopenmp -o test.x 13b-firstprivate-task-openmp.c -lm
         #include <stdio.h>
         #include <omp.h>
-
         void task_example() {
             int n = 5; // a shared variable with an initial value
-
             #pragma omp parallel
             {
                 #pragma omp single
                 {
                     for (int i = 0; i < 5; i++) {
-                        #pragma omp task private(n) firstprivate(n)
+                        #pragma omp task firstprivate(n)
                         {
                             // n is private to each task, initialized with its value at task creation
                             n += i; // Modify n for this task
@@ -638,17 +535,17 @@ That is, any tasks in the current team can execute the task.
                 }
             }
         }
-
         int main() {
             task_example();
             return 0;
         }
 
-
 .. challenge::
 
     The following function takes an integer as input, and writes the thread number that handles
-    the execution of the function. Use ``tasks`` to parallelize a *for* loop where each task 
+
+    the execution of the function. Use ``tasks`` to parallelize a *for* loop where each task
+
     executes this function:
 
     .. code-block:: c
@@ -666,19 +563,16 @@ That is, any tasks in the current team can execute the task.
 
         // On cluster Kebnekaise
         // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 12c-task-openmp.c -lm 
+        // export OMP_NUM_THREADS=1
+        // gcc -O3 -march=native -fopenmp -o test.x 12c-task-openmp.c -lm
         #include <stdio.h>
         #include <omp.h>
-
         void process_element(int i) {
             // do some work for each element by printing out the thread ID excuting this work
             printf("Processing element %d in thread %d\n", i, omp_get_thread_num());
         }
-
         int main() {
             int n = 10;
-
             #pragma omp parallel
             {
                 // single directive ensures that only one thread generates tasks
@@ -694,34 +588,31 @@ That is, any tasks in the current team can execute the task.
                 printf("Generating tasks \n");
                 }
             }
-
             return 0;
         }
 
-Allowing Suspension of Current Task
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Allowing Suspension of the Current Task
+---------------------------------------
 
-*taskyield Construct*
+A ``taskyield`` is a task scheduling point at which the runtime *may* suspend the current task and allow another task to run. It is a hint, not a guarantee that another task is scheduled.
 
-At a ``taskyield`` construct, the current task can be suspended to execute a different task.
+**taskyield directive**
 
-Syntax
+.. tabs::
 
-**Fortran:**
+   .. tab:: C/C++
 
-.. code-block:: fortran
+      .. code-block:: c
 
-    !$omp taskyield
+         #pragma omp taskyield
 
-**C:**
+   .. tab:: Fortran
 
-.. code-block:: c
+      .. code-block:: fortran
 
-    #pragma omp taskyield
+         !$omp taskyield
 
-*Use Case*
-
-Allows the runtime to schedule other tasks while waiting for resources or dependencies.
+This can be useful when a task waits for resources, although it must not be relied on to provide progress or to fix incorrect locking.
 
 .. challenge::
 
@@ -732,25 +623,22 @@ Allows the runtime to schedule other tasks while waiting for resources or depend
 
         // On cluster Kebnekaise
         // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 17-taskyield-openmp.c -lm 
+        // export OMP_NUM_THREADS=1
+        // gcc -O3 -march=native -fopenmp -o test.x 17-taskyield-openmp.c -lm
         // ml GCCcore/12.3.0 Clang/16.0.6
         // clang -O3 -fopenmp -o test.x 17-taskyield-openmp.c
         #include <omp.h>
         #include <stdio.h>
         #include <unistd.h>
         #include <stdlib.h>
-
         void something_useful(int id,int random_time) {
             sleep(random_time); // Simulate work
             printf("Task %d: did something useful on thread %d\n", id, omp_get_thread_num());
         }
-
         void something_critical(int id,int random_time) {
             sleep(random_time); // Simulate longer work
             printf("Task %d: did something critical on thread %d\n", id, omp_get_thread_num());
         }
-
         void foo(omp_lock_t *lock, int n) {
             srand(1999); // seed the random number generator
             int min = 1, max = 10;
@@ -760,192 +648,197 @@ Allows the runtime to schedule other tasks while waiting for resources or depend
                 #pragma omp task
                 {
                     something_useful(i,random_time1);
-
                     // Use taskyield to allow other tasks to execute while waiting
                     while (!omp_test_lock(lock)) {
                         #pragma omp taskyield
                         sleep(5);
                     }
-
                     something_critical(i,random_time2);
                     omp_unset_lock(lock);
                 }
             }
         }
-
         int main() {
             int n = 10; // Number of tasks
             omp_lock_t lock;
             omp_init_lock(&lock);
-
             #pragma omp parallel
             {
                 #pragma omp single
                 foo(&lock, n);
             }
-
             omp_destroy_lock(&lock);
             return 0;
         }
 
-Child tasks and taskwait construct
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    Child tasks and taskwait construct
+    A task can create new **child tasks**:
 
-A task can create new **child tasks**:
+Child Tasks and the taskwait Construct
+--------------------------------------
 
-.. code-block:: c
-    :linenos:
-    :emphasize-lines: 7-8
-    
-    #include <stdio.h>
-    
-    int main() {
-        #pragma omp parallel
-        #pragma omp single
-        {
-            #pragma omp task
-            {
-                #pragma omp task
-                printf("Hello.\n");
+A task can create **child tasks**. A child may run even after the generating parent task finishes its own structured block. ``taskwait`` without clauses waits for the generating task's direct children; it does not generally wait for all descendants.
 
-                printf("Hi.\n"); 
-            }
+**Child tasks without an explicit taskwait**
 
-            printf("Hej.\n");
-        }
+.. tabs::
 
-        printf("Goodbye.\n"); 
+   .. tab:: C/C++
 
-        return 0;
-    }
+      .. code-block:: c
 
-.. code-block:: bash
-    :emphasize-lines: 4-5,9-10
+         #include <stdio.h>
+         int main() {
+             #pragma omp parallel
+             #pragma omp single
+             {
+                 #pragma omp task
+                 {
+                     #pragma omp task
+                     printf("Hello.\n");
+                     printf("Hi.\n");
+                 }
+                 printf("Hej.\n");
+             }
+             printf("Goodbye.\n");
+             return 0;
+         }
 
-    $ gcc -o my_program my_program.c -Wall -fopenmp
-    $ ./my_program 
-    Hej
-    Hi.
-    Hello.
-    Goodbye.
-    $ ./my_program 
-    Hej.
-    Hello.
-    Hi.
-    Goodbye.
+   .. tab:: Fortran
 
-Note that child tasks are executed separately from the generating tasks. 
-In particular, it is possible that a child task gets executed after the generating task has finished.
-We can use the :code:`taskwait` construct to **wait on the completion of child tasks** of the generating task:
+      .. code-block:: fortran
 
-.. code-block:: c
+         program child_tasks
+             implicit none
+             !$omp parallel
+                 !$omp single
+                     !$omp task
+                         !$omp task
+                             print *, "Hello."
+                         !$omp end task
+                         print *, "Hi."
+                     !$omp end task
+                     print *, "Hej."
+                 !$omp end single
+             !$omp end parallel
+             print *, "Goodbye."
+         end program child_tasks
 
-    #pragma omp taskwait [clause[ [,] clause] ... ] new-line
+The output ordering may vary: in particular, ``Hello.`` can appear before or after ``Hi.``. ``Goodbye.`` is printed after completion of the parallel region.
 
-This allows us to enforce an execution order:
+**Adding taskwait**
 
+.. tabs::
 
-.. code-block:: c
-    :linenos:
-    :emphasize-lines: 12
-    
-    #include <stdio.h>
+   .. tab:: C/C++
 
-    int main() {
-        #pragma omp parallel
-        #pragma omp single
-        {
-            #pragma omp task
-            {
-                #pragma omp task
-                printf("Hello.\n");
+      .. code-block:: c
 
-                #pragma omp taskwait
+         #include <stdio.h>
+         int main() {
+             #pragma omp parallel
+             #pragma omp single
+             {
+                 #pragma omp task
+                 {
+                     #pragma omp task
+                     printf("Hello.\n");
+                     #pragma omp taskwait
+                     printf("Hi.\n");
+                 }
+                 printf("Hej.\n");
+             }
+             printf("Goodbye.\n");
+             return 0;
+         }
 
-                printf("Hi.\n"); 
-            }
+   .. tab:: Fortran
 
-            printf("Hej.\n");
-        }
+      .. code-block:: fortran
 
-        printf("Goodbye.\n"); 
+         program waiting_for_children
+             implicit none
+             !$omp parallel
+                 !$omp single
+                     !$omp task
+                         !$omp task
+                             print *, "Hello."
+                         !$omp end task
+                         !$omp taskwait
+                         print *, "Hi."
+                     !$omp end task
+                     print *, "Hej."
+                 !$omp end single
+             !$omp end parallel
+             print *, "Goodbye."
+         end program waiting_for_children
 
-        return 0;
-    }
-    
-.. code-block:: bash
-    :emphasize-lines: 4-5
-    
-    $ gcc -o my_program my_program.c -Wall -fopenmp
-    $ ./my_program 
-    Hej.
-    Hello.
-    Hi.
-    Goodbye.
+In this version ``Hello.`` precedes ``Hi.``; ``Hej.`` may appear before or after them, and ``Goodbye.`` is printed last.
 
 Controlling When Tasks Finish
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 
-*taskwait Directive*
+A ``taskwait`` waits for direct child tasks. A ``barrier`` requires all participating team threads to arrive, and all explicit tasks bound to the parallel region to complete before the threads pass that barrier. While waiting, a thread may execute other available tasks.
 
-.. code-block:: fortran
+**taskwait and barrier syntax**
 
-    !$omp taskwait
+.. tabs::
 
-**Purpose:**
+   .. tab:: C/C++
 
-- Ensures child tasks have completed
-- **Does not** consider grandchildren, etc.
+      .. code-block:: c
 
-*barrier Directive*
+         #pragma omp taskwait
+         /* ... */
+         #pragma omp barrier
 
-.. code-block:: fortran
+   .. tab:: Fortran
 
-    !$omp barrier
+      .. code-block:: fortran
 
-**Purpose:**
+         !$omp taskwait
+         ! ...
+         !$omp barrier
 
-- Ensures **all tasks** in the innermost parallel region have finished
+**Tasks separated by a barrier**
 
-.. note::
-   Instead of waiting, a thread can execute tasks generated elsewhere.
+.. tabs::
 
-All threads in the team must reach the barrier and **complete all explicit tasks** bound to the parallel region before they are allowed to continue execution beyond the barrier:
+   .. tab:: C/C++
 
-.. code-block:: c
-    :linenos:
-    :emphasize-lines: 9
+      .. code-block:: c
 
-    #include <stdio.h>
+         #include <stdio.h>
+         int main() {
+             #pragma omp parallel
+             {
+                 #pragma omp task
+                 printf("Hello.\n");
+                 #pragma omp barrier
+                 #pragma omp task
+                 printf("Goodbye.\n");
+             }
+             return 0;
+         }
 
-    int main() {
-        #pragma omp parallel
-        {
-            #pragma omp task
-            printf("Hello.\n");
+   .. tab:: Fortran
 
-            #pragma omp barrier
+      .. code-block:: fortran
 
-            #pragma omp task
-            printf("Goodbye.\n");
-        }
+         program barrier_tasks
+             implicit none
+             !$omp parallel
+                 !$omp task
+                     print *, "Hello."
+                 !$omp end task
+                 !$omp barrier
+                 !$omp task
+                     print *, "Goodbye."
+                 !$omp end task
+             !$omp end parallel
+         end program barrier_tasks
 
-        return 0;
-    }
-    
-.. code-block:: bash
-
-    $ gcc -o my_program my_program.c -Wall -fopenmp
-    $ ./my_program 
-    Hello.
-    Hello.
-    ...
-    Hello.
-    Goodbye.
-    Goodbye.
-    Goodbye.
-    ...
-
+Every task printing ``Hello.`` must complete before any thread passes the barrier to generate a ``Goodbye.`` task.
 
 .. challenge::
 
@@ -956,14 +849,13 @@ All threads in the team must reach the barrier and **complete all explicit tasks
 
         // On cluster Kebnekaise
         // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 19-taskwait-barrier-openmp.c -lm 
+        // export OMP_NUM_THREADS=1
+        // gcc -O3 -march=native -fopenmp -o test.x 19-taskwait-barrier-openmp.c -lm
         // ml GCCcore/12.3.0 Clang/16.0.6
         // clang -O3 -fopenmp -o test.x 19-taskwait-barrier-openmp.c
         #include <stdio.h>
         #include <omp.h>
         #include <unistd.h>
-
         void process_task(int task_id) {
             printf("task %d started by thread %d\n", task_id, omp_get_thread_num());
             #pragma omp taskyield
@@ -971,7 +863,6 @@ All threads in the team must reach the barrier and **complete all explicit tasks
             sleep(3);
             printf("task %d completed by thread %d\n", task_id, omp_get_thread_num());
         }
-
         int main() {
             #pragma omp parallel
             {
@@ -982,11 +873,9 @@ All threads in the team must reach the barrier and **complete all explicit tasks
                         #pragma omp task
                         process_task(i);
                     }
-
                     // wait for all tasks created up to now
                     #pragma omp taskwait
                     printf("All tasks at this level completed, but children,grandchildren tasks may still be running.\n");
-
                     // Second set of tasks
                     for (int i = 3; i < 6; i++) {
                         #pragma omp task
@@ -997,77 +886,71 @@ All threads in the team must reach the barrier and **complete all explicit tasks
                 #pragma omp barrier
                 printf("All threads have reached the barrier.\n");
             }
-
             return 0;
         }
 
-
-
+    taskgroup: Controlling Descendant Tasks (OpenMP 4.0)
+    A ``taskgroup`` construct defines a region with an implied task scheduling point at the end.
+    Current task is suspended until **all descendant tasks** (including grandchildren, etc.) have completed.
 
 taskgroup: Controlling Descendant Tasks (OpenMP 4.0)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------------------
 
+A ``taskgroup`` waits for child tasks generated in its lexical region **and their descendants**, including grandchildren. This provides a more comprehensive wait than an ordinary ``taskwait``.
 
-A ``taskgroup`` construct defines a region with an implied task scheduling point at the end.
+.. tabs::
 
-Current task is suspended until **all descendant tasks** (including grandchildren, etc.) have completed.
+   .. tab:: C/C++
 
-*Fortran Syntax*
+      .. code-block:: c
 
-.. code-block:: fortran
+         #pragma omp taskgroup
+         {
+             for (int i = 0; i < n; i++) {
+                 #pragma omp task firstprivate(i)
+                 processing(i);  /* may generate more tasks */
+             }
+         }  /* waits for descendants */
 
-    !$omp taskgroup
-    do i = 1, n
-        !$omp task ...
-            call processing(...)
-        !$omp end task
-    end do
-    !$omp end taskgroup  ! Waits for all tasks, including
-                          ! tasks generated in processing
+   .. tab:: Fortran
 
-*C Syntax*
+      .. code-block:: fortran
 
-.. code-block:: c
-
-    #pragma omp taskgroup
-    {
-        for (int i = 0; i < n; i++)
-        {
-            #pragma omp task ...
-            {
-                processing(...);
-            }
-        }
-    }  // Waits for all tasks, including
-       // tasks generated in processing
-
-
+         !$omp taskgroup
+         do i = 1, n
+             !$omp task firstprivate(i)
+                 call processing(i)  ! may generate more tasks
+             !$omp end task
+         end do
+         !$omp end taskgroup  ! waits for descendants
 
 Controlling Task Creation
-^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 
-*The Overhead Problem*
+Task generation has overhead. If the work per task is too small, execution can become slower than the serial version.
 
-Creating a task encounters significant overhead:
+With the ``if`` clause on a task construct, a false condition generates an **undeferred task** which is executed immediately by the encountering thread rather than deferred for later execution. This is useful for controlling task granularity.
 
-- Requires significant work inside the task to pay off
-- Too many small tasks can hurt performance
+**if clause**
 
-*Solution: if Clause*
+.. tabs::
 
-Use the ``if`` clause to control task creation:
+   .. tab:: C/C++
 
-.. code-block:: fortran
+      .. code-block:: c
 
-    !$OMP task if(level .lt. 10) ...
-        ...
-    !$OMP end task
+         #pragma omp task if(level < 10)
+         {
+             process(level);
+         }
 
+   .. tab:: Fortran
 
-If the expression evaluates to ``.false.``:
+      .. code-block:: fortran
 
-- Encountering thread executes code body directly (included task)
-- No task creation overhead
+         !$omp task if(level < 10)
+             call process(level)
+         !$omp end task
 
 .. challenge::
 
@@ -1078,18 +961,15 @@ If the expression evaluates to ``.false.``:
 
         // On cluster Kebnekaise
         // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 15-ifclause-task-openmp.c -lm 
+        // export OMP_NUM_THREADS=1
+        // gcc -O3 -march=native -fopenmp -o test.x 15-ifclause-task-openmp.c -lm
         #include <stdio.h>
         #include <omp.h>
-
         void process_task(int task_id) {
             printf("Processing iteration task %d in thread %d\n", task_id, omp_get_thread_num());
         }
-
         int main() {
             int n = 5; // Threshold for deciding if the task is executed synchronously or asynchrously
-
             #pragma omp parallel
             {
                 #pragma omp single
@@ -1099,7 +979,6 @@ If the expression evaluates to ``.false.``:
                         #pragma omp task if(i > n) // Tasks with i > n are deferred; others run in the current thread
                         {
                         process_task(i);
-
                         // childrens behave as regular tasks (can be deferred)
                         #pragma omp task
                         {
@@ -1109,34 +988,38 @@ If the expression evaluates to ``.false.``:
                     }
                 }
             }
-
             return 0;
         }
 
+    Final Tasks
+    A task can carry a ``final`` clause to control task generation in descendants.
+    *Syntax*
 
 Final Tasks
-^^^^^^^^^^^
+-----------
 
-A task can carry a ``final`` clause to control task generation in descendants.
+The ``final`` clause marks the generated task as final if its expression is true. Child tasks encountered within a final task are themselves final and **included**. This reduces task creation overhead in deep recursion; it does *not* prevent the task's own code from recursively executing.
 
-*Syntax*
+**final clause**
 
-.. code-block:: fortran
+.. tabs::
 
-    !$OMP task final(level .gt. 30) ...
-        ...
-    !$OMP end task
+   .. tab:: C/C++
 
-If the expression evaluates to ``.true.``:
+      .. code-block:: c
 
-- All encountered tasks within this task will be:
-  
-  - **Included** (executed immediately by encountering thread)
-  - **Final** (they also cannot generate new tasks)
+         #pragma omp task final(level > 30)
+         {
+             process(level);
+         }
 
-*Use Case*
+   .. tab:: Fortran
 
-Prevents excessive task creation in deep recursion by serializing once a certain depth is reached.
+      .. code-block:: fortran
+
+         !$omp task final(level > 30)
+             call process(level)
+         !$omp end task
 
 .. challenge::
 
@@ -1147,18 +1030,15 @@ Prevents excessive task creation in deep recursion by serializing once a certain
 
         // On cluster Kebnekaise
         // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 16-finalclause-task-openmp.c -lm 
+        // export OMP_NUM_THREADS=1
+        // gcc -O3 -march=native -fopenmp -o test.x 16-finalclause-task-openmp.c -lm
         #include <stdio.h>
         #include <omp.h>
-
         void process_task(int task_id) {
             printf("Processing iteration task %d in thread %d\n", task_id, omp_get_thread_num());
         }
-
         int main() {
             int n = 5; // Threshold for the final clause
-
             #pragma omp parallel
             {
                 #pragma omp single
@@ -1169,11 +1049,10 @@ Prevents excessive task creation in deep recursion by serializing once a certain
                         #pragma omp task final(i <= n)
                         {
                             process_task(i);
-
-                            #pragma omp task 
+                            #pragma omp task
                             {
                                 printf("Nested task for %d in thread %d\n", i, omp_get_thread_num());
-                                #pragma omp task 
+                                #pragma omp task
                                 {
                                 printf("Subnested task for %d in thread %d\n", i, omp_get_thread_num());
                                 }
@@ -1185,31 +1064,35 @@ Prevents excessive task creation in deep recursion by serializing once a certain
             return 0;
         }
 
+    Mergeable Tasks
+    A task can be declared as ``mergeable`` for optimization.
+    *Syntax*
 
 Mergeable Tasks
-^^^^^^^^^^^^^^^
+---------------
 
-A task can be declared as ``mergeable`` for optimization.
+A task may be declared ``mergeable``. If it is undeferred or included, the implementation may reuse the generating task's data environment as an optimization; this is optional and code must not depend on whether the optimization occurs.
 
-*Syntax*
+**mergeable clause**
 
-.. code-block:: fortran
+.. tabs::
 
-    !$omp task mergeable ...
+   .. tab:: C/C++
 
-.. code-block:: c
+      .. code-block:: c
 
-    #pragma omp task mergeable ...
+         #pragma omp task mergeable
+         {
+             process();
+         }
 
+   .. tab:: Fortran
 
-For an undeferred or included task, the implementation may:
+      .. code-block:: fortran
 
-- Use the data environment of the generating task (including internal control variables)
-- Optimize by merging task execution
-
-*Use Case*
-
-Often used with ``final`` clause for optimization at deep recursion levels.
+         !$omp task mergeable
+             call process()
+         !$omp end task
 
 .. challenge::
 
@@ -1220,20 +1103,17 @@ Often used with ``final`` clause for optimization at deep recursion levels.
 
         // On cluster Kebnekaise
         // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 18b-mergeable-task-openmp.c -lm 
+        // export OMP_NUM_THREADS=1
+        // gcc -O3 -march=native -fopenmp -o test.x 18b-mergeable-task-openmp.c -lm
         // ml GCCcore/12.3.0 Clang/16.0.6
         // clang -O3 -fopenmp -o test.x 18b-mergeable-task-openmp.c
         #include <omp.h>
         #include <stdio.h>
-
         void process_task(int task_id) {
             printf("Processing task %d on thread %d\n", task_id, omp_get_thread_num());
         }
-
         int main() {
             int n = 10; // nr. of iterations
-            
             #pragma omp parallel
             {
                 #pragma omp single
@@ -1247,744 +1127,556 @@ Often used with ``final`` clause for optimization at deep recursion levels.
                     }
                 }
             }
-            
             return 0;
         }
 
-
 Task Scheduling Points
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
-Threads may switch to a different task at a **task scheduling point**.
-
-*Task Scheduling Points Are*
-
-1. Immediately after generation of an explicit task
-2. After point of completion of a task
-3. At ``taskwait`` or ``taskyield``
-4. At ``barrier`` (explicit or implicit)
-5. At the end of ``taskgroup``
-
-**Untied Tasks (Advanced)**
+The runtime may switch tasks at scheduling points, including immediately after task creation, task completion, ``taskwait``/``taskyield``, explicit or implicit barriers, and at the end of a ``taskgroup``.
 
 .. warning::
-   Untied tasks (not covered in this course) may switch at any point.
-   
-   - Be careful with ``critical`` regions and locks
-   - Example: task may switch out of critical region → **deadlock!**
 
+   Untied tasks can resume on a different thread at task scheduling points. Be especially careful with locks and thread-local state; incorrect use can deadlock.
 
-*Case Study 1: Recursive Fibonacci*
+Case Study 1: Recursive Fibonacci
+---------------------------------
 
-Fibonacci Numbers Mathematical series:
+Fibonacci numbers satisfy the recurrence:
 
 .. math::
 
-   F_0 &= 0 \\
-   F_1 &= 1 \\
-   F_n &= F_{n-1} + F_{n-2}
+   F_0 = 0, \qquad F_1 = 1, \qquad F_n = F_{n-1} + F_{n-2}
 
-First numbers in series: 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, ...
+The sequence starts ``0, 1, 1, 2, 3, 5, 8, 13, 21, 34, ...``. Recursive Fibonacci is inefficient as a real numerical algorithm, but useful for demonstrating OpenMP tasks.
 
-.. note::
-   Recursive implementation: not efficient for computation, but good for demonstrating task parallelism!
-
-*Recursion Tree*
+**Recursion tree**
 
 .. code-block:: text
 
-                      n
-                   /     \
-                n-1       n-2
-               /   \     /   \
-            n-2   n-3  n-3  n-4
-           / \    / \  / \  / \
-         ...  ... ... ... ... ...
+   n
+   |-- n-1
+   |   |-- n-2
+   |   `-- n-3
+   `-- n-2
+       |-- n-3
+       `-- n-4
+
+**Serial Fibonacci implementation**
 
 .. tabs::
 
-    .. tab:: C 
-
-        *Serial Fibonacci Implementation (C)*
-
-        .. code-block:: c
-
-            unsigned long long recursive_fib(int in) {
-                unsigned long long fibnum, sub1, sub2;
-                
-                if (in > 1) {
-                    sub1 = recursive_fib(in - 1);
-                    sub2 = recursive_fib(in - 2);
-                    fibnum = sub1 + sub2;
-                } else {
-                    fibnum = in;
-                }
-                return fibnum;
-            }
-
-
-        *Parallel Version: Attempt 1 (C)*
-
-        Adding One Task
-
-        .. code-block:: c
-
-            unsigned long long recursive_fib(int in) {
-                unsigned long long fibnum, sub1, sub2;
-                
-                if (in > 1) {
-                    #pragma omp task shared(sub1) firstprivate(in)
-                    {
-                        sub1 = recursive_fib(in - 1);
-                    }
-                    sub2 = recursive_fib(in - 2);
-                    fibnum = sub1 + sub2;
-                } else {
-                    fibnum = in;
-                }
-                return fibnum;
-            }
-
-        *Data Sharing*
-
-
-        - ``sub1`` is ``shared`` - declared inside function, must share to return result
-        - ``in`` is ``firstprivate`` - initialized at task creation
-
-
-
-        *Parallel Version: Attempt 2 (C)*
-
-        Adding Second Task
-
-
-        .. code-block:: c
-
-            unsigned long long recursive_fib(int in) {
-                unsigned long long fibnum, sub1, sub2;
-                
-                if (in > 1) {
-                    #pragma omp task shared(sub1) firstprivate(in)
-                    {
-                        sub1 = recursive_fib(in - 1);
-                    }
-                    #pragma omp task shared(sub2) firstprivate(in)
-                    {
-                        sub2 = recursive_fib(in - 2);
-                    }
-                    fibnum = sub1 + sub2;
-                } else {
-                    fibnum = in;
-                }
-                return fibnum;
-            }
-
-        .. danger::
-        **Problem:** Need to have ``sub1`` and ``sub2`` ready before computing ``fibnum``!
-
-
-
-        *Parallel Version: Final Solution (C)*
-
-        Adding taskwait
-
-        .. code-block:: c
-
-            unsigned long long recursive_fib(int in) {
-                unsigned long long fibnum, sub1, sub2;
-                
-                if (in > 1) {
-                    #pragma omp task shared(sub1) firstprivate(in)
-                    {
-                        sub1 = recursive_fib(in - 1);
-                    }
-                    #pragma omp task shared(sub2) firstprivate(in)
-                    {
-                        sub2 = recursive_fib(in - 2);
-                    }
-                    #pragma omp taskwait
-                    fibnum = sub1 + sub2;
-                } else {
-                    fibnum = in;
-                }
-                return fibnum;
-            }
-
-        *Solution*
-
-        - ``taskwait`` waits for the 2 tasks above
-        - Recursion takes care of grandchildren automatically
-
-
-        *Calling the Parallel Fibonacci*
-
-        Original Serial Code
-
-        .. code-block:: c
-
-            #include <stdio.h>
-            #include <stdlib.h>
-            
-            int main(int argc, char *argv[]) {
-                unsigned long long fibres;
-                int input;
-                
-                printf("Enter input: ");
-                scanf("%d", &input);
-                fibres = recursive_fib(input);
-                printf("Fibonacci number %d is: %llu\n", input, fibres);
-                
-                return 0;
-            }
-
-
-
-        *Attempt: Starting Parallel Region*
-
-        .. code-block:: c
-
-            #include <stdio.h>
-            #include <stdlib.h>
-            #include <omp.h>
-            
-            int main(int argc, char *argv[]) {
-                unsigned long long fibres;
-                int input;
-                
-                printf("Enter input: ");
-                scanf("%d", &input);
-                
-                #pragma omp parallel shared(input, fibres) default(none)
-                {
-                    fibres = recursive_fib(input);
-                }
-                
-                printf("Fibonacci number %d is: %llu\n", input, fibres);
-                
-                return 0;
-            }
-
-        .. danger::
-        **Problem:** Each thread starts Fibonacci calculation! Multiple redundant computations.
-
-
-        *Solution: Using single Construct*
-
-        .. code-block:: c
-
-            #include <stdio.h>
-            #include <stdlib.h>
-            #include <omp.h>
-            
-            int main(int argc, char *argv[]) {
-                unsigned long long fibres;
-                int input;
-                
-                printf("Enter input: ");
-                scanf("%d", &input);
-                
-                #pragma omp parallel shared(input, fibres) default(none)
-                {
-                    #pragma omp single
-                    {
-                        fibres = recursive_fib(input);
-                    }
-                }
-                
-                printf("Fibonacci number %d is: %llu\n", input, fibres);
-                
-                return 0;
-            }
-
-        .. note::
-        ``single`` ensures only one thread starts the recursion, but all threads can help execute tasks.
-
-    .. tab:: Fortran
-      
-
-
-        *Serial Fibonacci Implementation (Fortran)*
-
-        .. code-block:: fortran
-
-            recursive function recursive_fib(in) result(fibnum)
-                integer, intent(in) :: in
-                integer(lint) :: fibnum, sub1, sub2
-                
-                if (in .gt. 1) then
-                    sub1 = recursive_fib(in - 1)
-                    sub2 = recursive_fib(in - 2)
-                    fibnum = sub1 + sub2
-                else
-                    fibnum = in
-                endif
-            end function recursive_fib
-
-
-        *Parallel Version: Attempt 1 (Fortran)*
-
-        Adding One Task
-
-        .. code-block:: fortran
-
-            recursive function recursive_fib(in) result(fibnum)
-                integer, intent(in) :: in
-                integer(lint) :: fibnum, sub1, sub2
-                
-                if (in .gt. 1) then
-                    !$OMP task shared(sub1) firstprivate(in)
-                        sub1 = recursive_fib(in - 1)
-                    !$OMP end task
-                    sub2 = recursive_fib(in - 2)
-                    fibnum = sub1 + sub2
-                else
-                    fibnum = in
-                endif
-            end function recursive_fib
-
-        *Data Sharing*
-
-
-        - ``sub1`` is ``shared`` - declared inside function, must share to return result
-        - ``in`` is ``firstprivate`` - initialized at task creation
-
-
-
-        *Parallel Version: Attempt 2 (Fortran)*
-
-        Adding Second Task
-
-
-        .. code-block:: fortran
-
-            recursive function recursive_fib(in) result(fibnum)
-                integer, intent(in) :: in
-                integer(lint) :: fibnum, sub1, sub2
-                
-                if (in .gt. 1) then
-                    !$OMP task shared(sub1) firstprivate(in)
-                        sub1 = recursive_fib(in - 1)
-                    !$OMP end task
-                    !$OMP task shared(sub2) firstprivate(in)
-                        sub2 = recursive_fib(in - 2)
-                    !$OMP end task
-                    fibnum = sub1 + sub2
-                else
-                    fibnum = in
-                endif
-            end function recursive_fib
-
-        .. danger::
-        **Problem:** Need to have ``sub1`` and ``sub2`` ready before computing ``fibnum``!
-
-
-
-        *Parallel Version: Final Solution (Fortran)*
-
-        Adding taskwait
-
-        .. code-block:: fortran
-
-            recursive function recursive_fib(in) result(fibnum)
-                integer, intent(in) :: in
-                integer(lint) :: fibnum, sub1, sub2
-                
-                if (in .gt. 1) then
-                    !$OMP task shared(sub1) firstprivate(in)
-                        sub1 = recursive_fib(in - 1)
-                    !$OMP end task
-                    !$OMP task shared(sub2) firstprivate(in)
-                        sub2 = recursive_fib(in - 2)
-                    !$OMP end task
-                    !$OMP taskwait
-                    fibnum = sub1 + sub2
-                else
-                    fibnum = in
-                endif
-            end function recursive_fib
-
-        *Solution*
-
-        - ``taskwait`` waits for the 2 tasks above
-        - Recursion takes care of grandchildren automatically
-
-
-        *Calling the Parallel Fibonacci*
-
-        Original Serial Code
-
-        .. code-block:: fortran
-
-            program fibonacci
-                !$ use omp_lib
-                integer, parameter :: lint = selected_int_kind(10)
-                integer(lint) :: fibres
-                integer :: input
-                
-                read (*,*) input
-                fibres = recursive_fib(input)
-                print *, "Fibonacci number", input, " is:", fibres
-            end program fibonacci
-
-
-
-        *Attempt: Starting Parallel Region*
-
-        .. code-block:: fortran
-
-            program fibonacci
-                !$ use omp_lib
-                integer, parameter :: lint = selected_int_kind(10)
-                integer(lint) :: fibres
-                integer :: input
-                
-                read (*,*) input
-                !$OMP parallel shared(input, fibres) default(none)
-                    fibres = recursive_fib(input)
-                !$OMP end parallel
-                print *, "Fibonacci number", input, " is:", fibres
-            end program fibonacci
-
-        .. danger::
-        **Problem:** Each thread starts Fibonacci calculation! Multiple redundant computations.
-
-
-        *Solution: Using single Construct*
-
-        .. code-block:: fortran
-
-            program fibonacci
-                !$ use omp_lib
-                integer, parameter :: lint = selected_int_kind(10)
-                integer(lint) :: fibres
-                integer :: input
-                
-                read (*,*) input
-                !$OMP parallel shared(input, fibres) default(none)
-                    !$OMP single
-                        fibres = recursive_fib(input)
-                    !$OMP end single
-                !$OMP end parallel
-                print *, "Fibonacci number", input, " is:", fibres
-            end program fibonacci
-
-        .. note::
-        ``single`` ensures only one thread starts the recursion, but all threads can help execute tasks.
-
-
-
-*Performance: Fibonacci Number 40*
-
-How is the performance of the OpenMP tasks implementation? 
-
-*Discussion: Fibonacci Performance*
-
-Key Findings
-
-**Task Overhead:**
-
-- Creating tasks has significant overhead
-- Need sufficient work per task to justify overhead
-
-**Optimization Strategies:**
-
-1. **if clause:** Prevents task creation for small problem sizes. Try adding this clause to the code above:
-
-.. code-block:: fortran
-
-    #pragma omp task shared(sub1) firstprivate(in) if(in > 30)
-    {
-        sub1 = recursive_fib(in - 1);
-    }
-    #pragma omp task shared(sub2) firstprivate(in) if(in >30)
-    {
-        sub2 = recursive_fib(in - 2);
-    }
-
-
-2. **Limit task creation:** Only create tasks at higher recursion levels
-3. **Balance:** Between parallelism and overhead
-
-
-
-Benchmark Setup
-
-
-**Hardware:** Intel E5-2650 v3
-**Test:** Computing Fibonacci(40)
-**Compilers:** gfortran 6.3, ifort 17.1
-
-Results Summary
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         unsigned long long recursive_fib(int in) {
+             unsigned long long fibnum, sub1, sub2;
+             if (in > 1) {
+                 sub1 = recursive_fib(in - 1);
+                 sub2 = recursive_fib(in - 2);
+                 fibnum = sub1 + sub2;
+             } else {
+                 fibnum = in;
+             }
+             return fibnum;
+         }
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         recursive function recursive_fib(in) result(fibnum)
+             integer, intent(in) :: in
+             integer(lint) :: fibnum, sub1, sub2
+             if (in .gt. 1) then
+                 sub1 = recursive_fib(in - 1)
+                 sub2 = recursive_fib(in - 2)
+                 fibnum = sub1 + sub2
+             else
+                 fibnum = in
+             endif
+         end function recursive_fib
+
+**Parallel attempt 1: create one task**
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         unsigned long long recursive_fib(int in) {
+             unsigned long long fibnum, sub1, sub2;
+             if (in > 1) {
+                 #pragma omp task shared(sub1) firstprivate(in)
+                 {
+                     sub1 = recursive_fib(in - 1);
+                 }
+                 sub2 = recursive_fib(in - 2);
+                 fibnum = sub1 + sub2;
+             } else {
+                 fibnum = in;
+             }
+             return fibnum;
+         }
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         recursive function recursive_fib(in) result(fibnum)
+             integer, intent(in) :: in
+             integer(lint) :: fibnum, sub1, sub2
+             if (in .gt. 1) then
+                 !$OMP task shared(sub1) firstprivate(in)
+                     sub1 = recursive_fib(in - 1)
+                 !$OMP end task
+                 sub2 = recursive_fib(in - 2)
+                 fibnum = sub1 + sub2
+             else
+                 fibnum = in
+             endif
+         end function recursive_fib
+
+Here ``sub1`` must be shared to return the computed result, while ``in`` is copied at task creation. The attempt is missing a wait before reading ``sub1``.
+
+**Parallel attempt 2: create two tasks (incorrect)**
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         unsigned long long recursive_fib(int in) {
+             unsigned long long fibnum, sub1, sub2;
+             if (in > 1) {
+                 #pragma omp task shared(sub1) firstprivate(in)
+                 {
+                     sub1 = recursive_fib(in - 1);
+                 }
+                 #pragma omp task shared(sub2) firstprivate(in)
+                 {
+                     sub2 = recursive_fib(in - 2);
+                 }
+                 fibnum = sub1 + sub2;
+             } else {
+                 fibnum = in;
+             }
+             return fibnum;
+         }
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         recursive function recursive_fib(in) result(fibnum)
+             integer, intent(in) :: in
+             integer(lint) :: fibnum, sub1, sub2
+             if (in .gt. 1) then
+                 !$OMP task shared(sub1) firstprivate(in)
+                     sub1 = recursive_fib(in - 1)
+                 !$OMP end task
+                 !$OMP task shared(sub2) firstprivate(in)
+                     sub2 = recursive_fib(in - 2)
+                 !$OMP end task
+                 fibnum = sub1 + sub2
+             else
+                 fibnum = in
+             endif
+         end function recursive_fib
+
+.. danger::
+
+   This attempt uses ``sub1`` and ``sub2`` before the child tasks are guaranteed to finish. It is intentionally incorrect.
+
+**Parallel final solution: taskwait**
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         unsigned long long recursive_fib(int in) {
+             unsigned long long fibnum, sub1, sub2;
+             if (in > 1) {
+                 #pragma omp task shared(sub1) firstprivate(in)
+                 {
+                     sub1 = recursive_fib(in - 1);
+                 }
+                 #pragma omp task shared(sub2) firstprivate(in)
+                 {
+                     sub2 = recursive_fib(in - 2);
+                 }
+                 #pragma omp taskwait
+                 fibnum = sub1 + sub2;
+             } else {
+                 fibnum = in;
+             }
+             return fibnum;
+         }
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         recursive function recursive_fib(in) result(fibnum)
+             integer, intent(in) :: in
+             integer(lint) :: fibnum, sub1, sub2
+             if (in .gt. 1) then
+                 !$OMP task shared(sub1) firstprivate(in)
+                     sub1 = recursive_fib(in - 1)
+                 !$OMP end task
+                 !$OMP task shared(sub2) firstprivate(in)
+                     sub2 = recursive_fib(in - 2)
+                 !$OMP end task
+                 !$OMP taskwait
+                 fibnum = sub1 + sub2
+             else
+                 fibnum = in
+             endif
+         end function recursive_fib
+
+``taskwait`` waits for the two children at each recursive call. Each child call manages its own descendants.
+
+**Calling Fibonacci from serial code**
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         #include <stdio.h>
+         #include <stdlib.h>
+         int main(int argc, char *argv[]) {
+             unsigned long long fibres;
+             int input;
+             printf("Enter input: ");
+             scanf("%d", &input);
+             fibres = recursive_fib(input);
+             printf("Fibonacci number %d is: %llu\n", input, fibres);
+             return 0;
+         }
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         program fibonacci
+             !$ use omp_lib
+             integer, parameter :: lint = selected_int_kind(10)
+             integer(lint) :: fibres
+             integer :: input
+             read (*,*) input
+             fibres = recursive_fib(input)
+             print *, "Fibonacci number", input, " is:", fibres
+         end program fibonacci
+
+**Incorrect: starting a parallel region without single**
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         #include <stdio.h>
+         #include <stdlib.h>
+         #include <omp.h>
+         int main(int argc, char *argv[]) {
+             unsigned long long fibres;
+             int input;
+             printf("Enter input: ");
+             scanf("%d", &input);
+             #pragma omp parallel shared(input, fibres) default(none)
+             {
+                 fibres = recursive_fib(input);
+             }
+             printf("Fibonacci number %d is: %llu\n", input, fibres);
+             return 0;
+         }
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         program fibonacci
+             !$ use omp_lib
+             integer, parameter :: lint = selected_int_kind(10)
+             integer(lint) :: fibres
+             integer :: input
+             read (*,*) input
+             !$OMP parallel shared(input, fibres) default(none)
+                 fibres = recursive_fib(input)
+             !$OMP end parallel
+             print *, "Fibonacci number", input, " is:", fibres
+         end program fibonacci
+
+.. danger::
+
+   Every thread redundantly starts the entire Fibonacci calculation.
+
+**Correct: one thread starts Fibonacci using single**
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         #include <stdio.h>
+         #include <stdlib.h>
+         #include <omp.h>
+         int main(int argc, char *argv[]) {
+             unsigned long long fibres;
+             int input;
+             printf("Enter input: ");
+             scanf("%d", &input);
+             #pragma omp parallel shared(input, fibres) default(none)
+             {
+                 #pragma omp single
+                 {
+                     fibres = recursive_fib(input);
+                 }
+             }
+             printf("Fibonacci number %d is: %llu\n", input, fibres);
+             return 0;
+         }
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         program fibonacci
+             !$ use omp_lib
+             integer, parameter :: lint = selected_int_kind(10)
+             integer(lint) :: fibres
+             integer :: input
+             read (*,*) input
+             !$OMP parallel shared(input, fibres) default(none)
+                 !$OMP single
+                     fibres = recursive_fib(input)
+                 !$OMP end single
+             !$OMP end parallel
+             print *, "Fibonacci number", input, " is:", fibres
+         end program fibonacci
+
+The ``single`` construct ensures that only one thread initiates the recursion while the full team can run tasks. The Fortran function fragments assume ``lint`` is defined in an appropriate enclosing module or scope, as in the original example.
+
+Performance: Fibonacci Number 40
+--------------------------------
+
+**Task overhead:** Creating tasks has measurable cost, so recursive tasks should contain enough work. Common optimization strategies are to stop deferring tasks below a recursion threshold, limit the number of tasks, and balance parallelism against overhead.
+
+**Using if to reduce task deferral**
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         #pragma omp task shared(sub1) firstprivate(in) if(in > 30)
+         { sub1 = recursive_fib(in - 1); }
+         #pragma omp task shared(sub2) firstprivate(in) if(in > 30)
+         { sub2 = recursive_fib(in - 2); }
+         #pragma omp taskwait
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         !$omp task shared(sub1) firstprivate(in) if(in > 30)
+             sub1 = recursive_fib(in - 1)
+         !$omp end task
+         !$omp task shared(sub2) firstprivate(in) if(in > 30)
+             sub2 = recursive_fib(in - 2)
+         !$omp end task
+         !$omp taskwait
+
+**Original benchmark:** Fibonacci(40) on Intel E5-2650 v3 hardware; gfortran 6.3 and ifort 17.1 with thread binding. The original material reports poor performance with two tiny tasks per call, improvement from conditional tasks, and further improvement with fewer tasks.
 
 .. figure:: img/perf-fibo.png
-    :align: center
-    :scale: 90%
+   :align: center
+   :scale: 90%
 
-----
+**Hardware:** Two sockets, 10 cores per Intel E5-2650 v3 processor. Benchmark results are historical and hardware/compiler-specific.
 
-*Key Observations*
+Case Study 2: Self-Refining Recursive Integrator
+------------------------------------------------
 
-Both compilers show similar patterns:
+Irregular numerical grids often benefit from dynamic mesh refinement, such as refining where a fluid-dynamics eddy develops and coarsening where it disappears.
 
-- **Naive implementation** (2 tasks per iteration): Poor performance
-- **Using if clause** (no tasks for low values): Helps significantly
-- **1 task per iteration**: Helps even more
-- **Problem:** Too little work per task
-- **Solution:** Limit the number of tasks created
+**Adaptive integration algorithm:** Evaluate a function at five points in an interval, compare a five-point estimate against a coarser three-point estimate, and accept the interval if the error is sufficiently small. Otherwise, divide the interval into two subintervals and recurse using tasks.
 
+**Start the recursive integrator once**
 
+.. tabs::
 
+   .. tab:: C/C++
 
-Hardware Details
+      .. code-block:: c
 
-**Test System:**
+         /* Illustrative fragment in an enclosing C function. */
+         double accumulator = 0.0;
+         #pragma omp parallel shared(accumulator, startv, stopv, unit_err, gen_num)
+         {
+             #pragma omp single
+             rec_eval_shared_update(startv, stopv, unit_err, gen_num,
+                                    &accumulator);
+         }
 
-- 2 sockets per server
-- Intel E5-2650 v3
-- 10 cores per processor
+   .. tab:: Fortran
 
-**Compilers:**
+      .. code-block:: fortran
 
-- **gfortran:** Version 6.3 with thread binding
-- **Intel ifort:** Version 17.1 with thread binding
+         accumulator = 0.0D0
+         !$OMP parallel default(none) &
+         !$OMP shared(accumulator) &
+         !$OMP shared(startv, stopv, unit_err, gen_num)
+             !$OMP single
+                 call rec_eval_shared_update( &
+                     startv, stopv, unit_err, gen_num)
+             !$OMP end single
+         !$OMP end parallel
 
+A shared accumulator stores the result. The ``single`` directive launches recursion only once; the parallel region completion waits for generated tasks. The C example is an added conceptual counterpart: its routine accepts a pointer to the accumulator rather than using a Fortran module variable. Inside the recursive C routine, the pointer is firstprivate in generated tasks, but the pointee is shared.
 
-*Case Study 2: Self-Refining Recursive Integrator*
+**Generate tasks for both half-intervals**
 
-Mesh Refinement Concept
+.. tabs::
 
-Codes employing irregular grids benefit from dynamic grid refinement/coarsening:
+   .. tab:: C/C++
 
-**Example: Fluid dynamics**
+      .. code-block:: c
 
-- Refine grid where eddy develops
-- Coarsen when eddy vanishes
+         /* my_start, my_stop, u_err, my_gen and task_start
+            are values visible in the surrounding function. */
+         #pragma omp task firstprivate(accumulator, my_start, my_stop, u_err, my_gen) if(task_start)
+         rec_eval_shared_update(my_start, 0.5 * (my_start + my_stop),
+                                u_err, my_gen, accumulator);
+         #pragma omp task firstprivate(accumulator, my_start, my_stop, u_err, my_gen) if(task_start)
+         rec_eval_shared_update(0.5 * (my_start + my_stop), my_stop,
+                                u_err, my_gen, accumulator);
 
-*Case Study Application*
+   .. tab:: Fortran
 
-Self-refining integrator for 1D function.
+      .. code-block:: fortran
 
+         !$OMP task shared(accumulator) firstprivate(my_start, my_stop) &
+         !$OMP default(none) firstprivate(my_gen, u_err) &
+         !$OMP if(task_start)
+             call rec_eval_shared_update( &
+                 my_start, 0.5_dpr * (my_start + my_stop), u_err, my_gen)
+         !$OMP end task
+         !$OMP task shared(accumulator) firstprivate(my_start, my_stop) &
+         !$OMP default(none) firstprivate(my_gen, u_err) &
+         !$OMP if(task_start)
+             call rec_eval_shared_update( &
+                 0.5_dpr * (my_start + my_stop), my_stop, u_err, my_gen)
+         !$OMP end task
 
-Basic Algorithm
-^^^^^^^^^^^^^^^
+Each task may recursively subdivide again. ``if(task_start)`` can limit deferred-task creation at deeper generations.
 
-Integration with Adaptive Refinement
+**Accumulating results:** A simple strategy uses atomic updates of a shared accumulator. Another option uses threadprivate accumulation, although threadprivate state belongs to a thread, not to an explicit task, so care is needed around task scheduling points. Newer OpenMP versions also support task reductions.
 
-1. **Evaluate function** at 5 regularly spaced points in interval
-2. **Estimate integral** using two methods:
-   
-   - Polygon using all 5 points (accurate)
-   - Polygon using only 3 points (first, center, last) (coarse)
+**Atomic accumulation**
 
-3. **Check difference** between the two integrals:
-   
-   - Compare to threshold * interval length
+.. tabs::
 
-4. **Decision:**
-   
-   - **If accurate:** Add contribution to accumulator
-   - **If not accurate:**
-     
-     - Split interval into two pieces
-     - Run integrator on both pieces (recursion)
+   .. tab:: C/C++
 
+      .. code-block:: c
 
-*Implementation: Parallel Region*
+         #pragma omp atomic update
+         *accumulator += contribution;
 
-.. code-block:: fortran
+   .. tab:: Fortran
 
-    accumulator = 0.0D0
-    
-    !$OMP parallel default(none) &
-    !$OMP shared(accumulator) &
-    !$OMP shared(startv, stopv, unit_err, gen_num)
-        !$OMP single
-            call rec_eval_shared_update( &
-                startv, stopv, unit_err, gen_num)
-        !$OMP end single
-    !$OMP end parallel
+      .. code-block:: fortran
 
-*Key Design Decisions*
-
-**Shared variable accumulator:**
-
-- Declared as module variable
-- Used to accumulate results
-
-**single construct:**
-
-- Starts the recursive integrator once
-- Implied barrier ensures all tasks are finished
-
-**Recursive subroutine:**
-
-- ``rec_eval_shared_update``
-
-
-*Implementation: Task Startup*
-
-.. code-block:: fortran
-
-    !$OMP task shared(accumulator) firstprivate(my_start, my_stop) &
-    !$OMP default(none) firstprivate(my_gen, u_err) &
-    !$OMP if(task_start)
-        call rec_eval_shared_update( &
-            my_start, 0.5_dpr * (my_start + my_stop), u_err, my_gen)
-    !$OMP end task
-    
-    !$OMP task shared(accumulator) firstprivate(my_start, my_stop) &
-    !$OMP default(none) firstprivate(my_gen, u_err) &
-    !$OMP if(task_start)
-        call rec_eval_shared_update( &
-            0.5_dpr * (my_start + my_stop), my_stop, u_err, my_gen)
-    !$OMP end task
-
-Recursion Strategy
-
-- Split interval in half
-- Create two tasks for sub-intervals
-- Each task may recursively subdivide further
-
-
-*Implementation: Result Accumulation*
-
-Three Approaches
-
-**1. Shared variable with atomic update:**
-
-.. code-block:: fortran
-
-    !$omp atomic update
-    accumulator = accumulator + contribution
-
-**2. Threadprivate variables:**
-
-- Thread executing task adds to its threadprivate copy
-- After barrier (implied in ``end single``): atomic update of threadprivate data into shared variable
-
-**Remarks:**
+         !$omp atomic update
+         accumulator = accumulator + contribution
 
 .. warning::
-   Be careful with threadprivate and task scheduling points!
-   
-   - Value can be changed after scheduling point
-   - threadprivate isn't private to the task
 
-**OpenMP 5.0:**
+   For threadprivate accumulation, ensure correctness across task scheduling and synchronization points. Threadprivate state must not be confused with task-private state.
 
-OpenMP 5.0 has reduction constructs for tasks.
-
-
-*Test Function*
-
-Mathematical Function
+**Test function**
 
 .. math::
 
    f(x) = \sin^2(10000x) \cdot \sin^4(x)
 
-Properties
+The oscillatory function motivates localized refinement.
 
-- Highly oscillatory (due to sin(10000x) term)
-- Requires adaptive refinement
-- Samples more densely where function varies rapidly
-
-Sampling Pattern
-
-The integrator samples most densely where the function oscillates most rapidly, demonstrating the effectiveness of adaptive refinement.
-
-*Performance Results: Integrator*
-
-Configuration
-
-- Task started every 5th generation
-- Two accumulation strategies tested
+**Original performance setup:** Tasks started every fifth generation, comparing two accumulation strategies. The original measurements found high overhead for millions of atomic updates and better scaling for threadprivate accumulation, up to 128 cores.
 
 .. figure:: img/perf-res.png
-    :align: center
-    :scale: 90%
-
-----
-
-
-*Key Findings*
-
-
-**Atomic updates:**
-
-- Poor results (millions of atomic operations)
-
-**Threadprivate accumulation:**
-
-- Satisfactory results
-- Efficient utilization of up to 128 cores
-
-
-*Compiler Comparison: Integrator*
-
+   :align: center
+   :scale: 90%
 
 .. note::
-   GCC shows inferior scalability beyond 20 cores compared to Intel compiler.
 
-
+   In the original benchmark, GCC scaled less effectively than Intel's compiler beyond approximately 20 cores. These are historical performance observations.
 
 Task Dependencies (OpenMP 4.0)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------
 
-Declare explicit dependencies between tasks to control execution order.
+Task dependences express ordering constraints between sibling tasks. ``depend(in: ...)`` waits for earlier siblings writing matching storage, whereas ``depend(out: ...)`` and ``depend(inout: ...)`` also order writers against preceding readers and writers. Array sections may appear as list items.
 
-Syntax
+**Dependency clause syntax**
 
-**Fortran:**
+.. tabs::
 
-.. code-block:: fortran
+   .. tab:: C/C++
 
-    !$omp task depend(type : list)
+      .. code-block:: c
 
-**C:**
+         #pragma omp task depend(in: a)
+         use_value(a);
 
-.. code-block:: c
+   .. tab:: Fortran
 
-    #pragma omp task depend(type : list)
+      .. code-block:: fortran
 
-*Dependency Types*
+         !$omp task depend(in: a)
+             call use_value(a)
+         !$omp end task
 
-**in:**
+**Task dependency example**
 
-- Task depends on all previous siblings with ``out`` or ``inout`` dependency on one or more list items
+.. tabs::
 
-**out, inout:**
+   .. tab:: C/C++
 
-- Task depends on all previous siblings with ``in``, ``out``, or ``inout`` dependency on one or more list items
+      .. code-block:: c
 
-*List Format*
+         #pragma omp task depend(out: a)
+         task_function_1(&a);
+         #pragma omp task depend(in: a)
+         task_function_2(a);
+         #pragma omp task depend(in: a)
+         task_function_3(a);
 
-The list contains variables, which may include array sections.
+   .. tab:: Fortran
 
+      .. code-block:: fortran
 
-*Example: Task Dependencies*
+         !$omp task depend(out: a)
+             call task_function_1(a)
+         !$omp end task
+         !$omp task depend(in: a)
+             call task_function_2(a)
+         !$omp end task
+         !$omp task depend(in: a)
+             call task_function_3(a)
+         !$omp end task
 
-.. code-block:: c
-
-    #pragma omp task depend(out: a)
-    task_function_1(&a);
-    
-    #pragma omp task depend(in: a)
-    task_function_2(a);
-    
-    #pragma omp task depend(in: a)
-    task_function_3(a);
-
-*Execution Order*
-
-1. **Wait** for ``task_function_1`` to finish (it writes ``a``)
-2. **Then execute** ``task_function_2`` and ``task_function_3`` in any order on any thread (both read ``a``)
-
-*Benefits*
-
-- Explicit control over task ordering
-- Runtime can optimize scheduling within dependency constraints
-- More flexible than barriers
+First, the task writing ``a`` completes; afterward, the two tasks reading ``a`` may proceed in parallel. This permits more flexible scheduling than a whole-team barrier.
 
 .. challenge::
 
@@ -1995,50 +1687,41 @@ The list contains variables, which may include array sections.
 
         // On cluster Kebnekaise
         // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 14-lifecycle-task-openmp.c -lm 
+        // export OMP_NUM_THREADS=1
+        // gcc -O3 -march=native -fopenmp -o test.x 14-lifecycle-task-openmp.c -lm
         #include <stdio.h>
         #include <omp.h>
-
         int taskA(int *a) {
             *a += 1;
             printf("Executing taskA, a=%d\n",*a);
         }
-
         int taskB(int *a, int *b) {
             *a += 1;
             *b += 1;
             printf("Executing taskB, a=%d  b=%d\n", *a,*b);
         }
-
         int taskC(int *a, int *b, int *c) {
             *a += 1;
             *b += 1;
             *c += 1;
             printf("Executing taskC, a=%d  b=%d  c=%d\n",*a,*b,*c);
         }
-
         int main() {
-
             int a = 0;
             int b = 0;
             int c = 0;
-
             #pragma omp parallel
             {
                 #pragma omp single
                 {
                     #pragma omp task depend(out : a)
                     taskA(&a);  // taskA runs independently
-
                     #pragma omp task depend(in : a) depend(out : b)
                     taskB(&a,&b);  // taskB is suspended until taskA completes
-                                // when dependencies are satisfied the task is resumed 
+                                // when dependencies are satisfied the task is resumed
                                 // and is ready to continue
-
                     #pragma omp task depend(in : b)
                     taskC(&a,&b,&c);  // taskC is suspended until taskB completes
-        
                 }
             }
             return 0;
@@ -2046,11 +1729,13 @@ The list contains variables, which may include array sections.
 
 .. challenge::
 
-    In the previous implementation of the Fibonacci generator code, we noticed that the values of 
-    Fibonacci numbers are computed several times during recursion. This situation can be avoided by using
-    task dependencies, as in the following graph which shows the dependencies that we can create explicitl
-    for the Fibonacci number 6:  
+    In the previous implementation of the Fibonacci generator code, we noticed that the values of
 
+    Fibonacci numbers are computed several times during recursion. This situation can be avoided by using
+
+    task dependencies, as in the following graph which shows the dependencies that we can create explicitl
+
+    for the Fibonacci number 6:
 
     .. code-block:: text
 
@@ -2068,21 +1753,18 @@ The list contains variables, which may include array sections.
                    v                            v
                 fib[3]                        fib[2]
                 depends on fib[2] and fib[1]   depends on fib[1] and fib[0]
-                |  \                               |          \
+                \|  \                               |          \
                 v   v                              v           v
             fib[2] fib[1]                     fib[1]       fib[0]
             depends on fib[1] and fib[0]
-            |  \
+            \|  \
             v   v
             fib[1] fib[0]
-
-
         Base values:
         fib[1] = 1
         fib[0] = 0
 
     Write a code for the Fibonacci numbers generator but now using task dependencies.
-
 .. solution::
 
     .. code-block:: c
@@ -2090,16 +1772,14 @@ The list contains variables, which may include array sections.
 
         // On cluster Kebnekaise
         // ml foss
-        // export OMP_NUM_THREADS=4 
-        // gcc -O3 -march=native -fopenmp -o test.x fibonacci_task_dependencies.c -lm 
+        // export OMP_NUM_THREADS=4
+        // gcc -O3 -march=native -fopenmp -o test.x fibonacci_task_dependencies.c -lm
         #include <stdio.h>
         #include <stdlib.h>
         #include <omp.h>
-
         int main(int argc, char* argv[]) {
             int n = (argc > 1) ? atoi(argv[1]) : 40;
             unsigned long long *fib = malloc((n+1) * sizeof(unsigned long long));
-
             #pragma omp parallel
             {
                 #pragma omp single
@@ -2107,10 +1787,8 @@ The list contains variables, which may include array sections.
                     // Base cases
                     #pragma omp task depend(out: fib[0])
                     { fib[0] = 0; }
-
                     #pragma omp task depend(out: fib[1])
                     { fib[1] = 1; }
-
                     // Create tasks for F(2) .. F(n)
                     for (int i = 2; i <= n; i++) {
                         #pragma omp task depend(in: fib[i-1], fib[i-2]) depend(out: fib[i])
@@ -2118,78 +1796,47 @@ The list contains variables, which may include array sections.
                             fib[i] = fib[i-1] + fib[i-2];
                         }
                     }
-
                     // Wait until fib[n] is available
                     #pragma omp taskwait
                     printf("fib(%d) = %llu\n", n, fib[n]);
                 }
             }
-
             free(fib);
             return 0;
         }
 
-
-
-
 taskloop Construct (OpenMP 4.5)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------
 
-The ``taskloop`` construct distributes loop iterations onto tasks.
+The ``taskloop`` construct partitions iterations into tasks rather than assigning iterations directly to threads as ``omp for`` or ``omp do`` does. Unless ``nogroup`` is present, it implies a ``taskgroup`` that waits for the generated loop tasks.
 
-*Similarity*
+**Basic taskloop syntax**
 
-Similar to the loop construct (``omp for``/``omp do``), but creates tasks instead of directly distributing iterations.
+.. tabs::
 
-*Default Behavior*
+   .. tab:: C/C++
 
-By default, ``taskloop`` implies a ``taskgroup``.
+      .. code-block:: c
 
-**taskloop: Basic Syntax**
+         #pragma omp taskloop shared(a) firstprivate(n)
+         for (int i = 0; i < n; i++) {
+             a[i] = expensive_function(i);
+         }
 
-*Fortran*
+   .. tab:: Fortran
 
-.. code-block:: fortran
+      .. code-block:: fortran
 
-    !$OMP taskloop default(none) shared(…) private(…)
-    do i = 1, N
-        ...
-    enddo
-
-*C*
-
-.. code-block:: c
-
-    #pragma omp taskloop default(none) shared(…) private(…)
-    for (i = 0; i < N; i++)
-    {
-        ...
-    }
-
+         !$omp taskloop shared(a) firstprivate(n)
+         do i = 1, n
+             a(i) = expensive_function(i)
+         end do
+         !$omp end taskloop
 
 Clauses for taskloop
-^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~
 
-*Standard Clauses*
-
-Clauses introduced previously that work with ``taskloop``:
-
-- ``if(scalar-expr)``
-- ``shared``
-- ``private``
-- ``firstprivate``
-- ``lastprivate``
-- ``default``
-- ``collapse``
-- ``final(scalar-expr)``
-
-*Important Differences*
-
-.. warning::
-   - **No** ``reduction`` clause for taskloop
-   - Use ``nogroup`` clause to remove the implied ``taskgroup``
-
-*Additional Construct*
+Clauses include ``if``, ``shared``, ``private``, ``firstprivate``, ``lastprivate``, ``default``, ``collapse``, ``final``, ``nogroup``, ``grainsize`` and ``num_tasks``. Modern OpenMP versions also support ``reduction`` on ``taskloop``; this was **not** supported by the original course's older OpenMP-version notes. ``in_reduction`` is also available in appropriate contexts.
 
 There is also a ``taskloop simd`` construct for vectorization.
 
@@ -2202,18 +1849,15 @@ There is also a ``taskloop simd`` construct for vectorization.
 
         // On cluster Kebnekaise
         // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 20a-taskloop-openmp.c -lm 
+        // export OMP_NUM_THREADS=1
+        // gcc -O3 -march=native -fopenmp -o test.x 20a-taskloop-openmp.c -lm
         #include <stdio.h>
         #include <omp.h>
-
         void process_iteration(int i) {
             printf("Processing iteration %d in thread %d\n", i, omp_get_thread_num());
         }
-
         int main() {
             int n = 10; // Number of iterations
-
             #pragma omp parallel
             {
                 // Use taskloop to distribute iterations as tasks
@@ -2225,7 +1869,6 @@ There is also a ``taskloop simd`` construct for vectorization.
                     }
                 }
             }
-
             return 0;
         }
 
@@ -2238,63 +1881,79 @@ There is also a ``taskloop simd`` construct for vectorization.
 
         // On cluster Kebnekaise
         // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 20b-taskloop-openmp.c -lm 
+        // export OMP_NUM_THREADS=1
+        // gcc -O3 -march=native -fopenmp -o test.x 20b-taskloop-openmp.c -lm
         #include <stdio.h>
         #include <omp.h>
-
         int main() {
             int n = 2000; // Number of iterations
             int sumR = 0; // Summation
-            #pragma omp parallel shared(sumR) 
+            #pragma omp parallel shared(sumR)
             {
                 // Use taskloop to distribute iterations as tasks
                 #pragma omp single
                 {
                     #pragma omp taskloop
                     for (int i = 0; i < n; i++) {
-                        #pragma omp atomic 
+                        #pragma omp atomic
                         sumR +=1;
                     }
                 }
             }
-
             printf("Total summation = %d \n", sumR);
-
             return 0;
         }
 
+Controlling the Number of Tasks Created
+---------------------------------------
 
-Controlling Number of Tasks Created
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Task granularity is a balance between parallelism and overhead. ``grainsize`` and ``num_tasks`` are alternative clauses and cannot be used together on the same ``taskloop``.
 
-Control the granularity of task creation to balance parallelism and overhead.
+**grainsize**
 
-*Clauses*
+.. tabs::
 
-Use ``grainsize`` **or** ``num_tasks`` (only one allowed):
+   .. tab:: C/C++
 
-*grainsize Clause*
+      .. code-block:: c
 
-.. code-block:: fortran
+         #pragma omp taskloop grainsize(100)
+         for (int i = 0; i < n; ++i) work(i);
 
-    !$omp taskloop grainsize(100)
+   .. tab:: Fortran
 
-Controls number of loop iterations per task:
+      .. code-block:: fortran
 
-- Each task gets between ``grainsize`` and ``2*grainsize`` iterations
+         !$omp taskloop grainsize(100)
+         do i = 1, n
+             call work(i)
+         end do
+         !$omp end taskloop
 
-*num_tasks Clause*
+``grainsize`` controls the number of iterations assigned to each generated task, generally between the specified grain size and twice that size, subject to the final partition.
 
-.. code-block:: fortran
+**num_tasks**
 
-    !$omp taskloop num_tasks(10)
+.. tabs::
 
-Specifies the number of tasks to create.
+   .. tab:: C/C++
 
-*Additional Restrictions*
+      .. code-block:: c
 
-Final number of tasks may be affected by iteration count and other factors.
+         #pragma omp taskloop num_tasks(10)
+         for (int i = 0; i < n; ++i) work(i);
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         !$omp taskloop num_tasks(10)
+         do i = 1, n
+             call work(i)
+         end do
+         !$omp end taskloop
+
+``num_tasks`` requests approximately the specified number of tasks; the actual partitioning depends on the iteration count and runtime rules.
 
 
 
