@@ -124,66 +124,81 @@ OpenMP is based on compiler directives that control parallel execution.
 - OpenMP also facilitates conditional compilation
 
 
+.. tabs::
 
-**OpenMP Directives in Fortran**
+   .. tab:: C/C++
 
+      **OpenMP Directives in C/C++**
 
-*Free Format*
+      OpenMP directives in C/C++ use the following syntax:
 
+      .. code-block:: c
 
-.. code-block:: fortran
+         #pragma omp directive_name [clause ...]
 
-    !$omp directive_name [clause […]]
+      **Line Continuation**
 
-*Fixed Format*
+      Use a backslash (``\``) for line continuation.
 
-Directives always start in column 1:
+      For example:
 
-.. code-block:: fortran
+      .. code-block:: c
 
-    !$omp directive_name [clause […]]
-    c$omp directive_name [clause […]]
-    *$omp directive_name [clause […]]
-
-The first piece (e.g., ``!$omp``) is called the **sentinel**.
-
-**Line Continuation**
+         #pragma omp parallel \
+             shared(a,b)
 
 
-*Free format example:*
+   .. tab:: Fortran
 
-.. code-block:: fortran
+      **OpenMP Directives in Fortran**
 
-    !$omp parallel do &
-    !$omp shared(a,b)
+      *Free Format*
 
-*Fixed format example:*
+      .. code-block:: fortran
 
-.. code-block:: fortran
+         !$omp directive_name [clause ...]
 
-    c$omp parallel do
-    c$ompa shared(a,b)
-    c$ompb schedule(dynamic)
+      *Fixed Format*
 
-.. note::
-   A non-blank character in column 6 marks a continuation line.
+      Directives always start in column 1:
+
+      .. code-block:: fortran
+
+         !$omp directive_name [clause ...]
+         c$omp directive_name [clause ...]
+         *$omp directive_name [clause ...]
+
+      The first piece (e.g., ``!$omp``) is called
+      the **sentinel**.
+
+      **Line Continuation**
+
+      *Free format example:*
+
+      .. code-block:: fortran
+
+         !$omp parallel do &
+         !$omp shared(a,b)
+
+      *Fixed format example:*
+
+      .. code-block:: fortran
+
+         c$omp parallel do
+         c$ompa shared(a,b)
+         c$ompb schedule(dynamic)
+
+      .. note::
+
+         A non-blank character in column 6 marks
+         a continuation line.
 
 
-**OpenMP Directives in C/C++**
+**Directive components**
 
+- **Directive name:** Specifies the action.
+- **Clause(s):** Allow further specification.
 
-.. code-block:: c
-
-    #pragma omp directive_name [clause […]]
-
-**Line Continuation**
-
-
-Use backslash ``\`` for line continuation.
-
-
-- **Directive name:** Specifies the action
-- **Clause(s):** Allow further specification
 
 
 Library Functions
