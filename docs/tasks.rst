@@ -158,7 +158,8 @@ If a variable is shared by all implicit tasks in the current team, the variable 
 
 The encountering thread performs block 1, generates a task for block 2, and eventually executes block 3. It may execute or defer block 2; neither the executing thread nor the completion time of block 2 is generally fixed.
 
-.. challenge::
+.. dropdown:: Challenge: Hello World
+   :color: warning
 
     Use two tasks where each prints out *Hello* and *World* strings. Use 4 threads.
 
@@ -270,7 +271,8 @@ The original variable belongs to the enclosing shared data environment, so tasks
 
 Here each generated task starts with its own copy of ``number``. With ``firstprivate`` the value is captured at task creation; all tasks print the initial value 1 (the order of output may vary).
 
-.. challenge::
+.. dropdown:: Challenge: Types of variables
+   :color: warning
 
     Replace the *fixme* strings with the types of the variables in the code when the defaults are used.
     (Exercise inspired in an example of `Christian Terboven <https://hpc-wiki.info/hpc/OpenMP_in_Small_Bites>`_).
@@ -459,7 +461,9 @@ The ``nowait`` clause removes the implicit barrier at the end of ``single``; the
         I am thread no. 0.
         I am thread no. 9.
 
-.. challenge::
+
+.. dropdown:: Challenge: Behavior of variables
+   :color: warning
 
     Inspect and run the following code to see the behavior of shared, private, and first private variables in the context of tasks.
     Notice that one can use **atomic updates** together with tasks.
@@ -503,7 +507,9 @@ The ``nowait`` clause removes the implicit barrier at the end of ``single``; the
             return 0;
         }
 
-.. challenge::
+
+.. dropdown:: Challenge: Behavior of variables in tasks
+   :color: warning
 
     Inspect and run the following code to see the behavior of first private variables in the context of tasks.
 
@@ -610,7 +616,8 @@ A ``taskyield`` is a task scheduling point at which the runtime *may* suspend th
 
 This can be useful when a task waits for resources, although it must not be relied on to provide progress or to fix incorrect locking.
 
-.. challenge::
+.. dropdown:: Challenge: taskyield behavior
+   :color: warning
 
     Inspect and run the following code to see the behavior of *taskyield* in the context of tasks.
 
@@ -836,7 +843,9 @@ A ``taskwait`` waits for direct child tasks. A ``barrier`` requires all particip
 
 Every task printing ``Hello.`` must complete before any thread passes the barrier to generate a ``Goodbye.`` task.
 
-.. challenge::
+
+.. dropdown:: Challenge: taskwait and barrier
+   :color: warning
 
     Inspect and run the following code to see the behavior of *taskwait* and *barrier* in the context of tasks.
 
@@ -948,7 +957,9 @@ With the ``if`` clause on a task construct, a false condition generates an **und
              call process(level)
          !$omp end task
 
-.. challenge::
+
+.. dropdown:: Challenge: if clause
+   :color: warning
 
     Inspect and run the following code to see the behavior of *if* clause in the context of tasks.
 
@@ -1017,7 +1028,9 @@ The ``final`` clause marks the generated task as final if its expression is true
              call process(level)
          !$omp end task
 
-.. challenge::
+
+.. dropdown:: Challenge: final clause
+   :color: warning
 
     Inspect and run the following code to see the behavior of *final* clause in the context of tasks.
 
@@ -1090,7 +1103,9 @@ A task may be declared ``mergeable``. If it is undeferred or included, the imple
              call process()
          !$omp end task
 
-.. challenge::
+
+.. dropdown:: Challenge: mergeable clause
+   :color: warning
 
     Inspect and run the following code to see the behavior of *mergeable* clause in the context of tasks.
 
@@ -1674,7 +1689,8 @@ Task dependences express ordering constraints between sibling tasks. ``depend(in
 
 First, the task writing ``a`` completes; afterward, the two tasks reading ``a`` may proceed in parallel. This permits more flexible scheduling than a whole-team barrier.
 
-.. challenge::
+.. dropdown:: Challenge: behavior of dependencies
+   :color: warning
 
     Inspect and run the following code to see the behavior of dependencies in the context of tasks.
 
@@ -1834,7 +1850,8 @@ Clauses include ``if``, ``shared``, ``private``, ``firstprivate``, ``lastprivate
 
 There is also a ``taskloop simd`` construct for vectorization.
 
-.. challenge::
+.. dropdown:: Challenge: taksloop
+   :color: warning
 
     Inspect and run the following code to see the behavior of *taskloop* in the context of tasks.
 
@@ -1866,7 +1883,8 @@ There is also a ``taskloop simd`` construct for vectorization.
             return 0;
         }
 
-.. challenge::
+.. dropdown:: Challenge: taskloop 
+   :color: warning
 
     Inspect and run the following code to see the behavior of *taskloop* in the context of tasks.
 
