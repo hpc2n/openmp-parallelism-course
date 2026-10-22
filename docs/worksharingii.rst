@@ -12,913 +12,761 @@ More on Worksharing
     - Orphan directives
 
 
-
 Work for Single Threads
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
-**Single Construct**
+The ``single`` Construct
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``single`` construct is a worksharing construct placed inside a parallel region.
+The ``single`` construct is a worksharing construct placed inside a parallel
+region. Exactly one thread, not necessarily thread 0, executes its block.
 
-As the name suggests, a single thread executes the region.
+- The executing thread is not specified.
+- Other threads wait at an implicit barrier at the end, unless ``nowait`` is used.
+- It is useful for operations that should be performed only once: updating
+  shared metadata, performing one I/O operation, or creating tasks.
 
-- **Not specified** which thread executes the region
-- Other threads wait at an implicit barrier at the end
-- Useful for operations that should be done only once
+**Example: initializing a shared value once**
 
-*Use Cases*
+.. tabs::
 
-**Guard when writing to shared variables:**
+   .. tab:: C/C++
 
-- Enforcing a single write
+      .. code-block:: c
 
-**Guard I/O operations:**
+         #pragma omp parallel shared(a, b, n)
+         {
+             #pragma omp single
+             {
+                 a = omp_get_num_threads();
+             }  // implicit barrier
 
-- Writing to stdout or file (single write)
-- Reading from stdin or file (data read once)
+             #pragma omp for
+             for (int i = 0; i < n; i++)
+                 b[i] = a;
+         }
 
-**Starting tasks:**
+   .. tab:: Fortran
 
-- Task creation (covered later in course)
+      .. code-block:: fortran
 
+         !$omp parallel shared(a, b, n) private(i)
+             !$omp single
+                 a = omp_get_num_threads()
+             !$omp end single  ! implicit barrier
 
-
-*Example: single Construct (Fortran)*
-
-
-.. code-block:: fortran
-
-    !$omp parallel shared(a, b, n) private(i)
-        !$omp single
-        a = omp_get_num_threads()
-        !$omp end single  ! implied barrier, required!
-        
-        !$omp do
-        do i = 1, n
-            b(i) = a
-        enddo
-    !$omp end parallel
-
-.. note::
-   The barrier after ``single`` ensures that ``a`` is set before any thread uses it in the loop.
-
-
-
-*Example: single Construct (C)*
-
-
-.. code-block:: c
-
-    #pragma omp parallel shared(a, b, n) private(i)
-    {
-        #pragma omp single
-        {
-            a = omp_get_num_threads();
-        }  // implied barrier, required!
-        
-        #pragma omp for
-        for (i = 0; i < n; i++)
-            b[i] = a;
-    }
+             !$omp do
+             do i = 1, n
+                 b(i) = a
+             end do
+         !$omp end parallel
 
 .. note::
-   The barrier after ``single`` ensures that ``a`` is set before any thread uses it in the loop.
 
+   The implicit barrier after ``single`` ensures that ``a`` has been set
+   before threads enter the following worksharing loop. Do not add ``nowait``
+   here without another suitable synchronization mechanism.
 
+The ``master`` and ``masked`` Constructs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Master Construct**
+Unlike ``single``, ``master`` assigns the work to the primary thread
+(thread 0) and has **no implicit barrier**. This avoids the barrier overhead
+when synchronization is unnecessary. ``master`` is deprecated as of OpenMP
+5.1; ``masked`` without a ``filter`` clause is its modern counterpart.
 
+.. tabs::
 
-Similar to ``single``, but with specific differences.
+   .. tab:: C/C++
 
-*Key Differences from single*
+      .. code-block:: c
 
-**Execution:**
+         #pragma omp parallel
+         {
+             #pragma omp masked
+             {
+                 /* Executed by the primary thread only. */
+             }
+             /* No implicit barrier after masked. */
+         }
 
-- Work is always done on the master thread (thread 0)
-- Deterministic behavior
+      Older OpenMP code may instead use ``#pragma omp master``.
 
-**Synchronization:**
+   .. tab:: Fortran
 
-- **No** implied barrier/synchronization
-- More lightweight than ``single`` if barrier is not needed
+      .. code-block:: fortran
 
-*When to Use*
+         !$omp parallel
+             !$omp masked
+                 ! Executed by the primary thread only.
+             !$omp end masked
+             ! No implicit barrier after masked.
+         !$omp end parallel
 
-Use ``master`` when:
-
-- You specifically need thread 0 to do the work
-- You don't need synchronization afterward
-- Performance is critical and barrier overhead should be avoided
-
-
-
-**Ordered Construct**
-
-
-
-Execute part of a loop body in sequential order.
-
-.. warning::
-   Significant performance penalty! Requires enough other parallel work to pay the overhead.
-
-*How It Works*
-
-1. Thread working on first iteration enters the ordered region, others wait
-2. When done, thread for second iteration enters
-3. And so on, in sequential order
-
-*Requirements*
-
-- ``ordered`` clause must also be specified on the loop construct (``omp for``/``omp do``)
-- No more than one ``ordered`` region per thread and iteration
-
-*Use Cases*
-
-- Ordered printing from parallel loops
-- Debugging (e.g., data races)
-
-
-
-*Example: Ordered Construct*
-
-.. code-block:: c
-
-    #pragma omp parallel default(none) shared(b)
-    {
-        #pragma omp for ordered schedule(dynamic, 1)
-        for (int i = 0; i < PSIZE; i++)
-        {
-            b[i] = expensiveFunction(i);
-            
-            #pragma omp ordered
-            printf("b[%3i] = %4i\n", i, b[i]);
-        }
-    }
-
-
-
-- The computation ``expensiveFunction(i)`` happens in parallel
-- The ``printf`` statements execute in sequential order (i=0, 1, 2, ...)
-- This ensures ordered output despite parallel execution
-
-
-
-Clauses for Parallel Construct
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-**if Clause**
-
-The ``if`` clause can be specified on the ``parallel`` construct.
-
-
-
-If the condition evaluates to false:
-
-- No parallel region is started
-- Code executes serially
-- Useful for runtime evaluation (e.g., loop count too small to benefit from parallelization)
-
-*Syntax*
-
-.. code-block:: fortran
-
-    !$omp parallel if (condition)
-
-.. code-block:: c
-
-    #pragma omp parallel if (condition)
-
-
-
-*Example: if Clause (Fortran)*
-
-
-.. code-block:: fortran
-
-    integer :: n = 20
-    
-    !$omp parallel if (n > 5) shared(n)
-        !$omp single
-        print *, "The n is: ", n
-        !$omp end single
-        
-        print *, "Hello, I am thread", &
-                 omp_get_thread_num(), " of", &
-                 omp_get_num_threads()
-    !$omp end parallel
-
-
-
-- If ``n > 5``: parallel region with multiple threads
-- If ``n <= 5``: serial execution with single thread
-
-
-
-*Example: if Clause (C)*
-
-.. code-block:: c
-
-    int n = 20;
-    
-    #pragma omp parallel if (n > 5) shared(n)
-    {
-        #pragma omp single
-        printf("The n is %i\n", n);
-        
-        printf("Hello, I am thread %i of %i\n",
-               omp_get_thread_num(),
-               omp_get_num_threads());
-    }
-
-
-
-- If ``n > 5``: parallel region with multiple threads
-- If ``n <= 5``: serial execution with single thread
-
-
-
-Clause: num_threads
-^^^^^^^^^^^^^^^^^^^
-
-
-The ``num_threads`` clause specifies the number of threads to start in a parallel region.
-
-*Syntax*
-
-**C:**
-
-.. code-block:: c
-
-    int nthread = 3;
-    #pragma omp parallel num_threads(nthread)
-
-**Fortran:**
-
-.. code-block:: fortran
-
-    integer :: nthread = 3
-    !$omp parallel num_threads(nthread)
+      Older OpenMP code may instead use ``!$omp master`` / ``!$omp end master``.
 
 .. note::
-   This overrides the default thread count and environment variables for this specific parallel region.
 
+   The ``masked`` examples require a compiler supporting OpenMP 5.1 or later.
+   Keep ``master`` if your HPC compiler only implements an older version.
 
-
-Keeping Memory Consistent
+The ``ordered`` Construct
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*OpenMP: Relaxed Memory Model*
-
-OpenMP uses a relaxed memory model for performance.
-
-Threads are allowed to have their "own temporary view" of memory:
-
-- Not required to be consistent with main memory
-- Data may be in registers or cache, invisible to other threads
-
-**Programmer Responsibility**
-
-.. important::
-   This is a "may be" for the hardware, but the programmer must assume it is (for portability).
-
-*Scope for Data Races*
-
-Without proper synchronization:
-
-- Memory modified by other threads may not be in temporary view
-- Own changes may not be visible to other threads
-
-
-
-Ensuring Memory Consistency: flush
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Use ``flush`` to ensure memory consistency across threads.
-
-*What flush Does*
-
-**Writes modifications to memory:**
-
-- Modifications in temporary view are written to memory system
-- Guaranteed to be visible to other threads
-
-**Discards temporary view:**
-
-- Temporary view gets discarded
-- Next access needs to read from memory subsystem
-- Ensures modifications from other threads are "known"
-
-**Prevents reordering:**
-
-- No reordering of memory access and flush
-
-
-
-*Example: Without flush (Problem)*
-
-
-.. code-block:: fortran
-
-    integer :: i
-    integer, dimension(4) :: b
-    b = (/ 3, 4, 5, 6 /)
-    
-    !$OMP parallel &
-    !$OMP shared(b), private(i)
-        i = omp_get_thread_num() + 1
-        b(i) = b(i) + i
-        b(i+1) = b(i+1) + 1
-    !$OMP end parallel
-
-*Memory Behavior (3 threads)*
-
-.. code-block:: text
-
-    Initial:     [3, 4, 5, 6]
-    
-    Thread 0: i=1
-      b(1) = 3 + 1 = 4
-      b(2) = 4 + 1 = 5    (but may read stale value!)
-    
-    Thread 1: i=2
-      b(2) = 4 + 2 = 6    (conflict!)
-      b(3) = 5 + 1 = 6
-    
-    Thread 2: i=3
-      b(3) = 5 + 3 = 8    (conflict!)
-      b(4) = 6 + 1 = 7
-    
-    Result: [4, 6, 8, 7]  ← Not what we want!
+An ``ordered`` region enforces sequential iteration order for a portion of
+an otherwise parallel loop. The enclosing worksharing loop needs an
+``ordered`` clause. The expensive calculation can run in parallel, while
+output is produced in the original iteration order. In this simple form,
+there must not be more than one ordered region associated with each loop
+iteration.
 
 .. warning::
-   Without synchronization, threads may read stale values and overwrite each other's changes.
 
+   Ordering can be expensive. Use it only for the part of the computation
+   that truly must follow the iteration order.
 
+**Example: ordered output from a parallel calculation**
 
-*Example: With barrier (Solution)*
+.. tabs::
 
-.. code-block:: fortran
+   .. tab:: C/C++
 
-    integer :: i
-    integer, dimension(4) :: b
-    b = (/ 3, 4, 5, 6 /)
-    
-    !$OMP parallel &
-    !$OMP shared(b), private(i)
-        i = omp_get_thread_num() + 1
-        b(i) = b(i) + i
-        !$OMP barrier
-        b(i+1) = b(i+1) + 1
-    !$OMP end parallel
+      .. code-block:: c
 
-*Memory Behavior (3 threads)*
+         #pragma omp parallel for ordered schedule(dynamic, 1)
+         for (int i = 0; i < PSIZE; i++) {
+             b[i] = expensiveFunction(i);
+             #pragma omp ordered
+             {
+                 printf("b[%3i] = %4i\n", i, b[i]);
+             }
+         }
 
-.. code-block:: text
+   .. tab:: Fortran
 
-    Initial:     [3, 4, 5, 6]
-    
-    Phase 1 (before barrier):
-      Thread 0: b(1) = 4
-      Thread 1: b(2) = 6
-      Thread 2: b(3) = 8
-    
-    Result after phase 1: [4, 6, 8, 6]
-    
-    BARRIER (flush to memory)
-    
-    Phase 2 (after barrier):
-      Thread 0: b(2) = 6 + 1 = 7
-      Thread 1: b(3) = 8 + 1 = 9
-      Thread 2: b(4) = 6 + 1 = 7
-    
-    Final result: [4, 7, 9, 7]  ← Correct!
+      .. code-block:: fortran
 
-.. note::
-   The barrier ensures all writes from phase 1 are visible before phase 2 begins.
+         !$omp parallel do ordered schedule(dynamic, 1)
+         do i = 1, PSIZE
+             b(i) = expensiveFunction(i)
+             !$omp ordered
+                 print *, "b(", i, ") = ", b(i)
+             !$omp end ordered
+         end do
+         !$omp end parallel do
 
+The calls to ``expensiveFunction`` can execute concurrently; the print
+statements execute in increasing iteration order. ``ordered`` is not a
+substitute for protecting arbitrary shared-variable updates.
 
+Clauses for the Parallel Construct
+----------------------------------
 
-**Sequence Required for Data Visibility**
-
-For data to be visible on another thread, the following sequence is required:
-
-1. **First thread writes** to shared memory
-2. **First thread flush** - change goes into memory system
-3. **Second thread flush** - discard local temporary view
-4. **Second thread reads** - gets updated value from memory
-
-*Important Notes*
-
-.. important::
-   - A flush doesn't "push" data to other threads
-   - Fixing data races typically also requires synchronization
-   - Implied flushes are often sufficient
-
-*Explicit Flush*
-
-You can issue an explicit flush:
-
-**Fortran:**
-
-.. code-block:: fortran
-
-    !$OMP flush
-
-**C:**
-
-.. code-block:: c
-
-    #pragma omp flush
-
-
-
-*Implicit Barriers and Data Flushes*
-
-OpenMP automatically performs barriers and flushes at specific points.
-
-*Constructs with Barrier and Flush*
-
-**At barrier:**
-
-- ``!$omp barrier`` / ``#pragma omp barrier`` (flush)
-
-**Start and end of constructs:**
-
-- ``parallel`` region (barrier & flush)
-
-**Start and end:**
-
-- ``critical`` region (flush)
-- ``ordered`` region (flush)
-
-**End only:**
-
-- Loop constructs (``for``/``do``) (barrier & flush)
-- ``single`` (barrier & flush)
-- ``workshare`` (barrier & flush)
-- ``sections`` (barrier & flush)
-
-.. note::
-   **No barrier or flush at the start** of loop, single, workshare, or sections!
-
-**Other Operations**
-
-- Various locking operations (flush)
-- Start and end of ``atomic`` flushes "protected" variable
-  
-  - Use ``seq_cst`` on ``atomic`` to include "global" flush
-
-**No barrier or flush associated with master construct!**
-
-
-
-Memory Reorder: Out-of-Order Execution
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-*Problem Scenario*
-
-Consider this code:
-
-.. code-block:: fortran
-
-    ...
-    A(5) = 3.0
-    !$omp atomic write
-    matrix_set = 1
-    ...
-
-*Potential Problems*
-
-1. **No guarantee A(5) is in memory:**
-   
-   - Value might still be in registers/cache
-
-2. **No guarantee order is maintained:**
-   
-   - Optimizing compiler might reorder:
-   
-   .. code-block:: fortran
-   
-       matrix_set = 1
-       ...
-       A(5) = 3.0
-
-.. warning::
-   Another thread might see ``matrix_set = 1`` but read an old value of ``A(5)``!
-
-
-
-*Fix: Using flush to Prevent Reordering*
-
-
-.. code-block:: fortran
-
-    ...
-    A(5) = 3.0
-    !$omp flush
-    !$omp atomic write
-    matrix_set = 1
-    ...
-
-*What the flush Does*
-
-1. **Ensures modified A is in memory:**
-   
-   - All threads can see the updated value
-
-2. **Prohibits reordering of memory accesses:**
-   
-   - Compiler and hardware cannot move ``matrix_set = 1`` before the flush
-   - Guarantees ``A(5)`` is written before ``matrix_set`` is set
-
-
-
-Clause: nowait
-^^^^^^^^^^^^^^
-
-Barriers have performance implications. The implied barrier of a construct may not be required for correctness.
-
-*Removing Barriers*
-
-
-Specifying ``nowait``:
-
-- **In C:** on the construct itself
-- **In Fortran:** on the end construct directive
-
-This suppresses the implied barrier (including flush).
-
-*When to Use*
-
-Use ``nowait`` when:
-
-- Threads don't need to wait for each other
-- No data dependencies between constructs
-- You want to improve performance by allowing threads to continue immediately
-
-
-
-*Example: Tensor Product (C)*
-
-.. code-block:: c
-
-    #pragma omp parallel shared(a, b, t, n, m)
-    {
-        #pragma omp for nowait
-        for (int i = 0; i < n; i++)
-            a[i] = funcA(i);  // no barrier needed!
-        
-        #pragma omp for
-        for (int j = 0; j < m; j++)
-            b[j] = funcB(j);  // barrier needed!
-        
-        #pragma omp for
-        for (int i = 0; i < n; i++)
-            for (int j = 0; j < m; j++)
-                t[i][j] = a[i] * b[j];  // bad access to b!
-    }
-
-
-
-- First loop initializes ``a`` with ``nowait`` - threads can continue immediately
-- Second loop initializes ``b`` - implicit barrier ensures all threads finish before tensor product
-- Third loop uses both ``a`` and ``b`` - needs both to be complete
-
-
-
-*Example: Adding Vectors (Fortran)*
-
-.. code-block:: fortran
-
-    !$omp parallel shared(a, b, t, n)
-        !$omp do
-        do i = 1, n
-            a(i) = sin(real(i))
-        !$omp end do nowait  ! no barrier here!
-        
-        !$omp do
-        do j = 1, n
-            b(j) = cos(real(j))  ! barrier here!
-        
-        !$omp do
-        do i = 1, n
-            t(i) = a(i) + b(i)
-    !$omp end parallel
-
-.. note::
-   Demo code - a single loop would help performance.
-
-
-
-- First loop fills ``a`` - can proceed without waiting
-- Second loop fills ``b`` - implicit barrier before final loop
-- Third loop needs both ``a`` and ``b`` complete
-
-
-
-*Example: Adding Vectors (C)*
-
-.. code-block:: c
-
-    #pragma omp parallel shared(a, b, t, n)
-    {
-        #pragma omp for nowait
-        for (int i = 0; i < n; i++)
-            a[i] = sin((double)i);  // no barrier here!
-        
-        #pragma omp for
-        for (int j = 0; j < n; j++)
-            b[j] = cos((double)j);  // barrier needed!
-        
-        #pragma omp for
-        for (int i = 0; i < n; i++)
-            t[i] = a[i] + b[i];
-    }
-
-.. note::
-   Demo code - a single loop would help performance.
-
-
-
-- First loop fills ``a`` - can proceed without waiting
-- Second loop fills ``b`` - implicit barrier before final loop
-- Third loop needs both ``a`` and ``b`` complete
-
-
-
-**Performance Impact of nowait**
-
-Benchmark Setup
-
-
-**Hardware:**
-
-- Dual socket, quad-core Intel Xeon E5520 (2.26 GHz)
-
-**Compilers tested:**
-
-- PGI 10.9
-- GCC 4.4
-- Intel 12.0
-
-**Problem:**
-
-- Vector addition example with ``n = 1000``
-- Time measured in microseconds (μs)
-- Tested with 4, 6, and 8 threads
-
-Results
-
-
-.. code-block:: text
-
-    Threads    Savings from nowait
-    -------    -------------------
-    4-8        0.6 - 1.3 μs
-
-**Performance Chart**
-
-.. figure:: img/perf-nowait.png
-    :align: center
-    :scale: 70%
-
-----
-
-.. note::
-   Even small savings (0.6-1.3 μs) can add up in frequently executed code.
-
-
-
-Specialty of Static Schedule
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-When specifying a static schedule with:
-
-- Same iteration count
-- Same chunk size (or default)
-- Loops bound to same parallel region
-
-**Guarantee:**
-
-You can safely assume the same thread works on the same iteration in all loops.
-
-
-
-Can use ``nowait`` even with data dependencies between loops!
-
-.. important::
-   This only works with **static** scheduling. Other schedules don't guarantee iteration-to-thread mapping.
-
-
-
-*Example: Static Schedule with Dependencies (Fortran)*
-
-.. code-block:: fortran
-
-    !$omp parallel shared(a, b, t, n)
-        !$omp do schedule(static)
-        do i = 1, n
-            a(i) = sin(real(i))
-        !$omp end do nowait  ! no barrier here!
-        
-        !$omp do schedule(static)
-        do j = 1, n
-            b(j) = cos(real(j))
-        !$omp end do nowait  ! no barrier here!
-        
-        !$omp do schedule(static)
-        do i = 1, n
-            t(i) = a(i) + b(i)
-        !$omp end do nowait  ! no barrier here!
-    !$omp end parallel
-
-.. important::
-   The static schedule is crucial! Each thread processes the same indices in all three loops.
-
-
-
-*Example: Static Schedule with Dependencies (C)*
-
-.. code-block:: c
-
-    #pragma omp parallel shared(a, b, t, n)
-    {
-        #pragma omp for schedule(static) nowait
-        for (int i = 0; i < n; i++)
-            a[i] = sin((double)i);  // no barrier here!
-        
-        #pragma omp for schedule(static) nowait
-        for (int j = 0; j < n; j++)
-            b[j] = cos((double)j);  // no barrier here!
-        
-        #pragma omp for schedule(static)
-        for (int i = 0; i < n; i++)
-            t[i] = a[i] + b[i];
-    }
-
-.. important::
-   The static schedule is crucial! Each thread processes the same indices in all three loops.
-
-*Why This Works*
-
-With static scheduling:
-
-- Thread 0 always processes indices 0 to n/num_threads-1
-- Thread 1 always processes indices n/num_threads to 2*n/num_threads-1
-- And so on...
-
-Each thread only reads values it wrote, so no race conditions occur!
-
-
-
-Orphan Directives
+The ``if`` Clause
 ^^^^^^^^^^^^^^^^^
 
+The ``if`` clause controls whether a parallel construct uses multiple
+threads. If the expression evaluates to false, the parallel region is
+**serialized** and executes with one thread. This is useful when a workload
+is too small to benefit from parallel execution.
 
-"Orphan" directives are OpenMP directives that appear inside functions/subroutines called from within a parallel region, rather than directly inside the parallel region.
+.. tabs::
 
-*Thread Safety Assumption*
+   .. tab:: C/C++
 
-Calling subroutines and functions inside a parallel region is legal, assuming thread safety.
+      .. code-block:: c
 
-*What Can Be Orphaned*
+         int n = 20;
+         #pragma omp parallel if (n > 5) shared(n)
+         {
+             #pragma omp single
+             printf("The n is %i\n", n);
 
-The called procedures may contain:
+             printf("Hello, I am thread %i of %i\n",
+                    omp_get_thread_num(), omp_get_num_threads());
+         }
 
-- Worksharing constructs (``for``, ``do``, ``sections``)
-- Synchronization constructs (``barrier``, ``critical``, etc.)
+   .. tab:: Fortran
 
+      .. code-block:: fortran
 
-*Example: Orphan Directive (C)*
+         integer :: n = 20
+         !$omp parallel if (n > 5) shared(n)
+             !$omp single
+                 print *, "The n is:", n
+             !$omp end single
+             print *, "Hello, I am thread", omp_get_thread_num(), &
+                      "of", omp_get_num_threads()
+         !$omp end parallel
 
-Main Function
+- If ``n > 5``, the runtime may use multiple threads.
+- If ``n <= 5``, the region executes using a single thread.
 
+The ``num_threads`` Clause
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c
+The ``num_threads`` clause requests a team size for a particular parallel
+region; the actual number can also depend on runtime limits and settings.
+It takes precedence over the environment's default request for that region.
 
-    #pragma omp parallel shared(v, vl) reduction(+:nm)
-    {
-        vectorinit(v, vl);
-        nm = vectornorm(v, vl);
-    }
+.. tabs::
 
-Called Function with Orphan Directive
+   .. tab:: C/C++
 
+      .. code-block:: c
 
-.. code-block:: c
+         int nthread = 3;
+         #pragma omp parallel num_threads(nthread)
+         {
+             /* Work performed by the team. */
+         }
 
-    void vectorinit(double* vdata, int leng)
-    {
-        #pragma omp for
-        for (int i = 0; i < leng; i++)
-        {
-            vdata[i] = i;
-        }
-        return;
-    }
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         integer :: nthread = 3
+         !$omp parallel num_threads(nthread)
+             ! Work performed by the team.
+         !$omp end parallel
+
+Keeping Memory Consistent
+-------------------------
+
+The OpenMP Memory Model
+^^^^^^^^^^^^^^^^^^^^^^^
+
+OpenMP has a relaxed-consistency memory model. A thread may have a temporary
+view of shared variables, and access to shared memory may be reordered within
+the constraints of the memory model. Correct communication between threads
+requires suitable synchronization, such as barriers, critical regions, locks,
+or atomics with appropriate memory ordering.
+
+.. important::
+
+   Do not assume that a value written by one thread is immediately visible
+   to another. A plain ``flush`` is not a general substitute for mutual
+   exclusion or an ordering protocol.
+
+**Potential race with overlapping array updates**
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         int b[4] = {3, 4, 5, 6};
+         #pragma omp parallel num_threads(3) shared(b)
+         {
+             int i = omp_get_thread_num();  // 0, 1, 2
+             b[i]   = b[i] + (i + 1);
+             b[i+1] = b[i+1] + 1;          // overlaps another thread
+         }
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         integer :: b(4) = [3, 4, 5, 6]
+         integer :: i
+         !$omp parallel num_threads(3) shared(b) private(i)
+             i = omp_get_thread_num() + 1  ! 1, 2, 3
+             b(i)   = b(i) + i
+             b(i+1) = b(i+1) + 1           ! overlaps another thread
+         !$omp end parallel
+
+This is a data race: one thread may be modifying ``b(i+1)`` while another
+modifies that same element. Merely flushing memory would **not** make the
+compound updates atomic.
+
+**Solution for this example: a barrier between two non-overlapping phases**
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         int b[4] = {3, 4, 5, 6};
+         #pragma omp parallel num_threads(3) shared(b)
+         {
+             int i = omp_get_thread_num();
+             b[i] = b[i] + (i + 1);
+             #pragma omp barrier
+             b[i+1] = b[i+1] + 1;
+         }
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         integer :: b(4) = [3, 4, 5, 6]
+         integer :: i
+         !$omp parallel num_threads(3) shared(b) private(i)
+             i = omp_get_thread_num() + 1
+             b(i) = b(i) + i
+             !$omp barrier
+             b(i+1) = b(i+1) + 1
+         !$omp end parallel
+
+For exactly three threads, the phases are:
+
+.. code-block:: text
+
+   Initial:                       [3, 4, 5, 6]
+   After phase 1 (before barrier): [4, 6, 8, 6]
+   After phase 2:                  [4, 7, 9, 7]
 
 .. note::
-   The ``#pragma omp for`` directive is "orphaned" - it's not directly inside the parallel region but binds to the active parallel region when called.
 
+   The barrier ensures that all updates in phase 1 complete before phase 2
+   begins. Within each phase, different threads write distinct elements.
+   This particular indexing assumes exactly three threads.
 
+Ensuring Memory Consistency: ``flush``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*Example: Orphan Directive (Fortran)*
+A ``flush`` participates in establishing consistency between threads'
+views of memory. A release/acquire synchronization relationship, or an
+appropriate synchronization construct, is needed for reliable publication
+of a value between threads. The usual communication sequence is: the
+producer writes, the producer performs a release operation, the consumer
+performs a synchronizing acquire operation, and the consumer reads the
+published data. In practice, prefer a barrier or an atomic protocol over
+hand-written spin loops with explicit flushes.
 
-Main Program
+**Explicit flush syntax**
 
+.. tabs::
 
-.. code-block:: fortran
+   .. tab:: C/C++
 
-    !$omp parallel shared(v, vl) reduction(+:nm)
-        call vectorinit(v, vl)
-        nm = vectornorm(v, vl)
-    !$omp end parallel
+      .. code-block:: c
 
-Subroutine with Orphan Directive
+         #pragma omp flush
 
+   .. tab:: Fortran
 
-.. code-block:: fortran
+      .. code-block:: fortran
 
-    subroutine vectorinit(vdata, leng)
-        double precision, dimension(leng) :: vdata
-        integer :: leng, i
-        
-        !$omp do
-        do i = 1, leng
-            vdata(i) = i
-        enddo
-    end subroutine vectorinit
+         !$omp flush
 
-.. note::
-   The ``!$omp do`` directive is "orphaned" - it's not directly inside the parallel region but binds to the active parallel region when called.
+**Ordered publication using release/acquire atomics (OpenMP 5.0+)**
 
+The following alternatives demonstrate a writer publishing ``a[4]`` /
+``a(5)`` and a reader waiting for a notification flag. An atomic write
+with ``release`` followed by a corresponding atomic read with ``acquire``
+orders the data access across the two threads.
 
-**Performance Impact of Orphaning**
+.. tabs::
 
+   .. tab:: C/C++
 
-Benchmark Setup
+      .. code-block:: c
 
+         double a[5] = {0};
+         int matrix_set = 0;
+         #pragma omp parallel num_threads(2) shared(a, matrix_set)
+         {
+             if (omp_get_thread_num() == 0) {
+                 a[4] = 3.0;
+                 #pragma omp atomic write release
+                 matrix_set = 1;
+             } else {
+                 int seen = 0;
+                 while (!seen) {
+                     #pragma omp atomic read acquire
+                     seen = matrix_set;
+                 }
+                 printf("a[4] = %g\n", a[4]);
+             }
+         }
 
-**Test:** Vector initialization and norm calculation
-**Vector length:** 40,000
-**Hardware:** Xeon E5-2650 v3
-**Compilers:** GCC 4.9.3, ICC 16.0
+   .. tab:: Fortran
 
-Configurations Tested
+      .. code-block:: fortran
 
-
-1. ``parallel for`` in each function (no orphaning)
-2. Orphaned ``for`` in each function
-3. Orphaned ``for nowait`` in each function
-
-
-.. figure:: img/perf-orphan.png
-    :align: center
-    :scale: 70%
-
-----
-
-
-*Key Observations*
-
-
-- Orphaned directives perform **better** than creating new parallel regions
-- Using ``nowait`` provides additional performance gains
-- Starting/closing parallel regions is very expensive
-
-
-
-*Discussion of Orphan Directives*
-
-Advantages:
-
-**Reduces need for code restructuring:**
-
-- Can parallelize existing functions without major changes
-
-**Allows for longer parallel regions:**
-
-- Starting/closing parallel regions is very expensive
-- One long parallel region is more efficient than many short ones
-
-**Better performance:**
-
-- As shown in benchmarks, avoids parallel region overhead
-
-Potential Issues:
+         real :: a(5)
+         integer :: matrix_set, seen
+         a = 0.0
+         matrix_set = 0
+         !$omp parallel num_threads(2) shared(a, matrix_set) private(seen)
+             if (omp_get_thread_num() == 0) then
+                 a(5) = 3.0
+                 !$omp atomic write release
+                 matrix_set = 1
+             else
+                 seen = 0
+                 do while (seen == 0)
+                     !$omp atomic read acquire
+                     seen = matrix_set
+                 end do
+                 print *, "a(5) =", a(5)
+             end if
+         !$omp end parallel
 
 .. warning::
-   **Problem:** Routine with orphan directive called outside parallel region
-   
-   If a function with an orphaned directive is called from serial code, the directive may have no effect or cause unexpected behavior.
 
-Best Practices:
+   The original version (writing ``A(5)``, calling ``flush``, and setting a
+   flag) does not by itself define a complete reader/writer protocol.
+   Use an appropriate acquire operation on the reader side. Busy-waiting
+   is for demonstration only, not generally the best design for HPC code.
 
-- Document functions that contain orphan directives
-- Consider adding checks for parallel context if needed
-- Design functions to work correctly both inside and outside parallel regions
+Implicit Synchronization
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+OpenMP includes synchronization and associated memory-consistency effects
+at many constructs, for example:
+
+- The end of a ``parallel`` region has an implicit barrier.
+- ``barrier`` is an explicit team synchronization point.
+- Worksharing ``for``/``do``, ``sections``, ``single``, and Fortran
+  ``workshare`` normally have an implicit barrier at the end, unless
+  ``nowait`` removes it.
+- ``critical`` coordinates mutually exclusive entry and exit.
+- ``atomic`` coordinates access to the specified storage location;
+  memory-order clauses determine further ordering guarantees.
+
+The deprecated ``master`` construct and the corresponding ``masked``
+construct have no implicit barrier on exit.
+
+Clause: ``nowait``
+------------------
+
+Implicit barriers can add overhead when threads do not need to wait for one
+another. ``nowait`` removes the implicit barrier at the end of an eligible
+worksharing construct, but it must not violate dependencies between work
+performed by different threads.
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      Add ``nowait`` to the worksharing directive:
+
+      .. code-block:: c
+
+         #pragma omp for nowait
+         for (int i = 0; i < n; i++)
+             a[i] = funcA(i);
+
+   .. tab:: Fortran
+
+      Put ``nowait`` on the corresponding end directive:
+
+      .. code-block:: fortran
+
+         !$omp do
+         do i = 1, n
+             a(i) = funcA(i)
+         end do
+         !$omp end do nowait
+
+**Example: producing two vectors before using both**
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         #pragma omp parallel shared(a, b, t, n)
+         {
+             #pragma omp for nowait
+             for (int i = 0; i < n; i++)
+                 a[i] = sin((double)i);
+
+             #pragma omp for
+             for (int i = 0; i < n; i++)
+                 b[i] = cos((double)i); // implicit barrier
+
+             #pragma omp for
+             for (int i = 0; i < n; i++)
+                 t[i] = a[i] + b[i];
+         }
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         !$omp parallel shared(a, b, t, n)
+             !$omp do
+             do i = 1, n
+                 a(i) = sin(real(i))
+             end do
+             !$omp end do nowait
+
+             !$omp do
+             do i = 1, n
+                 b(i) = cos(real(i))
+             end do
+             !$omp end do   ! implicit barrier
+
+             !$omp do
+             do i = 1, n
+                 t(i) = a(i) + b(i)
+             end do
+         !$omp end parallel
+
+The first loop initializes ``a`` without a barrier. The **second** loop
+initializes ``b`` and has a barrier, which ensures that *both* preceding
+loops have completed before the third loop uses their results. Combining
+these operations in one loop would often be faster; this is a demonstration
+of synchronization rather than a performance recommendation.
+
+**Example: tensor product, with the dependency correctly synchronized**
+
+The original C example was labeled as having a bad access to ``b`` even
+though the barrier after its second loop also guarantees completion of the
+first loop. The following paired examples make that dependency explicit.
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         #pragma omp parallel shared(a, b, t, n, m)
+         {
+             #pragma omp for nowait
+             for (int i = 0; i < n; i++)
+                 a[i] = funcA(i);
+
+             #pragma omp for
+             for (int j = 0; j < m; j++)
+                 b[j] = funcB(j);  // barrier synchronizes both arrays
+
+             #pragma omp for
+             for (int i = 0; i < n; i++)
+                 for (int j = 0; j < m; j++)
+                     t[i][j] = a[i] * b[j];
+         }
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         !$omp parallel shared(a, b, t, n, m)
+             !$omp do
+             do i = 1, n
+                 a(i) = funcA(i)
+             end do
+             !$omp end do nowait
+
+             !$omp do
+             do j = 1, m
+                 b(j) = funcB(j)
+             end do
+             !$omp end do   ! synchronizes both arrays
+
+             !$omp do
+             do j = 1, m
+                 do i = 1, n
+                     t(i,j) = a(i) * b(j)
+                 end do
+             end do
+         !$omp end parallel
+
+Performance Impact of ``nowait``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The original training benchmark used a dual-socket, quad-core Intel Xeon
+E5520 (2.26 GHz) with PGI 10.9, GCC 4.4, and Intel 12.0. It measured
+vector addition with ``n = 1000`` and 4, 6, or 8 threads.
+
+.. code-block:: text
+
+   Threads     Reported savings from nowait
+   4--8        0.6--1.3 microseconds
+
+.. figure:: img/perf-nowait.png
+   :align: center
+   :scale: 70%
+
+.. note::
+
+   These numbers are historical, platform-specific results, not general
+   performance guarantees. Even small improvements can matter in loops
+   executed very frequently.
+
+Specialty of ``schedule(static)``
+---------------------------------
+
+For multiple worksharing loops associated with the **same parallel region**,
+matching iteration counts, compatible bounds, and identical static schedules
+(including chunk size) can assign corresponding logical iterations to the
+same threads. Under these conditions, later loops can consume values written
+by the same threads without an intervening worksharing barrier.
+
+.. important::
+
+   This depends on the prescribed static-iteration mapping. Do not apply
+   it to ``dynamic`` or ``guided`` scheduling, or when iteration spaces
+   or scheduling parameters differ. A loop still needs the appropriate
+   synchronization for other dependencies.
+
+**Example: corresponding iterations handled by the same thread**
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         #pragma omp parallel shared(a, b, t, n)
+         {
+             #pragma omp for schedule(static) nowait
+             for (int i = 0; i < n; i++)
+                 a[i] = sin((double)i);
+
+             #pragma omp for schedule(static) nowait
+             for (int i = 0; i < n; i++)
+                 b[i] = cos((double)i);
+
+             #pragma omp for schedule(static)
+             for (int i = 0; i < n; i++)
+                 t[i] = a[i] + b[i];
+         }
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         !$omp parallel shared(a, b, t, n)
+             !$omp do schedule(static)
+             do i = 1, n
+                 a(i) = sin(real(i))
+             end do
+             !$omp end do nowait
+
+             !$omp do schedule(static)
+             do i = 1, n
+                 b(i) = cos(real(i))
+             end do
+             !$omp end do nowait
+
+             !$omp do schedule(static)
+             do i = 1, n
+                 t(i) = a(i) + b(i)
+             end do
+         !$omp end parallel
+
+In each loop, the same thread handles a given index. For example,
+under the specified equal static schedules, a thread responsible for
+index ``i`` in the first loop is responsible for that same index in the
+second and third loops. Therefore its read of ``a`` and ``b`` occurs
+after its own writes to those elements. The
+final implicit barrier at the end of the ``parallel`` region still applies.
+
+Orphan Directives
+-----------------
+
+An *orphan directive* is an OpenMP directive in a called function or
+subroutine, rather than lexically inside the ``parallel`` region. Such a
+directive can bind to the active parallel region in which it is called.
+Procedures called by the team must be thread-safe, and all the threads
+required by a worksharing or barrier construct must encounter it in a
+compatible order.
+
+**Example: a routine with an orphaned worksharing loop**
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      Main function (illustrative excerpt):
+
+      .. code-block:: c
+
+         double v[8];
+         #pragma omp parallel shared(v)
+         {
+             vectorinit(v, 8);
+         }
+
+      Called function:
+
+      .. code-block:: c
+
+         void vectorinit(double *vdata, int leng)
+         {
+             #pragma omp for
+             for (int i = 0; i < leng; i++)
+                 vdata[i] = (double)i;
+         }
+
+   .. tab:: Fortran
+
+      Main program (illustrative excerpt):
+
+      .. code-block:: fortran
+
+         double precision :: v(8)
+         !$omp parallel shared(v)
+             call vectorinit(v, size(v))
+         !$omp end parallel
+
+      Called subroutine:
+
+      .. code-block:: fortran
+
+         subroutine vectorinit(vdata, leng)
+             integer, intent(in) :: leng
+             double precision, intent(inout) :: vdata(leng)
+             integer :: i
+             !$omp do
+             do i = 1, leng
+                 vdata(i) = dble(i - 1)
+             end do
+             !$omp end do
+         end subroutine vectorinit
+
+.. note::
+
+   Every thread calls the routine, but its orphaned ``for``/``do``
+   distributes the loop across the team. The examples set the vector to
+   values 0 through 7. The original sample also called a ``vectornorm``
+   function, but did not provide its implementation; this example isolates
+   the orphaned directive so the synchronization is unambiguous.
+
+Performance Impact of Orphaning
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The original benchmark compared vector initialization and norm calculation
+for a vector of length 40,000, on a Xeon E5-2650 v3 using GCC 4.9.3 and
+ICC 16.0. It compared:
+
+1. Starting a separate parallel region in each routine.
+2. Using orphaned ``for``/``do`` in a longer parallel region.
+3. Using orphaned worksharing loops with ``nowait`` where safe.
+
+.. figure:: img/perf-orphan.png
+   :align: center
+   :scale: 70%
+
+The reported benchmark favored reusing one long parallel region, with
+additional savings from removing unnecessary barriers.
+
+Discussion of Orphan Directives
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Advantages**
+
+- Existing functions can be parallelized without rewriting every call site.
+- Longer parallel regions avoid repeated team setup costs.
+- Reducing barriers can improve performance when dependencies allow it.
+
+**Potential pitfalls**
+
+.. warning::
+
+   A routine containing orphan directives may behave differently when
+   called from serial code. For example, its worksharing construct can
+   run with a single thread, and a barrier inside it must be encountered
+   consistently by the expected team. Document the required calling
+   context, and design/test serial and parallel usage deliberately.
+
 
 
 .. challenge::
