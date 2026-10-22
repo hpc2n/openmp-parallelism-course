@@ -209,23 +209,29 @@ In addition to directives, OpenMP offers library functions mainly to control the
 **Including Headers**
 
 
-*In C:*
+.. tabs::
 
-.. code-block:: c
+   .. tab:: C/C++
 
-    #include <omp.h>
+      **In C/C++:**
 
-*In Fortran:*
+      .. code-block:: c
 
-.. code-block:: fortran
+         #include <omp.h>
 
-    include "omp_lib.h"
+   .. tab:: Fortran
 
-or
+      **In Fortran:**
 
-.. code-block:: fortran
+      .. code-block:: fortran
 
-    use omp_lib
+         include "omp_lib.h"
+
+      or
+
+      .. code-block:: fortran
+
+         use omp_lib
 
 
 Conditional Compilation
@@ -233,472 +239,512 @@ Conditional Compilation
 
 OpenMP compilers define the preprocessor macro ``_OPENMP``.
 
-*C Example*
 
+.. tabs::
 
-.. code-block:: c
+   .. tab:: C/C++
 
-    #ifdef _OPENMP
-    #include <omp.h>
-    #endif
+      **C Example**
 
-*Fortran Example*
+      .. code-block:: c
 
-Lines starting with ``!$`` (free format) or ``!$``, ``*$``, ``c$`` (fixed format) are only compiled if OpenMP is active:
+         #ifdef _OPENMP
+         #include <omp.h>
+         #endif
 
-.. code-block:: fortran
+   .. tab:: Fortran
 
-    !$ use omp_lib
+      **Fortran Example**
+
+      Lines starting with ``!$`` (free format) or
+      ``!$``, ``*$``, ``c$`` (fixed format)
+      are only compiled if OpenMP is active:
+
+      .. code-block:: fortran
+
+         !$ use omp_lib
 
 .. note::
-   This guard is required if code needs to be compiled serially.
+
+   This guard is required if code needs to be
+   compiled serially.
 
 
 
-The ``parallel`` Construct in Fortran
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The ``parallel`` Construct
+--------------------------
 
 The most important construct in OpenMP.
 
-.. code-block:: fortran
+.. tabs::
 
-    !$omp parallel
-        structured block of Fortran
-    !$omp end parallel
+   .. tab:: C/C++
 
+      **The ``parallel`` Construct in C/C++**
 
-- Starts a team of threads working on the block between the directives
-- At the end of the parallel region, there's an implicit synchronization (wait for the last thread)
+      .. code-block:: c
 
-**First Example**
+         #pragma omp parallel
+         {
+             structured block of C instructions
+         }
 
+      - Starts a team of threads working on the block
+        enclosed with ``{ }`` in parallel.
+      - At the end of the parallel region, there's an
+        implicit synchronization (wait for the last thread).
 
-.. code-block:: fortran
+      **First Example**
 
-    program example
-        implicit none
-        
-        print *, "3+5=", 3+5
-        
-        !$omp parallel
-        print *, "6+7=", 6+7
-        !$omp end parallel
-        
-    end program example
+      .. code-block:: c
 
-**Execution:**
+         int main()
+         {
+             printf("3+5=%i\n", 3+5);
+             #pragma omp parallel
+             {
+                 printf("6+7=%i\n", 6+7);
+             }
+             return 0;
+         }
 
-- First portion executed on master thread (prints "3+5=" once)
-- Parallel construct creates threads
-- Each thread performs addition and prints "6+7="
-- Code also compiles serially (without OpenMP)
+      **Execution:**
 
-
-
-The ``parallel`` Construct in C
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-.. code-block:: c
-
-    #pragma omp parallel
-    {
-        structured block of C instructions
-    }
+      - First portion executed on master thread
+        (prints "3+5=" once).
+      - Parallel construct creates threads.
+      - Each thread performs addition and prints "6+7=".
 
 
+   .. tab:: Fortran
 
-- Starts a team of threads working on the block enclosed with ``{ }`` in parallel
-- At the end of the parallel region, there's an implicit synchronization (wait for the last thread)
+      **The ``parallel`` Construct in Fortran**
 
-**First Example**
+      .. code-block:: fortran
 
+         !$omp parallel
+             structured block of Fortran
+         !$omp end parallel
 
-.. code-block:: c
+      - Starts a team of threads working on the block
+        between the directives.
+      - At the end of the parallel region, there's an
+        implicit synchronization (wait for the last thread).
 
-    int main()
-    {
-        printf("3+5=%i\n", 3+5);
-        
-        #pragma omp parallel
-        {
-            printf("6+7=%i\n", 6+7);
-        }
-        
-        return 0;
-    }
+      **First Example**
 
-**Execution:**
+      .. code-block:: fortran
 
-- First portion executed on master thread (prints "3+5=" once)
-- Parallel construct creates threads
-- Each thread performs addition and prints "6+7="
+         program example
+             implicit none
+             print *, "3+5=", 3+5
+             !$omp parallel
+             print *, "6+7=", 6+7
+             !$omp end parallel
+         end program example
+
+      **Execution:**
+
+      - First portion executed on master thread
+        (prints "3+5=" once).
+      - Parallel construct creates threads.
+      - Each thread performs addition and prints "6+7=".
+      - Code also compiles serially (without OpenMP).
 
 
 Controlling the Number of Threads
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------
 
-The number of threads started by a parallel construct can be controlled in several ways (listed by increasing priority):
+The number of threads started by a parallel construct can be controlled in
+several ways (listed by increasing priority):
 
-1. Environment Variable
+1. **Environment variable**
 
+   This setting applies to both C/C++ and Fortran:
 
-.. code-block:: bash
+   .. code-block:: bash
 
-    export OMP_NUM_THREADS=n
+      export OMP_NUM_THREADS=n
 
-2. Function Call
+2. **Function call**
 
+   .. tabs::
 
-.. code-block:: c
+      .. tab:: C/C++
 
-    omp_set_num_threads(n);
+         .. code-block:: c
 
-3. Clause on Parallel Construct (Highest Priority)
+            omp_set_num_threads(n);
 
+      .. tab:: Fortran
 
-*Fortran:*
+         .. code-block:: fortran
 
-.. code-block:: fortran
+            call omp_set_num_threads(n)
 
-    !$omp parallel num_threads(n)
+3. **Clause on the parallel construct (highest priority)**
 
-*C:*
+   .. tabs::
 
-.. code-block:: c
+      .. tab:: C/C++
 
-    #pragma omp parallel num_threads(n)
+         .. code-block:: c
 
+            #pragma omp parallel num_threads(n)
 
+      .. tab:: Fortran
 
-**Thread Number and Thread ID query Functions**
+         .. code-block:: fortran
 
-
-These functions require header files to be included.
-
-*Query number of threads:*
-
-.. code-block:: c
-
-    omp_get_num_threads()
-
-*Query thread ID:*
-
-.. code-block:: c
-
-    omp_get_thread_num()
-
-**Thread Numbering**
+            !$omp parallel num_threads(n)
 
 
-In a parallel region with n threads, thread IDs range from 0 to n-1.
+Thread Number and Thread ID Query Functions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The OpenMP runtime provides functions to query the number of threads and the
+current thread's ID. Include the appropriate OpenMP header or module.
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         #include <omp.h>
+
+         /* Inside a parallel region: */
+         int nthreads = omp_get_num_threads();
+         int thread_id = omp_get_thread_num();
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         use omp_lib
+
+         integer :: nthreads, thread_id
+
+         ! Inside a parallel region:
+         nthreads = omp_get_num_threads()
+         thread_id = omp_get_thread_num()
+
+
+Thread Numbering
+^^^^^^^^^^^^^^^^
+
+In a parallel region with ``n`` threads, thread IDs range from ``0`` to
+``n-1``.
 
 .. figure:: img/parallel_construct2.png
-    :align: center
-    :scale: 30%
-
-----
-
-**Example: Printing Thread Numbers**
+   :align: center
+   :scale: 30%
 
 
-*Fortran Version*
+Example: Printing Thread Numbers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. tabs::
 
-.. code-block:: fortran
+   .. tab:: C/C++
 
-    program FortranHello
-        !$ use omp_lib
-        implicit none
-        
-        !$omp parallel
-        print *, "I am thread", omp_get_thread_num(), &
-                 " out of ", omp_get_num_threads()
-        !$omp end parallel
-        
-    end program FortranHello
+      .. code-block:: c
 
-Sample Output (8 threads)
+         #include <stdio.h>
+         #include <omp.h>
+
+         int main()
+         {
+             #pragma omp parallel
+             {
+                 printf("I am thread %i of %i\n",
+                        omp_get_thread_num(),
+                        omp_get_num_threads());
+             }
+             return 0;
+         }
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         program FortranHello
+             !$ use omp_lib
+             implicit none
+             !$omp parallel
+             print *, "I am thread", omp_get_thread_num(), &
+                      " out of ", omp_get_num_threads()
+             !$omp end parallel
+         end program FortranHello
+
+**Sample output (8 threads):**
 
 .. code-block:: text
 
-    I am thread 0 out of 8
-    I am thread 3 out of 8
-    I am thread 4 out of 8
-    I am thread 2 out of 8
-    I am thread 1 out of 8
-    I am thread 7 out of 8
-    I am thread 6 out of 8
-    I am thread 5 out of 8
+   I am thread 0 out of 8
+   I am thread 3 out of 8
+   I am thread 4 out of 8
+   I am thread 2 out of 8
+   I am thread 1 out of 8
+   I am thread 7 out of 8
+   I am thread 6 out of 8
+   I am thread 5 out of 8
 
 .. note::
-   Each thread prints its thread number and total number of threads. The order is non-deterministic.
 
-*C Version*
-
-.. code-block:: c
-
-    #include <stdio.h>
-    #include <omp.h>
-
-    int main()
-    {
-        #pragma omp parallel
-        {
-            printf("I am thread %i of %i\n",
-                   omp_get_thread_num(),
-                   omp_get_num_threads());
-        }
-        
-        return 0;
-    }
+   Each thread prints its thread number and the total number of threads.
+   The order is non-deterministic.
 
 
-
-**Use Case: Task Farm Using Thread Numbers**
-
+Use Case: Task Farm Using Thread Numbers
+----------------------------------------
 
 You have three serial programs and want to run them on different threads.
-
-
 Convert the programs into functions/subroutines.
 
-*Fortran Implementation*
+.. tabs::
 
+   .. tab:: C/C++
 
-.. code-block:: fortran
+      **Original standalone program:**
 
-    Program Prog2
-        ! statements
-    End Program Prog2
+      .. code-block:: c
 
+         int main()
+         {
+             // statements
+         }
 
-.. code-block:: fortran
+      **Example extracted function:**
 
-    subroutine sub2()
-        ! statements
-    End subroutine sub2
+      .. code-block:: c
 
-New main program:
+         int funct2()
+         {
+             // statements
+         }
 
-.. code-block:: fortran
+      **New main function:**
 
-    Program farm
-        use omp_lib
-        
-        call omp_set_num_threads(3)
-        
-        !$OMP parallel
-        if (omp_get_thread_num() .eq. 0) call sub0()
-        if (omp_get_thread_num() .eq. 1) call sub1()
-        if (omp_get_thread_num() .eq. 2) call sub2()
-        !$OMP end parallel
-        
-    End program farm
+      .. code-block:: c
 
-*C Implementation*
+         int main()
+         {
+             omp_set_num_threads(3);
+             #pragma omp parallel
+             {
+                 if (omp_get_thread_num() == 0) funct0();
+                 if (omp_get_thread_num() == 1) funct1();
+                 if (omp_get_thread_num() == 2) funct2();
+             }
+             return 0;
+         }
 
+   .. tab:: Fortran
 
-.. code-block:: c
+      **Original standalone program:**
 
-    int main()
-    {
-        // statements
-    }
+      .. code-block:: fortran
 
+         Program Prog2
+             ! statements
+         End Program Prog2
 
+      **Example extracted subroutine:**
 
-.. code-block:: c
+      .. code-block:: fortran
 
-    int funct2()
-    {
-        // statements
-    }
+         subroutine sub2()
+             ! statements
+         End subroutine sub2
 
-New main function:
+      **New main program:**
 
-.. code-block:: c
+      .. code-block:: fortran
 
-    int main()
-    {
-        omp_set_num_threads(3);
-        
-        #pragma omp parallel
-        {
-            if (omp_get_thread_num() == 0) funct0();
-            if (omp_get_thread_num() == 1) funct1();
-            if (omp_get_thread_num() == 2) funct2();
-        }
-        
-        return 0;
-    }
-
+         Program farm
+             use omp_lib
+             call omp_set_num_threads(3)
+             !$OMP parallel
+             if (omp_get_thread_num() .eq. 0) call sub0()
+             if (omp_get_thread_num() .eq. 1) call sub1()
+             if (omp_get_thread_num() .eq. 2) call sub2()
+             !$OMP end parallel
+         End program farm
 
 
 Timing OpenMP Code
-^^^^^^^^^^^^^^^^^^
+------------------
 
 Parallel programming is all about speed, so timing is essential.
 
-Timer Function: ``omp_get_wtime()``
+Timer function: ``omp_get_wtime()``
 
-
-- Returns elapsed wall-clock time in seconds
-- Returns ``double`` in C, ``double precision`` in Fortran
-- Accuracy can be queried with ``omp_get_wtick()``
+- Returns elapsed wall-clock time in seconds.
+- Returns ``double`` in C and ``double precision`` in Fortran.
+- Accuracy can be queried with ``omp_get_wtick()``.
 
 .. warning::
-   Timer is bound to thread!
 
-*Fortran Example*
+   The timer is bound to the calling thread!
 
+.. tabs::
 
-.. code-block:: fortran
+   .. tab:: C/C++
 
-    double precision :: stime, ftime
+      .. code-block:: c
 
-    stime = omp_get_wtime()
+         double stime = omp_get_wtime();
 
-    ! code segment to be timed
+         // code segments to be timed
 
-    ftime = omp_get_wtime()
-    print *, "time: ", ftime - stime
+         double ftime = omp_get_wtime() - stime;
+         printf("time: %f\n", ftime);
 
-*C Example*
+   .. tab:: Fortran
 
-.. code-block:: c
+      .. code-block:: fortran
 
-    double stime = omp_get_wtime();
+         double precision :: stime, ftime
 
-    // code segments to be timed
+         stime = omp_get_wtime()
 
-    double ftime = omp_get_wtime() - stime;
-    printf("time: %f\n", ftime);
+         ! code segment to be timed
 
+         ftime = omp_get_wtime()
+         print *, "time: ", ftime - stime
 
 
 Compiling OpenMP Code
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
-Most modern compilers support OpenMP. Simply add a compiler flag to enable OpenMP.
+Most modern compilers support OpenMP. Add a compiler flag to enable it.
 
-Compiler Flags
-
+**Compiler flags**
 
 .. list-table::
    :header-rows: 1
-   :widths: 15 15 40
+   :widths: 15 25 20 20
 
    * - Compiler
      - Flag
-     - Standard Implemented (_OPENMP)
+     - Compiler version
+     - OpenMP version
    * - **GNU**
      - ``-fopenmp``
-     - 
-   * - 
-     - version 4.8.5
-     - OpenMP 3.1
-   * - 
-     - version 4.9.3
-     - OpenMP 4.0
-   * - 
-     - version 5.4.0
-     - OpenMP 4.0
-   * - 
-     - version 6.2.0
-     - OpenMP 4.5
+     - 4.8.5
+     - 3.1
+   * - GNU
+     - ``-fopenmp``
+     - 4.9.3
+     - 4.0
+   * - GNU
+     - ``-fopenmp``
+     - 5.4.0
+     - 4.0
+   * - GNU
+     - ``-fopenmp``
+     - 6.2.0
+     - 4.5
    * - **Intel**
-     - ``-openmp`` (old)
-     - 
-   * - 
+     - ``-openmp`` (old), ``-qopenmp``
+     - 16.0.1
+     - 4.0
+   * - Intel
      - ``-qopenmp``
-     - 
-   * - 
-     - version 16.0.1
-     - OpenMP 4.0
-   * - 
-     - version 16.0.3
-     - OpenMP 4.0
-   * - 
-     - version 17.0
-     - OpenMP 4.5
+     - 16.0.3
+     - 4.0
+   * - Intel
+     - ``-qopenmp``
+     - 17.0
+     - 4.5
 
-*Example with GCC*
+**Example with GCC**
 
+.. tabs::
 
-.. code-block:: bash
+   .. tab:: C/C++
 
-    gfortran -O3 -fopenmp -o prog_omp prog_omp.f90
+      .. code-block:: bash
+
+         gcc -O3 -fopenmp -o prog_omp prog_omp.c
+
+   .. tab:: Fortran
+
+      .. code-block:: bash
+
+         gfortran -O3 -fopenmp -o prog_omp prog_omp.f90
 
 .. note::
-   Some features of newer standards may be available depending on compiler version.
+
+   Some features of newer standards may be available depending on compiler
+   version.
 
 
-.. challenge::
+Exercises (C)
+-------------
 
-    Compile and run the following *hello wold* example on the cluster:   
-
-    .. code-block:: c
-        :linenos:
-
-        // On cluster Kebnekaise
-        // ml foss/2023b
-        // gcc -O3 -march=native -fopenmp -o test.x 1a-hello-openmp.c -lm 
-        #include <stdio.h>
-
-        int main()
-        {
-
-        #pragma omp parallel num_threads(4)
-        {
-        #ifdef _OPENMP // Macro for OpenMP
-            printf("Hello, you are using OpenMP! \n");
-        #else
-            printf("Hello from serial!\n");
-        #endif
-        }
-
-        return 0;
-        }
+The following exercises and the supplied solution are in C
 
 .. challenge::
 
-    Query the threads' IDs and number of threads in a parallel region.
+   Compile and run the following **hello world** example on the cluster:
+
+   .. code-block:: c
+      :linenos:
+
+      // On cluster Kebnekaise
+      // ml foss/2023b
+      // gcc -O3 -march=native -fopenmp -o test.x 1a-hello-openmp.c -lm
+      #include <stdio.h>
+
+      int main()
+      {
+          #pragma omp parallel num_threads(4)
+          {
+      #ifdef _OPENMP
+              printf("Hello, you are using OpenMP! \n");
+      #else
+              printf("Hello from serial!\n");
+      #endif
+          }
+          return 0;
+      }
+
+.. challenge::
+
+   Query the threads' IDs and number of threads in a parallel region.
 
 .. solution::
 
-    .. code-block:: c
-        :linenos:
+   .. code-block:: c
+      :linenos:
 
-        // On cluster Kebnekaise
-        // ml foss
-        // export OMP_NUM_THREADS=1 
-        // gcc -O3 -march=native -fopenmp -o test.x 2a-runtime-openmp.c -lm 
-        #include <stdio.h>
-        #ifdef _OPENMP
-        #include <omp.h>   // This header contains the querying functions
-        #endif
+      // On cluster Kebnekaise
+      // ml foss
+      // export OMP_NUM_THREADS=1
+      // gcc -O3 -march=native -fopenmp -o test.x 2a-runtime-openmp.c -lm
+      #include <stdio.h>
+      #ifdef _OPENMP
+      #include <omp.h>   // This header contains the querying functions
+      #endif
 
-        int main()
-        {
-
-        int threadID;   // Thread ID
-        int numThreads; // Number of threads
-        #pragma omp parallel
-            {
-        #ifdef _OPENMP
-            threadID = omp_get_thread_num();
-            numThreads = omp_get_num_threads();
-            printf("I am thread %i of %i\n", threadID, numThreads);
-        #else
-            printf("Hello from serial!\n");
-        #endif
-            }
-        
-        return 0;
-        }
-
-
+      int main()
+      {
+          int threadID;   // Thread ID
+          int numThreads; // Number of threads
+          #pragma omp parallel private(threadID, numThreads)
+          {
+      #ifdef _OPENMP
+              threadID = omp_get_thread_num();
+              numThreads = omp_get_num_threads();
+              printf("I am thread %i of %i\n", threadID, numThreads);
+      #else
+              printf("Hello from serial!\n");
+      #endif
+          }
+          return 0;
+      }
 
 Summary
 ^^^^^^^
