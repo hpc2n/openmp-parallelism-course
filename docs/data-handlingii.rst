@@ -20,1035 +20,883 @@ In a parallel region, data can be either shared or private.
 
 **Shared Data**
 
-- Value unchanged on entry to parallel region
-- Survives after end of parallel region
+- Value is retained on entry to the parallel region.
+- Survives after the parallel region ends.
 
 **Private Data**
 
-- Each thread has its own private copy
-- Normally uninitialized at beginning of parallel region
-- Contents typically lost when parallel region finishes
-- **However:** Connection to values before/after is often needed
+- Each thread has its own private copy.
+- Normally uninitialized at the beginning of the parallel region.
+- Contents are typically lost when the parallel region finishes.
+- Connections to values before and after the parallel region may nevertheless be needed.
 
 .. figure:: img/sm_3.png
-    :align: center
-    :scale: 30%
+   :align: center
+   :scale: 30%
 
-----
-
-*Memory Layout*
+**Memory Layout**
 
 .. code-block:: text
 
-    Main Memory: [Shared data]
-    
-    Thread 0: [Private T0]
-    Thread 1: [Private T1]
-    Thread 2: [Private T2]
-    Thread 3: [Private T3]
-
-
+   Main Memory: [Shared data]
+   Thread 0: [Private T0]
+   Thread 1: [Private T1]
+   Thread 2: [Private T2]
+   Thread 3: [Private T3]
 
 Clause: firstprivate
-^^^^^^^^^^^^^^^^^^^^
+--------------------
 
-*Problem*
+**Problem**
 
 Private variables are not initialized by default.
 
-*Solution: firstprivate Clause*
+**Solution: firstprivate Clause**
 
 The ``firstprivate`` clause:
 
-- Declares variable(s) as private
-- Initializes each private copy with the value prior to the construct
+- Declares variables private for each thread.
+- Initializes each private copy from the original value before the construct.
 
-*Fortran Example*
+**Example: firstprivate**
 
-.. code-block:: fortran
+.. tabs::
 
-    integer :: lsum = 10
-    
-    !$omp parallel &
-    !$omp firstprivate(lsum)
-        lsum = lsum + omp_get_thread_num()
-        print *, lsum
-    !$omp end parallel
+   .. tab:: C/C++
 
-*C Example*
+      .. code-block:: c
 
-.. code-block:: c
+         #include <stdio.h>
+         #include <omp.h>
 
-    int lsum = 10;
-    
-    #pragma omp parallel \
-        firstprivate(lsum)
-    {
-        lsum += omp_get_thread_num();
-        printf("%i\n", lsum);
-    }
+         int main(void)
+         {
+             int lsum = 10;
+             #pragma omp parallel firstprivate(lsum) num_threads(4)
+             {
+                 lsum += omp_get_thread_num();
+                 printf("%i\n", lsum);
+             }
+             return 0;
+         }
 
-*Expected Output*
+   .. tab:: Fortran
 
-With 4 threads:
+      .. code-block:: fortran
+
+         program firstprivate_example
+             use omp_lib
+             implicit none
+             integer :: lsum
+             lsum = 10
+             !$omp parallel firstprivate(lsum) num_threads(4)
+                 lsum = lsum + omp_get_thread_num()
+                 print *, lsum
+             !$omp end parallel
+         end program firstprivate_example
+
+**Expected Output**
+
+With four threads, the thread-local values are 10, 11, 12, and 13 (the printing order is unspecified).
 
 .. code-block:: text
 
-    Thread 0: 10
-    Thread 1: 11
-    Thread 2: 12
-    Thread 3: 13
+   Thread 0: 10
+   Thread 1: 11
+   Thread 2: 12
+   Thread 3: 13
 
+**Example: Vector Norm with private**
 
+This computes :math:`\sqrt{\sum_i v(i)\,v(i)}` using a private partial sum per thread and an atomic update to the shared result.
 
-*Example: Vector Norm with private*
+.. tabs::
 
-*Fortran Version*
+   .. tab:: C/C++
 
-.. code-block:: fortran
+      .. code-block:: c
 
-    norm = 0.0
-    
-    !$omp parallel default(none) &
-    !$omp shared(vect, norm) private(i, lNorm)
-        lNorm = 0.0
-        
-        !$omp do
-        do i = 0, vleng
-            lNorm = lNorm + vect(i)**2
-        enddo
-        
-        !$omp atomic update
-        norm = norm + lNorm
-    !$omp end parallel
-    
-    norm = sqrt(norm)
+         norm = 0.0;
+         #pragma omp parallel default(none) \
+             shared(vect, norm, vleng) private(i, lNorm)
+         {
+             lNorm = 0.0;
+             #pragma omp for
+             for (i = 0; i < vleng; i++)
+                 lNorm += vect[i] * vect[i];
+             #pragma omp atomic update
+             norm += lNorm;
+         }
+         norm = sqrt(norm);
 
-*C Version*
+   .. tab:: Fortran
 
-.. code-block:: c
+      .. code-block:: fortran
 
-    norm = 0.0;
-    
-    #pragma omp parallel default(none) \
-        shared(vect, norm) private(i, lNorm)
-    {
-        lNorm = 0.0;
-        
-        #pragma omp for
-        for (i = 0; i < vleng; i++)
-            lNorm += vect[i] * vect[i];
-        
-        #pragma omp atomic update
-        norm += lNorm;
-    }
-    
-    norm = sqrt(norm);
-
-Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
+         norm = 0.0
+         !$omp parallel default(none) &
+         !$omp shared(vect, norm) private(i, lNorm)
+             lNorm = 0.0
+             !$omp do
+             do i = 1, vleng
+                 lNorm = lNorm + vect(i)**2
+             enddo
+             !$omp atomic update
+             norm = norm + lNorm
+         !$omp end parallel
+         norm = sqrt(norm)
 
 .. note::
-   ``lNorm`` must be explicitly initialized to 0.0 inside the parallel region.
 
+   ``lNorm`` must be initialized to 0.0 inside the parallel region, because a ``private`` copy is initially undefined. In the Fortran examples, ``vleng`` is assumed to be a named ``parameter``; if it is an ordinary variable, add it to the ``shared`` clause when using ``default(none)``.
 
-*Example: Vector Norm with firstprivate*
+**Example: Vector Norm with firstprivate**
 
-*Fortran Version*
+This version initializes ``lNorm`` to zero before the parallel region; ``firstprivate`` then initializes every thread-local copy.
 
-.. code-block:: fortran
+.. tabs::
 
-    norm = 0.0
-    lNorm = 0.0
-    
-    !$omp parallel default(none) &
-    !$omp shared(vect, norm) private(i) firstprivate(lNorm)
-        !$omp do
-        do i = 0, vleng
-            lNorm = lNorm + vect(i)**2
-        enddo
-        
-        !$omp atomic update
-        norm = norm + lNorm
-    !$omp end parallel
-    
-    norm = sqrt(norm)
+   .. tab:: C/C++
 
-*C Version*
+      .. code-block:: c
 
-.. code-block:: c
+         norm = 0.0;
+         lNorm = 0.0;
+         #pragma omp parallel default(none) \
+             shared(vect, norm, vleng) private(i) firstprivate(lNorm)
+         {
+             #pragma omp for
+             for (i = 0; i < vleng; i++)
+                 lNorm += vect[i] * vect[i];
+             #pragma omp atomic update
+             norm += lNorm;
+         }
+         norm = sqrt(norm);
 
-    norm = 0.0;
-    lNorm = 0.0;
-    
-    #pragma omp parallel default(none) \
-        shared(vect, norm) private(i) firstprivate(lNorm)
-    {
-        #pragma omp for
-        for (i = 0; i < vleng; i++)
-            lNorm += vect[i] * vect[i];
-        
-        #pragma omp atomic update
-        norm += lNorm;
-    }
-    
-    norm = sqrt(norm);
+   .. tab:: Fortran
 
-Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
+      .. code-block:: fortran
+
+         norm = 0.0
+         lNorm = 0.0
+         !$omp parallel default(none) &
+         !$omp shared(vect, norm) private(i) firstprivate(lNorm)
+             !$omp do
+             do i = 1, vleng
+                 lNorm = lNorm + vect(i)**2
+             enddo
+             !$omp atomic update
+             norm = norm + lNorm
+         !$omp end parallel
+         norm = sqrt(norm)
 
 .. important::
-   With ``firstprivate``, ``lNorm`` is automatically initialized to 0.0 from the master thread's value.
 
+   With ``firstprivate``, each thread's ``lNorm`` starts at 0.0, copied from the original variable. The Fortran array index runs from ``1`` through ``vleng``, corresponding to the C indexing from ``0`` through ``vleng-1``.
 
 Clause: lastprivate
-^^^^^^^^^^^^^^^^^^^
-
-*Purpose*
+-------------------
 
 The ``lastprivate`` clause:
 
-- Used with loop and sections constructs
-- Variable is private during execution
-- At the end: assigns value from last iteration or section
-- Undefined if not set in last iteration/section
+- Applies to worksharing loop and sections constructs.
+- Makes the specified variable private during execution.
+- After the construct, copies the value from the sequentially last iteration or the last section into the original variable.
+- If no value is assigned on the sequentially last iteration or section, the final value may be undefined.
 
-*Combined Usage*
+A variable may appear in both ``firstprivate`` and ``lastprivate`` on a supported construct.
 
-Variables can be both ``firstprivate`` **and** ``lastprivate``.
+.. tabs::
 
-*Fortran Example*
+   .. tab:: C/C++
 
-.. code-block:: fortran
+      .. code-block:: c
 
-    integer :: i, a
-    
-    !$omp parallel do &
-    !$omp lastprivate(a)
-    do i = 1, 100
-        a = i + 1
-        call func(a)
-    enddo
-    
-    print *, "a=", a
-    ! This prints: a=101
+         int i, a;
+         #pragma omp parallel for lastprivate(a)
+         for (i = 0; i < 100; i++) {
+             a = i + 1;
+             func(a);
+         }
+         printf("a=%i\n", a);   // a=100
 
-*C Example*
+   .. tab:: Fortran
 
-.. code-block:: c
+      .. code-block:: fortran
 
-    int i, a;
-    
-    #pragma omp parallel for \
-        lastprivate(a)
-    for (i = 0; i < 100; i++)
-    {
-        a = i + 1;
-        func(a);
-    }
-    
-    printf("a=%i\n", a);
-    // This prints: a=100
+         integer :: i, a
+         !$omp parallel do lastprivate(a)
+         do i = 1, 100
+             a = i + 1
+             call func(a)
+         enddo
+         print *, "a=", a     ! a=101
 
 .. note::
-   The value from the sequentially last iteration is assigned back to the original variable.
 
+   The value from the **sequentially last iteration** is assigned back to the original variable, regardless of which thread finishes last. The outputs differ because the examples use C indexing from 0 and Fortran indexing from 1.
 
 Reduction Variables
-^^^^^^^^^^^^^^^^^^^
+===================
 
+Reductions of private variables are frequently needed for averages of arrays, scalar products, sums, products, minima, and maxima.
 
-Reductions of private variables are frequently needed:
+**Previous Approach**
 
-- Averages of array values
-- Scalar products
-- Sum, product, minimum, maximum operations
+In the vector-norm examples we used ``atomic`` to protect updates to a shared accumulator.
 
-*Previous Approach*
+**Better Approach: Reduction Clause**
 
-We've done this before (e.g., vector norm example) using ``atomic`` to protect the update.
+For a reduction, specify the operation (addition, multiplication, logical operations, etc.) and the variable or variables. A construct may contain multiple reductions.
 
-*Better Approach: Reduction Clause*
+**Common syntax:** ``reduction(operator : variable_list)``
 
-For a reduction, we specify:
+**How It Works**
 
-- **Operation:** e.g., addition, multiplication, OR, AND, etc.
-- **One or more variables**
-- A construct can have more than one reduction
+- Each thread receives a private contribution.
+- Each contribution is initialized to the identity element for the specified operation.
+- At the end of the reduction region, private contributions are combined with the original value using the specified operation.
+- The combined result is available after the construct.
 
+**Example: Memory Movements for Reduction**
 
-*Behavior of Reduction*
+.. tabs::
 
+   .. tab:: C/C++
 
-.. code-block:: fortran
+      .. code-block:: c
 
-    reduction(operator : variable_list)
+         #include <stdio.h>
+         #include <omp.h>
 
-*How It Works*
+         int main(void)
+         {
+             int b = 5;
+             #pragma omp parallel reduction(+:b) num_threads(4)
+             {
+                 b += omp_get_thread_num();
+             }
+             printf("%i\n", b);
+             return 0;
+         }
 
-**Variables specified in reduction:**
+   .. tab:: Fortran
 
-1. Each thread gets a private copy
-2. Private copies are initialized with default values matching the operator
-3. At the end of the construct (e.g., parallel region):
-   
-   - Value prior to construct is combined with private copies
-   - Using the specified operator for combining values
-   - New combined value is available after the construct
+      .. code-block:: fortran
 
+         program reduction_example
+             use omp_lib
+             implicit none
+             integer :: b
+             b = 5
+             !$omp parallel reduction(+:b) num_threads(4)
+                 b = b + omp_get_thread_num()
+             !$omp end parallel
+             print *, b
+         end program reduction_example
 
-
-*Example: Memory Movements for Reduction (C)*
-
-.. code-block:: c
-
-    int b;
-    b = 5;
-    
-    #pragma omp parallel \
-        reduction(+:b)
-    {
-        b += omp_get_thread_num();
-    }
-    
-    printf("%i\n", b);
-
-*Memory Behavior*
-
-.. code-block:: text
-
-    Main Memory: b = 5
-    
-    Thread 0: b = 0 → b = 0
-    Thread 1: b = 0 → b = 1
-    Thread 2: b = 0 → b = 2
-    Thread 3: b = 0 → b = 3
-    
-    Final: 5 + 0 + 1 + 2 + 3 = 11
-
-Output: ``11``
-
-.. note::
-   Each thread's private copy is initialized to 0 (identity for addition), then combined at the end.
-
-
-*Example: Memory Movements for Reduction (Fortran)*
-
-
-.. code-block:: fortran
-
-    integer :: b
-    
-    b = 5
-    
-    !$omp parallel &
-    !$omp reduction(+:b)
-        b = b + omp_get_thread_num()
-    !$omp end parallel
-    
-    print *, b
-
-*Memory Behavior*
+**Memory Behavior (4 threads)**
 
 .. code-block:: text
 
-    Main Memory: b = 5
-    
-    Thread 0: b = 0 → b = 0
-    Thread 1: b = 0 → b = 1
-    Thread 2: b = 0 → b = 2
-    Thread 3: b = 0 → b = 3
-    
-    Final: 5 + 0 + 1 + 2 + 3 = 11
+   Original value: b = 5
+   Thread 0: b = 0 -> b = 0
+   Thread 1: b = 0 -> b = 1
+   Thread 2: b = 0 -> b = 2
+   Thread 3: b = 0 -> b = 3
+   Final: 5 + 0 + 1 + 2 + 3 = 11
 
-Output: ``11``
+Output: ``11``.
 
 .. note::
-   Each thread's private copy is initialized to 0 (identity for addition), then combined at the end.
 
+   Each thread's private copy is initialized to 0 (the identity for addition) and combined at the end.
 
+**Example: Vector Norm with atomic update**
 
-*Example: Vector Norm with atomic update*
+.. tabs::
 
-*Fortran Version*
+   .. tab:: C/C++
 
-.. code-block:: fortran
+      .. code-block:: c
 
-    norm = 0.0
-    lNorm = 0.0
-    
-    !$omp parallel default(none) &
-    !$omp shared(vect, norm) private(i) firstprivate(lNorm)
-        !$omp do
-        do i = 1, vleng
-            lNorm = lNorm + vect(i)**2  ! private copy
-        enddo
-        
-        !$omp atomic update
-        norm = norm + lNorm
-    !$omp end parallel  ! combine copies
-    
-    norm = sqrt(norm)  ! master copy
+         norm = 0.0;
+         lNorm = 0.0;
+         #pragma omp parallel default(none) \
+             shared(vect, norm, vleng) private(i) firstprivate(lNorm)
+         {
+             #pragma omp for
+             for (i = 0; i < vleng; i++)
+                 lNorm += vect[i] * vect[i];
+             #pragma omp atomic update
+             norm += lNorm;
+         }
+         norm = sqrt(norm);
 
-*C Version*
+   .. tab:: Fortran
 
-.. code-block:: c
+      .. code-block:: fortran
 
-    norm = 0.0;
-    lNorm = 0.0;
-    
-    #pragma omp parallel default(none) \
-        shared(vect, norm) private(i) firstprivate(lNorm)
-    {
-        #pragma omp for
-        for (i = 0; i < vleng; i++)
-            lNorm += vect[i] * vect[i];
-        
-        #pragma omp atomic update
-        norm += lNorm;
-    }
-    
-    norm = sqrt(norm);
+         norm = 0.0
+         lNorm = 0.0
+         !$omp parallel default(none) &
+         !$omp shared(vect, norm) private(i) firstprivate(lNorm)
+             !$omp do
+             do i = 1, vleng
+                 lNorm = lNorm + vect(i)**2
+             enddo
+             !$omp atomic update
+             norm = norm + lNorm
+         !$omp end parallel
+         norm = sqrt(norm)
 
-Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
+**Example: Vector Norm with reduction**
 
+.. tabs::
 
+   .. tab:: C/C++
 
-*Example: Vector Norm with reduction*
+      .. code-block:: c
 
-*Fortran Version*
+         norm = 0.0;  // original value
+         #pragma omp parallel default(none) \
+             shared(vect, vleng) reduction(+:norm) private(i)
+         {
+             #pragma omp for
+             for (i = 0; i < vleng; i++)
+                 norm += vect[i] * vect[i];  // private contribution
+         }
+         norm = sqrt(norm);  // combined result
 
-.. code-block:: fortran
+   .. tab:: Fortran
 
-    norm = 0.0  ! master copy
-    ! lNorm gone
-    
-    !$omp parallel default(none) &
-    !$omp shared(vect) reduction(+:norm) private(i)
-        !$omp do  ! private copy = 0
-        do i = 1, vleng
-            norm = norm + vect(i)**2  ! private copy
-        enddo
-    !$omp end parallel  ! combine copies
-    
-    norm = sqrt(norm)  ! master copy
+      .. code-block:: fortran
 
-*C Version*
-
-.. code-block:: c
-
-    norm = 0.0;  // master copy
-    // lNorm gone!
-    
-    #pragma omp parallel default(none) \
-        shared(vect) reduction(+:norm) private(i)
-    {  // private copy: 0
-        #pragma omp for
-        for (i = 0; i < vleng; i++)
-            norm += vect[i] * vect[i];  // private copy
-    }  // combine copies
-    
-    norm = sqrt(norm);  // master copy
-
-Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
+         norm = 0.0  ! original value
+         !$omp parallel default(none) &
+         !$omp shared(vect) reduction(+:norm) private(i)
+             !$omp do
+             do i = 1, vleng
+                 norm = norm + vect(i)**2  ! private contribution
+             enddo
+         !$omp end parallel
+         norm = sqrt(norm)  ! combined result
 
 .. important::
-   No need for ``lNorm`` variable or ``atomic`` directive. The reduction clause handles everything automatically.
 
+   With ``reduction(+:norm)``, no separate ``lNorm`` variable or ``atomic`` directive is needed. The clause manages private contributions and their combination.
 
-*Example: Vector Norm with reduction (Simplified)*
+**Example: Vector Norm with reduction (Simplified)**
 
-*Fortran Version*
+The combined ``parallel for`` / ``parallel do`` construct makes the code even more concise.
 
-.. code-block:: fortran
+.. tabs::
 
-    norm = 0.0  ! master copy
-    
-    !$omp parallel do default(none) &
-    !$omp shared(vect) reduction(+:norm)
-    do i = 1, vleng
-        norm = norm + vect(i)**2  ! private copy
-    enddo
-    !$omp end parallel do
-    
-    norm = sqrt(norm)  ! master copy
+   .. tab:: C/C++
 
-*C Version*
+      .. code-block:: c
 
-.. code-block:: c
+         norm = 0.0;
+         #pragma omp parallel for default(none) \
+             shared(vect, vleng) reduction(+:norm)
+         for (int i = 0; i < vleng; i++)
+             norm += vect[i] * vect[i];
+         norm = sqrt(norm);
 
-    norm = 0.0;  // master copy
-    
-    #pragma omp parallel for default(none) \
-        shared(vect) reduction(+:norm)
-    for (i = 0; i < vleng; i++)
-        norm += vect[i] * vect[i];  // private copy
-    
-    norm = sqrt(norm);  // master copy
+   .. tab:: Fortran
 
-Mathematical notation: :math:`\sqrt{\sum_i v(i) \cdot v(i)}`
+      .. code-block:: fortran
+
+         norm = 0.0
+         !$omp parallel do default(none) &
+         !$omp shared(vect) reduction(+:norm)
+         do i = 1, vleng
+             norm = norm + vect(i)**2
+         enddo
+         !$omp end parallel do
+         norm = sqrt(norm)
+
+The quantity computed in all three norm approaches is :math:`\sqrt{\sum_i v(i)\,v(i)}`.
+
+**Supported Operators (OpenMP 3.0 reference)**
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. list-table::
+         :header-rows: 1
+         :widths: 25 20 45
+
+         * - Name
+           - Symbol
+           - Initial value of private copy
+         * - Add
+           - ``+``
+           - 0
+         * - Multiply
+           - ``*``
+           - 1
+         * - Subtract
+           - ``-``
+           - 0
+         * - Bitwise AND
+           - ``&``
+           - All bits on (``~0``)
+         * - Bitwise OR
+           - ``|``
+           - 0
+         * - Bitwise XOR
+           - ``^``
+           - 0
+         * - Logical AND
+           - ``&&``
+           - 1
+         * - Logical OR
+           - ``||``
+           - 0
+
+   .. tab:: Fortran
+
+      .. list-table::
+         :header-rows: 1
+         :widths: 25 20 45
+
+         * - Name
+           - Symbol
+           - Initial value of private copy
+         * - Add
+           - ``+``
+           - 0
+         * - Multiply
+           - ``*``
+           - 1
+         * - Subtract
+           - ``-``
+           - 0
+         * - Logical AND
+           - ``.and.``
+           - ``.true.``
+         * - Logical OR
+           - ``.or.``
+           - ``.false.``
+         * - Equivalence
+           - ``.eqv.``
+           - ``.true.``
+         * - Non-equivalence
+           - ``.neqv.``
+           - ``.false.``
+         * - Maximum
+           - ``max``
+           - Smallest representable number
+         * - Minimum
+           - ``min``
+           - Largest representable number
+         * - Bitwise AND
+           - ``iand``
+           - All bits on
+         * - Bitwise OR
+           - ``ior``
+           - 0
+         * - Bitwise XOR
+           - ``ieor``
+           - 0
 
 .. note::
-   Using ``parallel do``/``parallel for`` makes the code even more concise.
 
+   The tables reflect the OpenMP 3.0-era teaching material. Later OpenMP versions add features and clarify or change some restrictions; ``-`` as a reduction identifier is deprecated in modern specifications.
 
-*Supported Operators: Fortran (OpenMP 3.0)*
+**Restrictions on Reduction**
 
-.. list-table::
-   :header-rows: 1
-   :widths: 20 15 35
+.. tabs::
 
-   * - Name
-     - Symbol
-     - Initial Value of Local Copy
-   * - add
-     - ``+``
-     - 0
-   * - multiply
-     - ``*``
-     - 1
-   * - subtract
-     - ``-``
-     - 0
-   * - logical AND
-     - ``.and.``
-     - ``.true.``
-   * - logical OR
-     - ``.or.``
-     - ``.false.``
-   * - EQUIVALENCE
-     - ``.eqv.``
-     - ``.true.``
-   * - NON-EQUIV.
-     - ``.neqv.``
-     - ``.false.``
-   * - maximum
-     - ``max``
-     - smallest representable number
-   * - minimum
-     - ``min``
-     - largest representable number
-   * - bitwise AND
-     - ``iand``
-     - all bits on
-   * - bitwise OR
-     - ``ior``
-     - 0
-   * - bitwise XOR
-     - ``ieor``
-     - 0
+   .. tab:: C/C++
 
+      For older OpenMP versions, the original course material notes restrictions involving arrays and pointer/reference variables.
 
-*Supported Operators: C (OpenMP 3.0)*
+      Modern OpenMP permits **contiguous array sections** in reduction clauses under specified restrictions. A pointer variable or C++ reference is not interchangeable with an array section.
 
-.. list-table::
-   :header-rows: 1
-   :widths: 20 15 35
+      Use a scalar or a supported array section, and check the compiler's OpenMP version before relying on newer features.
 
-   * - Name
-     - Symbol
-     - Initial Value of Local Copy
-   * - add
-     - ``+``
-     - 0
-   * - multiply
-     - ``*``
-     - 1
-   * - subtract
-     - ``-``
-     - 0
-   * - bitwise AND
-     - ``&``
-     - ``~0``
-   * - bitwise OR
-     - ``|``
-     - 0
-   * - bitwise XOR
-     - ``^``
-     - 0
-   * - logical AND
-     - ``&&``
-     - 1
-   * - logical OR
-     - ``||``
-     - 0
+   .. tab:: Fortran
 
+      - ``ALLOCATABLE`` arrays must be allocated when the construct is encountered, and must not be deallocated during the reduction.
+      - Pointer and assumed-size-array restrictions depend on the reduction item and OpenMP version.
+      - Check the supported forms of array elements and array sections for the compiler in use.
 
-*Restrictions on Reduction*
-
-Important Limitations
-
-
-**C/C++:**
-
-- Arrays are **unsupported** as reduction variables
-- No pointer or reference types
-
-**Fortran:**
-
-- ``ALLOCATABLE`` arrays must be allocated at the beginning of construct
-- Must not be deallocated during construct
-- No Fortran pointers or assumed-size arrays
-
-*Order of Execution*
+**Order of Execution**
 
 .. warning::
-   No order of threads is specified!
-   
-   - Repeated runs are typically **not bit-identical**
-   - This is common in parallel computing
-   - This is technically a race condition, which is typically tolerated
 
-*OpenMP 4.0 Enhancement*
+   The order in which thread contributions are combined is unspecified. Floating-point reductions can therefore give slightly different results between runs due to rounding and non-associative floating-point arithmetic. This is **not**, by itself, an OpenMP data race.
 
-OpenMP 4.0 allows you to declare your own custom reductions.
+**OpenMP 4.0 Enhancement**
 
+OpenMP 4.0 introduced the ability to declare custom reduction operations.
 
 User-Defined Reductions
-^^^^^^^^^^^^^^^^^^^^^^^
+=======================
 
+User-defined reductions allow custom combining operations, particularly useful for C/C++ ``struct`` or class objects and Fortran derived ``type`` objects.
 
-Allows definition of custom reduction operations.
+A declaration supplies a **combiner** for merging thread-private results and optionally an **initializer** for each private contribution.
 
-*Use Cases*
+**Case Study: Maximum Value and Its Position**
 
-Particularly useful with derived data types:
+Given an array, determine both its maximum value and its index. Each thread processes part of the array and contributes a maximum-value/index pair; a user-defined reduction combines those pairs.
 
-- **C/C++:** ``struct``
-- **Fortran:** ``type``
+**Step 1: Define the Data Type**
 
-*Requirements*
+.. tabs::
 
-You need to provide:
+   .. tab:: C/C++
 
-1. **Combiner:** Combines thread-private results to final result
-2. **Initializer:** Initializes private contributions at outset
+      .. code-block:: c
 
+         struct mx_s {
+             float value;
+             int index;
+         };
 
-*Case Study: Maximum Value and Its Position*
+   .. tab:: Fortran
 
-Given a large array:
+      .. code-block:: fortran
 
-- Determine the maximum value
-- Find the location (index) of the maximum in the array
+         type :: mx_s
+             real :: value
+             integer :: index
+         end type mx_s
 
-Parallelization Strategy:
+**Step 2: Declare the Reduction**
 
-1. Assign a portion of array to each thread
-2. Each thread determines maximum and position in its part
-3. Use user-defined reduction to determine final result
+The reduction is named ``maxloc`` and operates on ``mx_s`` objects. Here ``mx_combine`` and ``mx_init`` are user-defined helper routines.
 
+.. tabs::
 
-*User-Defined Reduction in Fortran*
+   .. tab:: C/C++
 
-Step 1: Define the Data Type
+      .. code-block:: c
 
+         #pragma omp declare reduction(maxloc: struct mx_s: \
+             mx_combine(&omp_out, &omp_in)) \
+             initializer(mx_init(&omp_priv, &omp_orig))
 
-.. code-block:: fortran
+   .. tab:: Fortran
 
-    type :: mx_s
-        real :: value
-        integer :: index
-    end type
+      .. code-block:: fortran
 
-Step 2: Declare the Reduction
+         !$omp declare reduction(maxloc: mx_s: &
+         !$omp& mx_combine(omp_out, omp_in)) &
+         !$omp& initializer(mx_init(omp_priv, omp_orig))
 
+**Special variables**
 
-.. code-block:: fortran
+- ``omp_priv``: the newly created private result to initialize.
+- ``omp_orig``: the original result prior to the construct.
+- ``omp_in``: a value to be combined.
+- ``omp_out``: the current combined value, to update.
 
-    !$omp declare reduction(maxloc: mx_s: &
-    !$omp mx_combine(omp_out, omp_in)) &
-    !$omp initializer(mx_init(omp_priv, omp_orig))
+**Step 3: Implement the Initializer**
 
+This initializer copies the initial value and index from the original object, as in the source material.
 
-- The operation can be triggered by the name ``maxloc``
-- Utilizes subroutine ``mx_combine`` and ``mx_init``
-- Acts on objects of type ``mx_s``
+.. tabs::
 
+   .. tab:: C/C++
 
-*The Initializer in Fortran*
+      .. code-block:: c
 
-Can be a subroutine or assignment statement (here: subroutine).
+         void mx_init(struct mx_s *priv, const struct mx_s *orig)
+         {
+             priv->value = orig->value;
+             priv->index = orig->index;
+         }
 
-Special Variables:
+   .. tab:: Fortran
 
-- ``omp_priv``: reference to variable to be initialized
-- ``omp_orig``: reference to original variable prior to construct
+      .. code-block:: fortran
 
-*Example Implementation*
+         subroutine mx_init(priv, orig)
+             type(mx_s), intent(out) :: priv
+             type(mx_s), intent(in) :: orig
+             priv%value = orig%value
+             priv%index = orig%index
+         end subroutine mx_init
 
-Initialize from value prior to construct:
+**Step 4: Implement the Combiner**
 
-.. code-block:: fortran
+Replace the combined result if the incoming contribution has a greater value.
 
-    subroutine mx_init(priv, orig)
-        type(mx_s), intent(out) :: priv
-        type(mx_s), intent(in) :: orig
-        
-        priv%value = orig%value
-        priv%index = orig%index
-    end subroutine mx_init
+.. tabs::
 
+   .. tab:: C/C++
 
+      .. code-block:: c
 
-*The Combiner in Fortran*
+         void mx_combine(struct mx_s *out, const struct mx_s *in)
+         {
+             if (out->value < in->value) {
+                 out->value = in->value;
+                 out->index = in->index;
+             }
+         }
 
+   .. tab:: Fortran
 
-Can be a subroutine or assignment statement (here: subroutine).
+      .. code-block:: fortran
 
-Special Variables:
+         subroutine mx_combine(out, in)
+             type(mx_s), intent(inout) :: out
+             type(mx_s), intent(in) :: in
+             if (out%value < in%value) then
+                 out%value = in%value
+                 out%index = in%index
+             endif
+         end subroutine mx_combine
 
-- ``omp_in``: reference to contribution from thread
-- ``omp_out``: reference to combined result
+.. note::
 
-*Example Implementation*
+   These declaration and helper-routine fragments must be placed in appropriate program or module scope, with helper interfaces visible to the ``declare reduction`` directive. Compiler support varies: for example, GNU Fortran 14 recognizes a local ``declare reduction`` but did not resolve the same reduction imported from a separate module in a representative check.
 
-Replace if contribution is larger:
+**Step 5: Use the Reduction**
 
-.. code-block:: fortran
+The following fragments assume the type and helper routines above are in scope, and ``val`` contains ``count`` elements.
 
-    subroutine mx_combine(out, in)
-        type(mx_s), intent(inout) :: out
-        type(mx_s), intent(in) :: in
-        
-        if (out%value < in%value) then
-            out%value = in%value
-            out%index = in%index
-        endif
-    end subroutine mx_combine
+.. tabs::
 
+   .. tab:: C/C++
 
-*Using User-Defined Reduction in Fortran*
+      .. code-block:: c
 
-.. code-block:: fortran
+         struct mx_s mx;
+         mx.value = val[0];
+         mx.index = 0;
+         #pragma omp parallel for reduction(maxloc:mx)
+         for (int i = 1; i < count; i++) {
+             if (mx.value < val[i]) {
+                 mx.value = val[i];
+                 mx.index = i;
+             }
+         }
 
-    mx%value = val(1)
-    mx%index = 1
-    
-    !$omp parallel do reduction(maxloc: mx)
-    do i = 2, count
-        if (mx%value < val(i)) then
-            mx%value = val(i)
-            mx%index = i
-        endif
-    enddo
+   .. tab:: Fortran
 
+      .. code-block:: fortran
 
+         type(mx_s) :: mx
+         mx%value = val(1)
+         mx%index = 1
+         !$omp parallel do reduction(maxloc:mx)
+         do i = 2, count
+             if (mx%value < val(i)) then
+                 mx%value = val(i)
+                 mx%index = i
+             endif
+         enddo
+         !$omp end parallel do
 
-- Easily readable code
-- Similar to what one would do in serial programming
-- Abstracts away the parallel complexity
+- The code is similar to a serial maximum search.
+- Parallel combination is abstracted behind the named reduction.
+- Equal maxima may select different indices because the combiner only replaces an entry when the incoming value is strictly greater.
 
+**Declaring a Reduction Operation: Syntax Summary**
 
-*User-Defined Reduction in C*
+.. tabs::
 
-Step 1: Define the Data Type
+   .. tab:: C/C++
 
+      .. code-block:: c
 
-.. code-block:: c
+         #pragma omp declare reduction(reduction_identifier: type_list: \
+             combiner) initializer(initializer_expression)
 
-    struct mx_s {
-        float value;
-        int index;
-    };
+   .. tab:: Fortran
 
-Step 2: Declare the Reduction
+      .. code-block:: fortran
 
+         !$omp declare reduction(reduction_identifier: type_list: &
+         !$omp& combiner) initializer(initializer_expression)
 
-.. code-block:: c
+**Components**
 
-    #pragma omp declare reduction(maxloc: \
-        struct mx_s: mx_combine(&omp_out, &omp_in)) \
-        initializer(mx_init(&omp_priv, &omp_orig))
-
-
-
-- The operation can be triggered by the name ``maxloc``
-- Utilizes functions ``mx_combine`` and ``mx_init``
-- Acts on objects of type ``struct mx_s``
-
-
-*The Initializer in C*
-
-
-An expression (here: implemented with a function).
-
-Special Variables:
-
-- ``omp_priv``: reference to variable to be initialized
-- ``omp_orig``: reference to original variable prior to construct
-
-*Example Implementation*
-
-Initialize from value prior to construct:
-
-.. code-block:: c
-
-    void mx_init(struct mx_s *priv, struct mx_s *orig)
-    {
-        priv->value = orig->value;
-        priv->index = orig->index;
-    }
-
-
-
-*The Combiner in C*
-
-An expression (here: implemented with a function).
-
-Special Variables:
-
-- ``omp_in``: reference to contribution from thread
-- ``omp_out``: reference to combined result
-
-*Example Implementation*
-
-Replace if contribution is larger:
-
-.. code-block:: c
-
-    void mx_combine(struct mx_s *out, struct mx_s *in)
-    {
-        if (out->value < in->value) {
-            out->value = in->value;
-            out->index = in->index;
-        }
-    }
-
-
-
-*Using User-Defined Reduction in C*
-
-
-.. code-block:: c
-
-    mx->value = val[0];
-    mx->index = 0;
-    
-    #pragma omp parallel for reduction(maxloc: mx)
-    for (i = 1; i < count; i++) {
-        if (mx.value < val[i])
-        {
-            mx.value = val[i];
-            mx.index = i;
-        }
-    }
-
-
-- Easily readable code
-- Similar to what one would do in serial programming
-- Abstracts away the parallel complexity
-
-
-
-*Declaring a Reduction Operation: Syntax Summary*
-
-C Syntax
-
-
-.. code-block:: c
-
-    #pragma omp declare reduction (reduction-identifier : \
-        typename-list : combiner) [initializer-clause] new-line
-
-Fortran Syntax
-
-
-.. code-block:: fortran
-
-    !$omp declare reduction(reduction-identifier : &
-    !$omp type-list : combiner) [initializer-clause]
-
-*Components*
-
-- **reduction-identifier:** Name for your reduction
-- **typename-list/type-list:** Data types the reduction applies to
-- **combiner:** Function/subroutine to combine values
-- **initializer-clause:** Optional initialization specification
-
-
+- ``reduction_identifier``: name for the custom reduction.
+- ``type_list``: the type or types the reduction applies to.
+- ``combiner``: expression or helper routine to merge contributions.
+- ``initializer``: optional initialization expression or routine.
 
 Dealing with Global Storage
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+===========================
 
+By default, global storage is shared by threads. Examples include:
 
-By default, global storage is shared among all threads.
+.. tabs::
 
-*Examples of Global Storage*
+   .. tab:: C/C++
 
+      - File-scope variables
+      - Static variables
 
-**C/C++:**
+   .. tab:: Fortran
 
-- File scope variables
-- ``static`` variables
+      - ``COMMON`` blocks
+      - Module data
+      - Variables with the ``SAVE`` attribute
 
-**Fortran:**
+This default behavior is not always what a parallel program needs.
 
-- ``COMMON`` blocks
-- Module data
-- Variables with ``save`` attribute
+Directive: threadprivate
+------------------------
 
+The ``threadprivate`` directive makes eligible global or persistent storage private to each thread. Each thread has its own copy rather than using a single shared value.
 
-This default behavior is not always what is needed.
+.. tabs::
 
+   .. tab:: C/C++
 
-Directive: threadprivate in C
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      .. code-block:: c
 
-The ``threadprivate`` directive makes global storage private to each thread.
+         #include <stdio.h>
+         int g_var = 1;
+         #pragma omp threadprivate(g_var)
 
+         int main(void)
+         {
+             g_var = 4;
+             #pragma omp parallel num_threads(4)
+             {
+                 printf("%d\n", g_var);
+             }
+             return 0;
+         }
 
-.. code-block:: c
+   .. tab:: Fortran
 
-    int g_var = 1;
-    #pragma omp threadprivate(g_var)
-    
-    int main()
-    {
-        g_var = 4;
-        
-        #pragma omp parallel
-        {
-            printf("%d\n", g_var);
-        }
-        
-        return 0;
-    }
+      .. code-block:: fortran
 
+         module gmod
+             integer :: g_var = 1
+             !$omp threadprivate(g_var)
+         end module gmod
 
-- Each thread gets a private copy
-- Outside parallel region: modifications affect master's copy
+         program example
+             use gmod
+             g_var = 4
+             !$omp parallel num_threads(4)
+                 print *, g_var
+             !$omp end parallel
+         end program example
 
-*Example Output*
-
-With 4 threads:
-
-.. code-block:: text
-
-    Thread 0 (master): 4
-    Thread 1: 1
-    Thread 2: 1
-    Thread 3: 1
-
-
-
-Directive: threadprivate in Fortran
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-The ``threadprivate`` directive makes global storage private to each thread.
-
-
-
-.. code-block:: fortran
-
-    module gmod
-        integer :: g_var = 1
-        !$omp threadprivate(g_var)
-    end module gmod
-    
-    program example
-        use gmod
-        
-        g_var = 4
-        
-        !$omp parallel
-        print *, g_var
-        !$omp end parallel
-    end program example
-
-
-
-- Each thread gets a private copy
-- Outside parallel region: modifications affect master's copy
-
-*Example Output*
-
-
-With 4 threads:
+**Expected values with 4 threads**
 
 .. code-block:: text
 
-    Thread 0 (master): 4
-    Thread 1: 1
-    Thread 2: 1
-    Thread 3: 1
+   Thread 0 (primary thread): 4
+   Thread 1: 1
+   Thread 2: 1
+   Thread 3: 1
 
+.. note::
 
+   Values may appear in any output order. Outside a parallel region, assignments by the initial thread affect its own ``threadprivate`` copy.
 
 Clause: copyin
-^^^^^^^^^^^^^^
+--------------
 
+The ``copyin`` clause initializes each thread's ``threadprivate`` data from the value held by the primary thread when the parallel region begins.
 
-The ``copyin`` clause initializes threadprivate data from the master thread.
+.. tabs::
 
-C Example
+   .. tab:: C/C++
 
+      .. code-block:: c
 
-.. code-block:: c
+         #include <stdio.h>
+         int g_var = 1;
+         #pragma omp threadprivate(g_var)
 
-    int g_var = 1;
-    #pragma omp threadprivate(g_var)
-    
-    int main()
-    {
-        g_var = 4;
-        
-        #pragma omp parallel \
-            copyin(g_var)
-        {
-            printf("%d\n", g_var);
-        }
-        
-        return 0;
-    }
+         int main(void)
+         {
+             g_var = 4;
+             #pragma omp parallel copyin(g_var) num_threads(4)
+             {
+                 printf("%d\n", g_var);
+             }
+             return 0;
+         }
 
-Fortran Example
+   .. tab:: Fortran
 
+      .. code-block:: fortran
 
-.. code-block:: fortran
+         module gmod
+             integer :: g_var = 1
+             !$omp threadprivate(g_var)
+         end module gmod
 
-    module gmod
-        integer :: g_var = 1
-        !$omp threadprivate(g_var)
-    end module gmod
-    
-    program example
-        use gmod
-        
-        g_var = 4
-        
-        !$omp parallel copyin(g_var)
-        print *, g_var
-        !$omp end parallel
-    end program example
+         program example
+             use gmod
+             g_var = 4
+             !$omp parallel copyin(g_var) num_threads(4)
+                 print *, g_var
+             !$omp end parallel
+         end program example
 
-*Output*
-
-With 4 threads, **all** threads print: ``4``
-
-
+**Output:** With four threads, **all** threads print ``4`` (in an unspecified order).
 
 More on threadprivate
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
-*Data Persistence*
+**Data Persistence**
 
-``threadprivate`` data remains unchanged between parallel regions if:
+The original course material highlights these conditions for preserving ``threadprivate`` values between non-nested parallel regions:
 
-1. Neither region is nested inside another parallel region
-2. Both regions have the same thread count
-3. Internal variable ``dyn-var`` is false in both regions
-   
-   - Use function ``omp_set_dynamic`` to control this
+- Both parallel regions have the same number of threads.
+- Dynamic adjustment of the number of threads is disabled.
+- Neither region is nested in another parallel region.
 
-*Fortran COMMON Blocks*
+Use ``omp_set_dynamic`` to control dynamic adjustment:
 
-In Fortran, you can make a ``COMMON`` block threadprivate:
+.. tabs::
 
-.. code-block:: fortran
+   .. tab:: C/C++
 
-    integer :: a, b, c
-    COMMON /abccom/ a, b, c
-    !$OMP threadprivate(/abccom/)
+      .. code-block:: c
+
+         #include <omp.h>
+         omp_set_dynamic(0);  // disable dynamic thread adjustment
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         use omp_lib
+         call omp_set_dynamic(.false.)  ! disable dynamic adjustment
+
+.. note::
+
+   These are key conditions from the original teaching material, not an exhaustive statement of all OpenMP requirements for persistence. Do not assume thread-to-thread persistence if the runtime may change team membership.
+
+**Threadprivate Global Storage: C/C++ and Fortran COMMON Blocks**
+
+Fortran ``COMMON`` blocks can be made ``threadprivate``. C/C++ has no ``COMMON`` block; the analogous operation is to declare a file-scope or static variable ``threadprivate``.
+
+.. tabs::
+
+   .. tab:: C/C++
+
+      .. code-block:: c
+
+         int a, b, c;   // file-scope variables
+         #pragma omp threadprivate(a, b, c)
+
+   .. tab:: Fortran
+
+      .. code-block:: fortran
+
+         integer :: a, b, c
+         common /abccom/ a, b, c
+         !$omp threadprivate(/abccom/)
+
 
 
 .. challenge::
