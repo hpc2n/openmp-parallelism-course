@@ -127,7 +127,7 @@ The :code:`-Wall` causes the compiler to print additional warnings.
 
 .. challenge::
 
-    Compile the following "Hello world" program using the `foss/2025b` toolchain:
+    Compile the following "Hello world" program using the :code:`foss/2025b` toolchain:
     
     .. code-block:: c
         :linenos:
