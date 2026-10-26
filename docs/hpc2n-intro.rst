@@ -294,7 +294,7 @@ Other than these two places you can also use **/scratch** on both the login node
 |                           | | the storage projects  | directory |                 |
 +---------------------------+-------------------------+-----------+-----------------+
 
-There is more information about the filesystems at HPC2N here: https://docs.hpc2n.umu.se/documentation/filesystems/#
+There is more information about the filesystems at HPC2N here: https://docs.hpc2n.umu.se/documentation/filesystems/
 
 Project storage for this course
 """""""""""""""""""""""""""""""
