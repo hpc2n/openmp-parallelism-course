@@ -117,7 +117,7 @@ This is normal and you should **NOT** force unload them.
 Compile C code
 ^^^^^^^^^^^^^^
 
-Once the correct toolchain (:code:`foss`) has been loaded, we can compile C source files (:code:`*.c`) with the GNU compiler:
+Once the correct toolchain has been loaded, we can compile C source files (:code:`*.c`) with the GNU compiler:
 
 .. code-block:: bash
 
@@ -127,7 +127,7 @@ The :code:`-Wall` causes the compiler to print additional warnings.
 
 .. challenge::
 
-    Compile the following "Hello world" program:
+    Compile the following "Hello world" program using the `foss/2025b` toolchain:
     
     .. code-block:: c
         :linenos:
