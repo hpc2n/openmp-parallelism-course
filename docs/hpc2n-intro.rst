@@ -13,7 +13,7 @@ Introduction to HPC2N
 Overview of HPC2N
 ^^^^^^^^^^^^^^^^^
 
-High Performance Computing Center North (HPC2N) is a national center for Scientific and Parallel Computing. It is a part of the National Infrastructure for Supercomputing Computing in Sweden (NAISS).
+High Performance Computing Center North (HPC2N) is a national center for Scientific and Parallel Computing. It is a branch of the National Infrastructure for Supercomputing Computing in Sweden (NAISS).
 
 HPC2N is a collaboration between universities and research institutes (Luleå University of Technology, Mid Sweden University, Swedish Institute of Space Physics, the Swedish University of Agricultural Sciences, and Umeå University). 
 
@@ -29,8 +29,7 @@ HPC2N management and personnel
 
 Management
  - Paolo Bientinesi, director
- - Björn Torkelsson, deputy director
- - Lena Hellman, administrator  
+ - Björn Torkelsson, deputy director  
 
 Application experts (AE)
  - Jerry Eriksson
@@ -52,6 +51,7 @@ HPC2N's supercomputer is called **Kebnekaise**. It is named after a massif which
 
  - Delivered by Lenovo. Opened for usage November 2016.
  - Extended during 2018 with Skylake nodes and NVidia V100 GPU nodes.
+ - Upgraded in a rolling-base manner. 
    
 **Kebnekaise compute nodes**
 
@@ -82,10 +82,14 @@ In total, Kebnekaise has
  - 984 TFlops/s Peak performance
  - 791 TFlops/s HPL (80% of Peak performance)  
 
+ See `HPC2N's hardware <https://www.hpc2n.umu.se/resources/hardware/kebnekaise>`_.
+
 **Storage**
 
  - Home directory (25GB)
  - Project storage (small, medium, large. Applied for through SUPR. Shared among project members)
+
+ See `HPC2N's storage <https://www.hpc2n.umu.se/access/systems>`_.
 
 Overview of projects, storage, and accounts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -111,34 +115,21 @@ In order to use Kebnekaise, you must be a member of a compute project. This is h
 
 Note that you can still be a member of a project even if you are not in Swedish academia. The requirements are only for the PI. 
 
-Since the only available storage per default is the 25 GB in a user's home directory, most also needs to apply for storage. During the application for a compute project the applicant will be asked if they want the default extra storage of 500 GB. If this is not enough, it is necessary to apply for a storage project as well. 
+Since the only available storage per default is the 25 GB in a user's **HOME** directory, most also needs to apply for storage. 
+During the application for a compute project the applicant will be asked if they want the default extra storage of 500 GB. 
+If this is not enough, it is necessary to apply for a storage project as well. 
 
-**There are three sizes of storage project** 
+**Storage project** 
 
- - Small
-
-   - <= 3 TB
-   - at least PhD student to apply
-   - evaluated weekly
- - Medium
-
-   - 3 - 30 TB
-   - at least an assistant professor to apply
-   - monthly rounds
- - Large
-
-   - more than 30 TB
-   - bi-annual rounds 
-
-Project storage is shared among the project members. 
+Now, one applies for storage during the application for Computing Projects. There is no a separate application for storage. 
+Storage directories are shared among the project members. 
    
-The compute project and the storage project can be linked together so members of the compute project automatically becomes members of the storage project. 
-
 HPC2N has a webpage with more information about `projects <https://docs.hpc2n.umu.se/documentation/projects/>`_.  
 
 **Accounts**
 
-When your project has been approved (or you have become a member of an approved project), you can apply for an account at HPC2N. This is done through SUPR, from the `account request page <https://supr.naiss.se/account/>`_. 
+When your project has been approved (or you have become a member of an approved project), you can apply for an account at HPC2N. 
+This is done through SUPR, from the `account request page <https://supr.naiss.se/account/>`_. 
 
 NOTE that if you have not signed the NAISS User Agreement we will not get the account request, so remember to do this! 
 
@@ -149,7 +140,8 @@ Connecting to HPC2N's systems and transferring files
 
 In order to login to HPC2N, you need an SSH client and potentially an X11 server if you want to open graphical displays. 
 
-If you are using Windows and do not currently have a preferred setup for connecting, we recommend using ThinLinc since that includes everything needed and is quick to install. 
+If you are using Windows and do not currently have a preferred setup for connecting, we recommend using ThinLinc since that 
+includes everything needed and is quick to install. 
 
 Guides
  - ThinLinc (all OS): https://docs.hpc2n.umu.se/tutorials/connections/#thinlinc
@@ -163,9 +155,7 @@ Guides
 
 You get your first, temporary HPC2N password from this page: https://docs.hpc2n.umu.se/documentation/access/#first__time__login__password__change
 
-The above page can also be used to reset your HPC2N password if you have forgotten it. 
-
-Note that you are authenticating through SUPR, using that service's login credentials! 
+The above page can also be used to reset your HPC2N password if you have forgotten it.  
 
 Logging in to Kebnekaise
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -234,7 +224,9 @@ macOS
  - Transfer as for Linux, using Terminal
  - Download client: Cyberduck, Fetch, ... 
 
-More information in the connection guides (see section under connecting to HPC2N) and on the HPC2N file transfer documentation: https://www.hpc2n.umu.se/documentation/filesystems/filetransfer
+More information in the connection guides (see section under connecting to HPC2N) and on the HPC2N file transfer documentation: 
+https://docs.hpc2n.umu.se/tutorials/connections/#file__transfers_1 https://docs.hpc2n.umu.se/documentation/filesystems/#file__transfer
+
 
 Editors at HPC2N
 ^^^^^^^^^^^^^^^^
@@ -302,7 +294,7 @@ Other than these two places you can also use **/scratch** on both the login node
 |                           | | the storage projects  | directory |                 |
 +---------------------------+-------------------------+-----------+-----------------+
 
-There is more information about the filesystems at HPC2N here: https://www.hpc2n.umu.se/filesystems/overview
+There is more information about the filesystems at HPC2N here: https://docs.hpc2n.umu.se/documentation/filesystems/#
 
 Project storage for this course
 """""""""""""""""""""""""""""""
@@ -339,5 +331,6 @@ In order to run a batch job, you either need to give commands to it on the comma
 
 Examples of using the batch system will be given in the "Using Kebnekaise" lecture. 
 
-There are guides and documentation for the batch system and the policies to be found on HPC2N's website: https://www.hpc2n.umu.se/support 
+There are guides and documentation for the batch system and the policies to be found on HPC2N's website: 
+https://docs.hpc2n.umu.se/documentation/batchsystem/intro/
 
