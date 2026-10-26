@@ -139,6 +139,92 @@ The :code:`-Wall` causes the compiler to print additional warnings.
             return 0;
         }
 
+.. challenge::
+
+    Compile the following **time0.c** program using the :code:`foss/2025b` toolchain, linking the BLAS 
+    library available for the foss toolchain (Flexiblas):
+    
+    .. code-block:: c
+        :linenos:
+    
+        // laptop
+        // gcc time0.c -Wall -o test.x -O2 -L/opt/local/lib -lopenblas
+        // gcc time0.c -Wall -o test.x -O2 -L/Users/pauldj/works/libs/OpenBLAS-develop/ -lopenblas
+        // on cluster Kebnekaise
+        // ml foss/2025b
+        // export OMP_NUM_THREADS=1
+        // gcc time0.c -Wall -o test.x -lflexiblas -lgfortran
+        // ml intel
+        // export MKL_NUM_THREADS=1
+        // icx time0.c -Wall -o test.x -qmkl
+
+        #include <stdlib.h>
+        #include <stdio.h> 
+        #include <time.h>
+
+        int dpotrf_(char *, int *, double *, int *, int *);
+
+        int dgemm_(char *, char *, int *, int *, int *, double *,
+            double *, int *, double *, int *, double *, double *, int *);
+
+        double dlange_( char *, int *, int *, double *, int *, double * );
+
+        void mat_print( double *A, int n, int m, int ldA, char *text);
+
+
+        int main( int argc, char *argv[] ){
+        int i, j, m, info;
+        double *A, *A0;
+
+        if( argc < 2 ){ printf(" matrix size please?\n "); return -1; }
+        
+        m = atof(argv[1]);
+        
+        A = (double *) malloc( m*m * sizeof(double) );
+        A0= (double *) malloc( m*m * sizeof(double) );
+
+        srand48( (unsigned)time((time_t *)NULL) ); 
+        
+        for( i=0; i<m; i++ )
+            for( j=0; j<=i; j++ ){
+            A[i+j*m] = drand48();
+            A[j+i*m] = 0;
+            if(i == j) A[i+j*m] += m;
+            A0[i+j*m] = A[i+j*m];
+            A0[j+i*m] = A[i+j*m];
+            }
+
+        /* L * L^T = A */
+        dpotrf_( "L", &m, A, &m, &info );   
+
+        double one = 1.0, minus = -1.0;
+        /* L * L^T - A */
+        dgemm_( "N", "T", &m, &m, &m, &one, A, &m, A, &m, &minus, A0, &m ); 
+        printf(" norm: %g\n", dlange_( "F", &m, &m, A0, &m, A ) );   
+        
+        return 0;
+        }
+
+        void mat_print( double *A, int n, int m, int ldA, char *text)
+        {
+        int i, j;
+        FILE *output;
+        output = stdout;
+
+        fprintf(output, "%s = [ ...\n", text );
+        for( i=0; i<n; i++ ) //row
+            {
+            for( j=0; j<m; j++ )  //column
+                fprintf(output, "%.15g ", A[i+j*ldA] );
+            fprintf(output, "; ...\n" );
+            }
+        fprintf(output, "];\n" );
+
+        return;
+        }
+    
+    Run the code :code:`time ./test.x matrix_sise` with different number of threads and monitor
+    the timings 
 
 Course project
 ^^^^^^^^^^^^^^
@@ -203,7 +289,11 @@ If you want to measure the performance, it is advisable to request an **exclusiv
 
 .. challenge::
 
-    Run both "Hello world" programs on the the compute nodes.
+    Run both "time0.c" program on the the compute nodes with **X** number of threads.
+
+.. code-block:: bash
+
+    $ srun --account=hpc2n202w-xyz --ntasks=1 --cpus-per-task=X --exclusive --time=00:03:00  env OMP_NUM_THREADS=X time ./test.x 8000 
  
 Aliases
 ^^^^^^^
@@ -237,7 +327,7 @@ For example, we could write the following to a file called :code:`batch.sh`:
     #SBATCH --time=00:00:15
 
     ml purge
-    ml foss/2020b
+    ml foss/2025b
 
     uname -n
 
