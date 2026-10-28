@@ -1,0 +1,1087 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>More on Private Data &mdash; OpenMP parallelism in scientific computing  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=9c3e77be" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx_lesson.css?v=e9df6548" />
+      <link rel="stylesheet" type="text/css" href="../_static/term_role_formatting.css?v=4194e21c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+      <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=187304be"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+      <script src="../_static/minipres.js?v=a0d29692"></script>
+      <script>let toggleHintShow = 'Click to show';</script>
+      <script>let toggleHintHide = 'Click to hide';</script>
+      <script>let toggleOpenOnPrint = 'true';</script>
+      <script src="../_static/togglebutton.js?v=b8b12719"></script>
+      <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+      <script src="../_static/design-tabs.js?v=f930bc37"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="../_static/tabs.js?v=3030b3cb"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex/" />
+    <link rel="search" title="Search" href="../search/" />
+    <link rel="next" title="More on Worksharing" href="../worksharingii/" />
+    <link rel="prev" title="Worksharing and Scheduling" href="../worksharing/" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../" class="icon icon-home">
+            OpenMP parallelism in scientific computing
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search/" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Day 1</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../hpc2n-intro/">Introduction to HPC2N</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup/">Introduction to Kebnekaise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../profiling-analysis/">Profiling analysis with VTune and Advisor</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 2</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../first-steps/">First Steps in OpenMP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../data-handling/">Data for Parallel Regions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../worksharing/">Worksharing and Scheduling</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 3</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">More on Private Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#private-and-shared-data-review">Private and Shared Data: Review</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#clause-firstprivate">Clause: firstprivate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#clause-lastprivate">Clause: lastprivate</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#reduction-variables">Reduction Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#user-defined-reductions">User-Defined Reductions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#dealing-with-global-storage">Dealing with Global Storage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../worksharingii/">More on Worksharing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Day 4</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../tasks/">The Task Directive</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Miscellanous</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../quick-reference/">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../guide/">Instructor’s guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../">OpenMP parallelism in scientific computing</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">More on Private Data</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/hpc2n/OpenMP-parallelism-course/blob/master/docs/data-handlingii.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="more-on-private-data">
+<h1>More on Private Data<a class="headerlink" href="#more-on-private-data" title="Link to this heading"></a></h1>
+<div class="admonition-objectives objectives admonition" id="objectives-0">
+<p class="admonition-title">Objectives</p>
+<p>This guide covers special versions of private data:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">firstprivate</span></code> - initialization of private variables</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lastprivate</span></code> - capturing values from last iteration</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reduction</span></code> - parallel reductions (sums, products, etc.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">threadprivate</span></code> - privatizing global storage</p></li>
+<li><p>User-defined reductions (OpenMP 4.0+)</p></li>
+</ul>
+</div>
+<section id="private-and-shared-data-review">
+<h2>Private and Shared Data: Review<a class="headerlink" href="#private-and-shared-data-review" title="Link to this heading"></a></h2>
+<p>In a parallel region, data can be either shared or private.</p>
+<p><strong>Shared Data</strong></p>
+<ul class="simple">
+<li><p>Value is retained on entry to the parallel region.</p></li>
+<li><p>Survives after the parallel region ends.</p></li>
+</ul>
+<p><strong>Private Data</strong></p>
+<ul class="simple">
+<li><p>Each thread has its own private copy.</p></li>
+<li><p>Normally uninitialized at the beginning of the parallel region.</p></li>
+<li><p>Contents are typically lost when the parallel region finishes.</p></li>
+<li><p>Connections to values before and after the parallel region may nevertheless be needed.</p></li>
+</ul>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/sm_3.png"><img alt="../_images/sm_3.png" src="../_images/sm_3.png" style="width: 242.39999999999998px; height: 164.1px;" />
+</a>
+</figure>
+<p><strong>Memory Layout</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Main Memory: [Shared data]
+Thread 0: [Private T0]
+Thread 1: [Private T1]
+Thread 2: [Private T2]
+Thread 3: [Private T3]
+</pre></div>
+</div>
+<section id="clause-firstprivate">
+<h3>Clause: firstprivate<a class="headerlink" href="#clause-firstprivate" title="Link to this heading"></a></h3>
+<p><strong>Problem</strong></p>
+<p>Private variables are not initialized by default.</p>
+<p><strong>Solution: firstprivate Clause</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">firstprivate</span></code> clause:</p>
+<ul class="simple">
+<li><p>Declares variables private for each thread.</p></li>
+<li><p>Initializes each private copy from the original value before the construct.</p></li>
+</ul>
+<p><strong>Example: firstprivate</strong></p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">lsum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
+<span class="w">    </span><span class="cp">#pragma omp parallel firstprivate(lsum) num_threads(4)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">lsum</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%i</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">lsum</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">program </span><span class="n">firstprivate_example</span>
+<span class="w">    </span><span class="k">use </span><span class="n">omp_lib</span>
+<span class="w">    </span><span class="k">implicit none</span>
+<span class="k">    </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">lsum</span>
+<span class="w">    </span><span class="n">lsum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span>
+<span class="w">    </span><span class="c">!$omp parallel firstprivate(lsum) num_threads(4)</span>
+<span class="w">        </span><span class="n">lsum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lsum</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">lsum</span>
+<span class="w">    </span><span class="c">!$omp end parallel</span>
+<span class="k">end program </span><span class="n">firstprivate_example</span>
+</pre></div>
+</div>
+</div></div>
+<p><strong>Expected Output</strong></p>
+<p>With four threads, the thread-local values are 10, 11, 12, and 13 (the printing order is unspecified).</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread 0: 10
+Thread 1: 11
+Thread 2: 12
+Thread 3: 13
+</pre></div>
+</div>
+<p><strong>Example: Vector Norm with private</strong></p>
+<p>This computes <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i)\,v(i)}\)</span> using a private partial sum per thread and an atomic update to the shared result.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-1-1-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-1-1-0" name="1-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-1-1-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-1-1-1" name="1-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-1-1-0" class="sphinx-tabs-panel" id="panel-1-1-0" name="1-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    shared(vect, norm, vleng) private(i, lNorm)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">vleng</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="cp">#pragma omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">lNorm</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-1-1-1" class="sphinx-tabs-panel" hidden="true" id="panel-1-1-1" name="1-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp shared(vect, norm) private(i, lNorm)</span>
+<span class="w">    </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">vleng</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="w">    </span><span class="c">!$omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">lNorm</span>
+<span class="c">!$omp end parallel</span>
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">lNorm</span></code> must be initialized to 0.0 inside the parallel region, because a <code class="docutils literal notranslate"><span class="pre">private</span></code> copy is initially undefined. In the Fortran examples, <code class="docutils literal notranslate"><span class="pre">vleng</span></code> is assumed to be a named <code class="docutils literal notranslate"><span class="pre">parameter</span></code>; if it is an ordinary variable, add it to the <code class="docutils literal notranslate"><span class="pre">shared</span></code> clause when using <code class="docutils literal notranslate"><span class="pre">default(none)</span></code>.</p>
+</div>
+<p><strong>Example: Vector Norm with firstprivate</strong></p>
+<p>This version initializes <code class="docutils literal notranslate"><span class="pre">lNorm</span></code> to zero before the parallel region; <code class="docutils literal notranslate"><span class="pre">firstprivate</span></code> then initializes every thread-local copy.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-2-2-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-2-2-0" name="2-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-2-2-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-2-2-1" name="2-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-2-2-0" class="sphinx-tabs-panel" id="panel-2-2-0" name="2-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    shared(vect, norm, vleng) private(i) firstprivate(lNorm)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">vleng</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="cp">#pragma omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">lNorm</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-2-2-1" class="sphinx-tabs-panel" hidden="true" id="panel-2-2-1" name="2-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp shared(vect, norm) private(i) firstprivate(lNorm)</span>
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">vleng</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="w">    </span><span class="c">!$omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">lNorm</span>
+<span class="c">!$omp end parallel</span>
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">firstprivate</span></code>, each thread’s <code class="docutils literal notranslate"><span class="pre">lNorm</span></code> starts at 0.0, copied from the original variable. The Fortran array index runs from <code class="docutils literal notranslate"><span class="pre">1</span></code> through <code class="docutils literal notranslate"><span class="pre">vleng</span></code>, corresponding to the C indexing from <code class="docutils literal notranslate"><span class="pre">0</span></code> through <code class="docutils literal notranslate"><span class="pre">vleng-1</span></code>.</p>
+</div>
+</section>
+<section id="clause-lastprivate">
+<h3>Clause: lastprivate<a class="headerlink" href="#clause-lastprivate" title="Link to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">lastprivate</span></code> clause:</p>
+<ul class="simple">
+<li><p>Applies to worksharing loop and sections constructs.</p></li>
+<li><p>Makes the specified variable private during execution.</p></li>
+<li><p>After the construct, copies the value from the sequentially last iteration or the last section into the original variable.</p></li>
+<li><p>If no value is assigned on the sequentially last iteration or section, the final value may be undefined.</p></li>
+</ul>
+<p>A variable may appear in both <code class="docutils literal notranslate"><span class="pre">firstprivate</span></code> and <code class="docutils literal notranslate"><span class="pre">lastprivate</span></code> on a supported construct.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-3-3-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-3-3-0" name="3-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-3-3-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-3-3-1" name="3-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-3-3-0" class="sphinx-tabs-panel" id="panel-3-3-0" name="3-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
+<span class="cp">#pragma omp parallel for lastprivate(a)</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">100</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="n">func</span><span class="p">(</span><span class="n">a</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="n">printf</span><span class="p">(</span><span class="s">"a=%i</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">);</span><span class="w">   </span><span class="c1">// a=100</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-3-3-1" class="sphinx-tabs-panel" hidden="true" id="panel-3-3-1" name="3-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">a</span>
+<span class="c">!$omp parallel do lastprivate(a)</span>
+<span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span>
+<span class="w">    </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="k">call </span><span class="n">func</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="k">enddo</span>
+<span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="s2">"a="</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="w">     </span><span class="c">! a=101</span>
+</pre></div>
+</div>
+</div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The value from the <strong>sequentially last iteration</strong> is assigned back to the original variable, regardless of which thread finishes last. The outputs differ because the examples use C indexing from 0 and Fortran indexing from 1.</p>
+</div>
+</section>
+</section>
+</section>
+<section id="reduction-variables">
+<h1>Reduction Variables<a class="headerlink" href="#reduction-variables" title="Link to this heading"></a></h1>
+<p>Reductions of private variables are frequently needed for averages of arrays, scalar products, sums, products, minima, and maxima.</p>
+<p><strong>Previous Approach</strong></p>
+<p>In the vector-norm examples we used <code class="docutils literal notranslate"><span class="pre">atomic</span></code> to protect updates to a shared accumulator.</p>
+<p><strong>Better Approach: Reduction Clause</strong></p>
+<p>For a reduction, specify the operation (addition, multiplication, logical operations, etc.) and the variable or variables. A construct may contain multiple reductions.</p>
+<p><strong>Common syntax:</strong> <code class="docutils literal notranslate"><span class="pre">reduction(operator</span> <span class="pre">:</span> <span class="pre">variable_list)</span></code></p>
+<p><strong>How It Works</strong></p>
+<ul class="simple">
+<li><p>Each thread receives a private contribution.</p></li>
+<li><p>Each contribution is initialized to the identity element for the specified operation.</p></li>
+<li><p>At the end of the reduction region, private contributions are combined with the original value using the specified operation.</p></li>
+<li><p>The combined result is available after the construct.</p></li>
+</ul>
+<p><strong>Example: Memory Movements for Reduction</strong></p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-4-4-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-4-4-0" name="4-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-4-4-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-4-4-1" name="4-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-4-4-0" class="sphinx-tabs-panel" id="panel-4-4-0" name="4-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+<span class="w">    </span><span class="cp">#pragma omp parallel reduction(+:b) num_threads(4)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">b</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"%i</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-4-4-1" class="sphinx-tabs-panel" hidden="true" id="panel-4-4-1" name="4-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">program </span><span class="n">reduction_example</span>
+<span class="w">    </span><span class="k">use </span><span class="n">omp_lib</span>
+<span class="w">    </span><span class="k">implicit none</span>
+<span class="k">    </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">b</span>
+<span class="w">    </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span>
+<span class="w">    </span><span class="c">!$omp parallel reduction(+:b) num_threads(4)</span>
+<span class="w">        </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">()</span>
+<span class="w">    </span><span class="c">!$omp end parallel</span>
+<span class="w">    </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">b</span>
+<span class="k">end program </span><span class="n">reduction_example</span>
+</pre></div>
+</div>
+</div></div>
+<p><strong>Memory Behavior (4 threads)</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Original value: b = 5
+Thread 0: b = 0 -&gt; b = 0
+Thread 1: b = 0 -&gt; b = 1
+Thread 2: b = 0 -&gt; b = 2
+Thread 3: b = 0 -&gt; b = 3
+Final: 5 + 0 + 1 + 2 + 3 = 11
+</pre></div>
+</div>
+<p>Output: <code class="docutils literal notranslate"><span class="pre">11</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Each thread’s private copy is initialized to 0 (the identity for addition) and combined at the end.</p>
+</div>
+<p><strong>Example: Vector Norm with atomic update</strong></p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-5-5-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-5-5-0" name="5-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-5-5-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-5-5-1" name="5-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-5-5-0" class="sphinx-tabs-panel" id="panel-5-5-0" name="5-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    shared(vect, norm, vleng) private(i) firstprivate(lNorm)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">vleng</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">    </span><span class="cp">#pragma omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">lNorm</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-5-5-1" class="sphinx-tabs-panel" hidden="true" id="panel-5-5-1" name="5-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp shared(vect, norm) private(i) firstprivate(lNorm)</span>
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">vleng</span>
+<span class="w">        </span><span class="n">lNorm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lNorm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="w">    </span><span class="c">!$omp atomic update</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">lNorm</span>
+<span class="c">!$omp end parallel</span>
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></div>
+<p><strong>Example: Vector Norm with reduction</strong></p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-6-6-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-6-6-0" name="6-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-6-6-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-6-6-1" name="6-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-6-6-0" class="sphinx-tabs-panel" id="panel-6-6-0" name="6-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span><span class="w">  </span><span class="c1">// original value</span>
+<span class="cp">#pragma omp parallel default(none) \</span>
+<span class="cp">    shared(vect, vleng) reduction(+:norm) private(i)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="cp">#pragma omp for</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">vleng</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">        </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span><span class="w">  </span><span class="c1">// private contribution</span>
+<span class="p">}</span>
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span><span class="w">  </span><span class="c1">// combined result</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-6-6-1" class="sphinx-tabs-panel" hidden="true" id="panel-6-6-1" name="6-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="w">  </span><span class="c">! original value</span>
+<span class="c">!$omp parallel default(none) &amp;</span>
+<span class="c">!$omp shared(vect) reduction(+:norm) private(i)</span>
+<span class="w">    </span><span class="c">!$omp do</span>
+<span class="w">    </span><span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">vleng</span>
+<span class="w">        </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="w">  </span><span class="c">! private contribution</span>
+<span class="w">    </span><span class="k">enddo</span>
+<span class="c">!$omp end parallel</span>
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span><span class="w">  </span><span class="c">! combined result</span>
+</pre></div>
+</div>
+</div></div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">reduction(+:norm)</span></code>, no separate <code class="docutils literal notranslate"><span class="pre">lNorm</span></code> variable or <code class="docutils literal notranslate"><span class="pre">atomic</span></code> directive is needed. The clause manages private contributions and their combination.</p>
+</div>
+<p><strong>Example: Vector Norm with reduction (Simplified)</strong></p>
+<p>The combined <code class="docutils literal notranslate"><span class="pre">parallel</span> <span class="pre">for</span></code> / <code class="docutils literal notranslate"><span class="pre">parallel</span> <span class="pre">do</span></code> construct makes the code even more concise.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-7-7-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-7-7-0" name="7-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-7-7-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-7-7-1" name="7-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-7-7-0" class="sphinx-tabs-panel" id="panel-7-7-0" name="7-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span><span class="p">;</span>
+<span class="cp">#pragma omp parallel for default(none) \</span>
+<span class="cp">    shared(vect, vleng) reduction(+:norm)</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">vleng</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">vect</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">);</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-7-7-1" class="sphinx-tabs-panel" hidden="true" id="panel-7-7-1" name="7-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="c">!$omp parallel do default(none) &amp;</span>
+<span class="c">!$omp shared(vect) reduction(+:norm)</span>
+<span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">vleng</span>
+<span class="w">    </span><span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">norm</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">vect</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+<span class="k">enddo</span>
+<span class="c">!$omp end parallel do</span>
+<span class="n">norm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">sqrt</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></div>
+<p>The quantity computed in all three norm approaches is <span class="math notranslate nohighlight">\(\sqrt{\sum_i v(i)\,v(i)}\)</span>.</p>
+<p><strong>Supported Operators (OpenMP 3.0 reference)</strong></p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-8-8-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-8-8-0" name="8-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-8-8-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-8-8-1" name="8-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-8-8-0" class="sphinx-tabs-panel" id="panel-8-8-0" name="8-0" role="tabpanel" tabindex="0"><table class="docutils align-default">
+<colgroup>
+<col style="width: 27.8%" />
+<col style="width: 22.2%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Symbol</p></th>
+<th class="head"><p>Initial value of private copy</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Add</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">+</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>Multiply</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">*</span></code></p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>Subtract</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>Bitwise AND</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&amp;</span></code></p></td>
+<td><p>All bits on (<code class="docutils literal notranslate"><span class="pre">~0</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p>Bitwise OR</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">|</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>Bitwise XOR</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">^</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p>Logical AND</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code></p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>Logical OR</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">||</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+</tbody>
+</table>
+</div><div aria-labelledby="tab-8-8-1" class="sphinx-tabs-panel" hidden="true" id="panel-8-8-1" name="8-1" role="tabpanel" tabindex="0"><table class="docutils align-default">
+<colgroup>
+<col style="width: 27.8%" />
+<col style="width: 22.2%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Symbol</p></th>
+<th class="head"><p>Initial value of private copy</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Add</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">+</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>Multiply</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">*</span></code></p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p>Subtract</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">-</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>Logical AND</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.and.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.true.</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Logical OR</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.or.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.false.</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Equivalence</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.eqv.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.true.</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>Non-equivalence</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.neqv.</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.false.</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Maximum</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">max</span></code></p></td>
+<td><p>Smallest representable number</p></td>
+</tr>
+<tr class="row-even"><td><p>Minimum</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">min</span></code></p></td>
+<td><p>Largest representable number</p></td>
+</tr>
+<tr class="row-odd"><td><p>Bitwise AND</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">iand</span></code></p></td>
+<td><p>All bits on</p></td>
+</tr>
+<tr class="row-even"><td><p>Bitwise OR</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ior</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>Bitwise XOR</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ieor</span></code></p></td>
+<td><p>0</p></td>
+</tr>
+</tbody>
+</table>
+</div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The tables reflect the OpenMP 3.0-era teaching material. Later OpenMP versions add features and clarify or change some restrictions; <code class="docutils literal notranslate"><span class="pre">-</span></code> as a reduction identifier is deprecated in modern specifications.</p>
+</div>
+<p><strong>Restrictions on Reduction</strong></p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-9-9-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-9-9-0" name="9-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-9-9-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-9-9-1" name="9-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-9-9-0" class="sphinx-tabs-panel" id="panel-9-9-0" name="9-0" role="tabpanel" tabindex="0"><p>For older OpenMP versions, there are restrictions involving arrays and pointer/reference variables.</p>
+<p>Modern OpenMP permits <strong>contiguous array sections</strong> in reduction clauses under specified restrictions. A pointer variable or C++ reference is not interchangeable with an array section.</p>
+<p>Use a scalar or a supported array section, and check the compiler’s OpenMP version before relying on newer features.</p>
+</div><div aria-labelledby="tab-9-9-1" class="sphinx-tabs-panel" hidden="true" id="panel-9-9-1" name="9-1" role="tabpanel" tabindex="0"><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ALLOCATABLE</span></code> arrays must be allocated when the construct is encountered, and must not be deallocated during the reduction.</p></li>
+<li><p>Pointer and assumed-size-array restrictions depend on the reduction item and OpenMP version.</p></li>
+<li><p>Check the supported forms of array elements and array sections for the compiler in use.</p></li>
+</ul>
+</div></div>
+<p><strong>Order of Execution</strong></p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The order in which thread contributions are combined is unspecified. Floating-point reductions can therefore give slightly different results between runs due to rounding and non-associative floating-point arithmetic. This is <strong>not</strong>, by itself, an OpenMP data race.</p>
+</div>
+<p><strong>OpenMP 4.0 Enhancement</strong></p>
+<p>OpenMP 4.0 introduced the ability to declare custom reduction operations.</p>
+</section>
+<section id="user-defined-reductions">
+<h1>User-Defined Reductions<a class="headerlink" href="#user-defined-reductions" title="Link to this heading"></a></h1>
+<p>User-defined reductions allow custom combining operations, particularly useful for C/C++ <code class="docutils literal notranslate"><span class="pre">struct</span></code> or class objects and Fortran derived <code class="docutils literal notranslate"><span class="pre">type</span></code> objects.</p>
+<p>A declaration supplies a <strong>combiner</strong> for merging thread-private results and optionally an <strong>initializer</strong> for each private contribution.</p>
+<p><strong>Case Study: Maximum Value and Its Position</strong></p>
+<p>Given an array, determine both its maximum value and its index. Each thread processes part of the array and contributes a maximum-value/index pair; a user-defined reduction combines those pairs.</p>
+<p><strong>Step 1: Define the Data Type</strong></p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-10-10-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-10-10-0" name="10-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-10-10-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-10-10-1" name="10-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-10-10-0" class="sphinx-tabs-panel" id="panel-10-10-0" name="10-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">mx_s</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">float</span><span class="w"> </span><span class="n">value</span><span class="p">;</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">index</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-10-10-1" class="sphinx-tabs-panel" hidden="true" id="panel-10-10-1" name="10-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">type</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">mx_s</span>
+<span class="w">    </span><span class="kt">real</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="k">value</span>
+<span class="k">    </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="nb">index</span>
+<span class="k">end type </span><span class="n">mx_s</span>
+</pre></div>
+</div>
+</div></div>
+<p><strong>Step 2: Declare the Reduction</strong></p>
+<p>The reduction is named <code class="docutils literal notranslate"><span class="pre">maxloc</span></code> and operates on <code class="docutils literal notranslate"><span class="pre">mx_s</span></code> objects. Here <code class="docutils literal notranslate"><span class="pre">mx_combine</span></code> and <code class="docutils literal notranslate"><span class="pre">mx_init</span></code> are user-defined helper routines.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-11-11-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-11-11-0" name="11-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-11-11-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-11-11-1" name="11-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-11-11-0" class="sphinx-tabs-panel" id="panel-11-11-0" name="11-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp declare reduction(maxloc: struct mx_s: \</span>
+<span class="cp">    mx_combine(&amp;omp_out, &amp;omp_in)) \</span>
+<span class="cp">    initializer(mx_init(&amp;omp_priv, &amp;omp_orig))</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-11-11-1" class="sphinx-tabs-panel" hidden="true" id="panel-11-11-1" name="11-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp declare reduction(maxloc: mx_s: &amp;</span>
+<span class="c">!$omp&amp; mx_combine(omp_out, omp_in)) &amp;</span>
+<span class="c">!$omp&amp; initializer(mx_init(omp_priv, omp_orig))</span>
+</pre></div>
+</div>
+</div></div>
+<p><strong>Special variables</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">omp_priv</span></code>: the newly created private result to initialize.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">omp_orig</span></code>: the original result prior to the construct.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">omp_in</span></code>: a value to be combined.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">omp_out</span></code>: the current combined value, to update.</p></li>
+</ul>
+<p><strong>Step 3: Implement the Initializer</strong></p>
+<p>This initializer copies the initial value and index from the original object, as in the source material.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-12-12-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-12-12-0" name="12-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-12-12-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-12-12-1" name="12-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-12-12-0" class="sphinx-tabs-panel" id="panel-12-12-0" name="12-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">mx_init</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">mx_s</span><span class="w"> </span><span class="o">*</span><span class="n">priv</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">mx_s</span><span class="w"> </span><span class="o">*</span><span class="n">orig</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orig</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">;</span>
+<span class="w">    </span><span class="n">priv</span><span class="o">-&gt;</span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orig</span><span class="o">-&gt;</span><span class="n">index</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-12-12-1" class="sphinx-tabs-panel" hidden="true" id="panel-12-12-1" name="12-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">mx_init</span><span class="p">(</span><span class="n">priv</span><span class="p">,</span><span class="w"> </span><span class="n">orig</span><span class="p">)</span>
+<span class="w">    </span><span class="k">type</span><span class="p">(</span><span class="n">mx_s</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">priv</span>
+<span class="w">    </span><span class="k">type</span><span class="p">(</span><span class="n">mx_s</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">orig</span>
+<span class="w">    </span><span class="n">priv</span><span class="p">%</span><span class="k">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orig</span><span class="p">%</span><span class="k">value</span>
+<span class="k">    </span><span class="n">priv</span><span class="p">%</span><span class="nb">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orig</span><span class="p">%</span><span class="nb">index</span>
+<span class="k">end subroutine </span><span class="n">mx_init</span>
+</pre></div>
+</div>
+</div></div>
+<p><strong>Step 4: Implement the Combiner</strong></p>
+<p>Replace the combined result if the incoming contribution has a greater value.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-13-13-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-13-13-0" name="13-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-13-13-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-13-13-1" name="13-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-13-13-0" class="sphinx-tabs-panel" id="panel-13-13-0" name="13-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">mx_combine</span><span class="p">(</span><span class="k">struct</span><span class="w"> </span><span class="nc">mx_s</span><span class="w"> </span><span class="o">*</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">mx_s</span><span class="w"> </span><span class="o">*</span><span class="n">in</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">out</span><span class="o">-&gt;</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">in</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">out</span><span class="o">-&gt;</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">in</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">;</span>
+<span class="w">        </span><span class="n">out</span><span class="o">-&gt;</span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">in</span><span class="o">-&gt;</span><span class="n">index</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-13-13-1" class="sphinx-tabs-panel" hidden="true" id="panel-13-13-1" name="13-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">subroutine </span><span class="n">mx_combine</span><span class="p">(</span><span class="n">out</span><span class="p">,</span><span class="w"> </span><span class="n">in</span><span class="p">)</span>
+<span class="w">    </span><span class="k">type</span><span class="p">(</span><span class="n">mx_s</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">inout</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">out</span>
+<span class="w">    </span><span class="k">type</span><span class="p">(</span><span class="n">mx_s</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">in</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">out</span><span class="p">%</span><span class="k">value</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">in</span><span class="p">%</span><span class="k">value</span><span class="p">)</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        </span><span class="n">out</span><span class="p">%</span><span class="k">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">in</span><span class="p">%</span><span class="k">value</span>
+<span class="k">        </span><span class="n">out</span><span class="p">%</span><span class="nb">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">in</span><span class="p">%</span><span class="nb">index</span>
+<span class="nb">    </span><span class="k">endif</span>
+<span class="k">end subroutine </span><span class="n">mx_combine</span>
+</pre></div>
+</div>
+</div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These declaration and helper-routine fragments must be placed in appropriate program or module scope, with helper interfaces visible to the <code class="docutils literal notranslate"><span class="pre">declare</span> <span class="pre">reduction</span></code> directive. Compiler support varies: for example, GNU Fortran 14 recognizes a local <code class="docutils literal notranslate"><span class="pre">declare</span> <span class="pre">reduction</span></code> but did not resolve the same reduction imported from a separate module in a representative check.</p>
+</div>
+<p><strong>Step 5: Use the Reduction</strong></p>
+<p>The following fragments assume the type and helper routines above are in scope, and <code class="docutils literal notranslate"><span class="pre">val</span></code> contains <code class="docutils literal notranslate"><span class="pre">count</span></code> elements.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-14-14-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-14-14-0" name="14-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-14-14-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-14-14-1" name="14-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-14-14-0" class="sphinx-tabs-panel" id="panel-14-14-0" name="14-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">mx_s</span><span class="w"> </span><span class="n">mx</span><span class="p">;</span>
+<span class="n">mx</span><span class="p">.</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+<span class="n">mx</span><span class="p">.</span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="cp">#pragma omp parallel for reduction(maxloc:mx)</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mx</span><span class="p">.</span><span class="n">value</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">mx</span><span class="p">.</span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+<span class="w">        </span><span class="n">mx</span><span class="p">.</span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-14-14-1" class="sphinx-tabs-panel" hidden="true" id="panel-14-14-1" name="14-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">type</span><span class="p">(</span><span class="n">mx_s</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">mx</span>
+<span class="n">mx</span><span class="p">%</span><span class="k">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">mx</span><span class="p">%</span><span class="nb">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="c">!$omp parallel do reduction(maxloc:mx)</span>
+<span class="k">do </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="nb">count</span>
+<span class="nb">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mx</span><span class="p">%</span><span class="k">value</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">val</span><span class="p">(</span><span class="n">i</span><span class="p">))</span><span class="w"> </span><span class="k">then</span>
+<span class="k">        </span><span class="n">mx</span><span class="p">%</span><span class="k">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">val</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+<span class="w">        </span><span class="n">mx</span><span class="p">%</span><span class="nb">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span>
+<span class="w">    </span><span class="k">endif</span>
+<span class="k">enddo</span>
+<span class="c">!$omp end parallel do</span>
+</pre></div>
+</div>
+</div></div>
+<ul class="simple">
+<li><p>The code is similar to a serial maximum search.</p></li>
+<li><p>Parallel combination is abstracted behind the named reduction.</p></li>
+<li><p>Equal maxima may select different indices because the combiner only replaces an entry when the incoming value is strictly greater.</p></li>
+</ul>
+<p><strong>Declaring a Reduction Operation: Syntax Summary</strong></p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-15-15-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-15-15-0" name="15-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-15-15-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-15-15-1" name="15-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-15-15-0" class="sphinx-tabs-panel" id="panel-15-15-0" name="15-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#pragma omp declare reduction(reduction_identifier: type_list: \</span>
+<span class="cp">    combiner) initializer(initializer_expression)</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-15-15-1" class="sphinx-tabs-panel" hidden="true" id="panel-15-15-1" name="15-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!$omp declare reduction(reduction_identifier: type_list: &amp;</span>
+<span class="c">!$omp&amp; combiner) initializer(initializer_expression)</span>
+</pre></div>
+</div>
+</div></div>
+<p><strong>Components</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">reduction_identifier</span></code>: name for the custom reduction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">type_list</span></code>: the type or types the reduction applies to.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">combiner</span></code>: expression or helper routine to merge contributions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">initializer</span></code>: optional initialization expression or routine.</p></li>
+</ul>
+</section>
+<section id="dealing-with-global-storage">
+<h1>Dealing with Global Storage<a class="headerlink" href="#dealing-with-global-storage" title="Link to this heading"></a></h1>
+<p>By default, global storage is shared by threads. Examples include:</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-16-16-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-16-16-0" name="16-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-16-16-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-16-16-1" name="16-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-16-16-0" class="sphinx-tabs-panel" id="panel-16-16-0" name="16-0" role="tabpanel" tabindex="0"><ul class="simple">
+<li><p>File-scope variables</p></li>
+<li><p>Static variables</p></li>
+</ul>
+</div><div aria-labelledby="tab-16-16-1" class="sphinx-tabs-panel" hidden="true" id="panel-16-16-1" name="16-1" role="tabpanel" tabindex="0"><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">COMMON</span></code> blocks</p></li>
+<li><p>Module data</p></li>
+<li><p>Variables with the <code class="docutils literal notranslate"><span class="pre">SAVE</span></code> attribute</p></li>
+</ul>
+</div></div>
+<p>This default behavior is not always what a parallel program needs.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">threadprivate</span></code> directive makes eligible global or persistent storage private to each thread. Each thread has its own copy rather than using a single shared value.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-17-17-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-17-17-0" name="17-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-17-17-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-17-17-1" name="17-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-17-17-0" class="sphinx-tabs-panel" id="panel-17-17-0" name="17-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="cp">#pragma omp threadprivate(g_var)</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+<span class="w">    </span><span class="cp">#pragma omp parallel num_threads(4)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_var</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-17-17-1" class="sphinx-tabs-panel" hidden="true" id="panel-17-17-1" name="17-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">module </span><span class="n">gmod</span>
+<span class="w">    </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="c">!$omp threadprivate(g_var)</span>
+<span class="k">end module </span><span class="n">gmod</span>
+
+<span class="k">program </span><span class="n">example</span>
+<span class="w">    </span><span class="k">use </span><span class="n">gmod</span>
+<span class="w">    </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span>
+<span class="w">    </span><span class="c">!$omp parallel num_threads(4)</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">g_var</span>
+<span class="w">    </span><span class="c">!$omp end parallel</span>
+<span class="k">end program </span><span class="n">example</span>
+</pre></div>
+</div>
+</div></div>
+<p><strong>Expected values with 4 threads</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Thread 0 (primary thread): 4
+Thread 1: 1
+Thread 2: 1
+Thread 3: 1
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Values may appear in any output order. Outside a parallel region, assignments by the initial thread affect its own <code class="docutils literal notranslate"><span class="pre">threadprivate</span></code> copy.</p>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">copyin</span></code> clause initializes each thread’s <code class="docutils literal notranslate"><span class="pre">threadprivate</span></code> data from the value held by the primary thread when the parallel region begins.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-18-18-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-18-18-0" name="18-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-18-18-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-18-18-1" name="18-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-18-18-0" class="sphinx-tabs-panel" id="panel-18-18-0" name="18-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="cp">#pragma omp threadprivate(g_var)</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span>
+<span class="w">    </span><span class="cp">#pragma omp parallel copyin(g_var) num_threads(4)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">"%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">g_var</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-18-18-1" class="sphinx-tabs-panel" hidden="true" id="panel-18-18-1" name="18-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">module </span><span class="n">gmod</span>
+<span class="w">    </span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="c">!$omp threadprivate(g_var)</span>
+<span class="k">end module </span><span class="n">gmod</span>
+
+<span class="k">program </span><span class="n">example</span>
+<span class="w">    </span><span class="k">use </span><span class="n">gmod</span>
+<span class="w">    </span><span class="n">g_var</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">4</span>
+<span class="w">    </span><span class="c">!$omp parallel copyin(g_var) num_threads(4)</span>
+<span class="w">        </span><span class="k">print</span><span class="w"> </span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">g_var</span>
+<span class="w">    </span><span class="c">!$omp end parallel</span>
+<span class="k">end program </span><span class="n">example</span>
+</pre></div>
+</div>
+</div></div>
+<p><strong>Output:</strong> With four threads, <strong>all</strong> threads print <code class="docutils literal notranslate"><span class="pre">4</span></code> (in an unspecified order).</p>
+<p><strong>Data Persistence</strong></p>
+<p>There are some conditions for preserving <code class="docutils literal notranslate"><span class="pre">threadprivate</span></code> values between non-nested parallel regions:</p>
+<ul class="simple">
+<li><p>Both parallel regions have the same number of threads.</p></li>
+<li><p>Dynamic adjustment of the number of threads is disabled.</p></li>
+<li><p>Neither region is nested in another parallel region.</p></li>
+</ul>
+<p>Use <code class="docutils literal notranslate"><span class="pre">omp_set_dynamic</span></code> to control dynamic adjustment:</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-19-19-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-19-19-0" name="19-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-19-19-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-19-19-1" name="19-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-19-19-0" class="sphinx-tabs-panel" id="panel-19-19-0" name="19-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span>
+<span class="n">omp_set_dynamic</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span><span class="w">  </span><span class="c1">// disable dynamic thread adjustment</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-19-19-1" class="sphinx-tabs-panel" hidden="true" id="panel-19-19-1" name="19-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">use </span><span class="n">omp_lib</span>
+<span class="k">call </span><span class="n">omp_set_dynamic</span><span class="p">(.</span><span class="n">false</span><span class="p">.)</span><span class="w">  </span><span class="c">! disable dynamic adjustment</span>
+</pre></div>
+</div>
+</div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These conditions are not an exhaustive statement of all OpenMP requirements for persistence. Do not assume thread-to-thread persistence if the runtime may change team membership.</p>
+</div>
+<p><strong>Threadprivate Global Storage: C/C++ and Fortran COMMON Blocks</strong></p>
+<p>Fortran <code class="docutils literal notranslate"><span class="pre">COMMON</span></code> blocks can be made <code class="docutils literal notranslate"><span class="pre">threadprivate</span></code>. C/C++ has no <code class="docutils literal notranslate"><span class="pre">COMMON</span></code> block; the analogous operation is to declare a file-scope or static variable <code class="docutils literal notranslate"><span class="pre">threadprivate</span></code>.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-20-20-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-20-20-0" name="20-0" role="tab" tabindex="0">C/C++</button><button aria-controls="panel-20-20-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-20-20-1" name="20-1" role="tab" tabindex="-1">Fortran</button></div><div aria-labelledby="tab-20-20-0" class="sphinx-tabs-panel" id="panel-20-20-0" name="20-0" role="tabpanel" tabindex="0"><div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">;</span><span class="w">   </span><span class="c1">// file-scope variables</span>
+<span class="cp">#pragma omp threadprivate(a, b, c)</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-20-20-1" class="sphinx-tabs-panel" hidden="true" id="panel-20-20-1" name="20-1" role="tabpanel" tabindex="0"><div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="kt">integer</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span>
+<span class="k">common</span><span class="w"> </span><span class="o">/</span><span class="n">abccom</span><span class="o">/</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">c</span>
+<span class="c">!$omp threadprivate(/abccom/)</span>
+</pre></div>
+</div>
+</div></div>
+<div class="admonition-exercise exercise important admonition" id="exercise-0">
+<p class="admonition-title">Exercise</p>
+<p>In a previous exercise, we parallelized a <strong>for</strong> loop which had 20 iterations by evenly divinding the
+number of interations among the available threads. An variable was used to store the number of iterations
+in the loop and an <em>atomic</em> operation protected the data from race conditions. Rewrite this code but
+now use the <em>reduction</em> operation.</p>
+</div>
+<div class="admonition-solution solution important dropdown admonition" id="solution-0">
+<p class="admonition-title">Solution</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1">// On cluster Kebnekaise</span>
+<span class="linenos"> 2</span><span class="c1">// ml foss</span>
+<span class="linenos"> 3</span><span class="c1">// export OMP_NUM_THREADS=1</span>
+<span class="linenos"> 4</span><span class="c1">// gcc -O3 -march=native -fopenmp -o test.x 6b-forworksharing-openmp.c -lm</span>
+<span class="linenos"> 5</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="linenos"> 6</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos"> 7</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span>
+<span class="linenos"> 8</span><span class="cp">#endif</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="linenos">11</span><span class="p">{</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="n">var1</span><span class="p">;</span>
+<span class="linenos">14</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span><span class="w"> </span><span class="c1">// number of iterations</span>
+<span class="linenos">15</span><span class="n">var1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">16</span>
+<span class="linenos">17</span><span class="cp">#pragma omp parallel</span>
+<span class="linenos">18</span><span class="w">    </span><span class="p">{</span>
+<span class="linenos">19</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos">20</span><span class="w">    </span><span class="c1">// The purpose of this code is to add 1 to var1 20 times</span>
+<span class="linenos">21</span><span class="cp">#pragma omp for reduction(+:var1)</span>
+<span class="linenos">22</span><span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">n</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="linenos">23</span><span class="w">        </span><span class="n">var1</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="linenos">24</span>
+<span class="linenos">25</span><span class="cp">#else</span>
+<span class="linenos">26</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Serial code!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="linenos">27</span><span class="cp">#endif</span>
+<span class="linenos">28</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">29</span>
+<span class="linenos">30</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"var1 =  %i </span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">var1</span><span class="p">);</span>
+<span class="linenos">31</span>
+<span class="linenos">32</span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">33</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition-exercise exercise important admonition" id="exercise-1">
+<p class="admonition-title">Exercise</p>
+<p>In the following code, monitor the values of the variables at the different stages of the runtime.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1">// On cluster Kebnekaise</span>
+<span class="linenos"> 2</span><span class="c1">// ml foss</span>
+<span class="linenos"> 3</span><span class="c1">// export OMP_NUM_THREADS=1</span>
+<span class="linenos"> 4</span><span class="c1">// gcc -O3 -march=native -fopenmp -o test.x 5b-datascope-openmp.c -lm</span>
+<span class="linenos"> 5</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="linenos"> 6</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos"> 7</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span>
+<span class="linenos"> 8</span><span class="cp">#endif</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="linenos">11</span><span class="p">{</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="kt">int</span><span class="w"> </span><span class="n">var1</span><span class="p">,</span><span class="w"> </span><span class="n">var2</span><span class="p">,</span><span class="w"> </span><span class="n">var3</span><span class="p">;</span><span class="w">   </span><span class="c1">// Three variables</span>
+<span class="linenos">14</span><span class="n">var1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="linenos">15</span><span class="n">var2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span>
+<span class="linenos">16</span><span class="n">var3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span><span class="p">;</span>
+<span class="linenos">17</span>
+<span class="linenos">18</span><span class="cp">#pragma omp parallel firstprivate(var1,var2) shared(var3)</span>
+<span class="linenos">19</span><span class="w">    </span><span class="p">{</span>
+<span class="linenos">20</span>
+<span class="linenos">21</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos">22</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"var1 =  %i , var2 = %i , var3 = %i </span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="n">var1</span><span class="p">,</span><span class="n">var2</span><span class="p">,</span><span class="n">var3</span><span class="p">);</span>
+<span class="linenos">23</span><span class="w">    </span><span class="n">var1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
+<span class="linenos">24</span><span class="w">    </span><span class="n">var2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">20</span><span class="p">;</span>
+<span class="linenos">25</span><span class="w">    </span><span class="n">var3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">30</span><span class="p">;</span>
+<span class="linenos">26</span><span class="cp">#else</span>
+<span class="linenos">27</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Serial code!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="linenos">28</span><span class="cp">#endif</span>
+<span class="linenos">29</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">30</span>
+<span class="linenos">31</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"var1 =  %i , var2 = %i , var3 = %i </span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="n">var1</span><span class="p">,</span><span class="n">var2</span><span class="p">,</span><span class="n">var3</span><span class="p">);</span>
+<span class="linenos">32</span>
+<span class="linenos">33</span>
+<span class="linenos">34</span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="c1">// variable to hold the value from the last iteration</span>
+<span class="linenos">35</span>
+<span class="linenos">36</span><span class="cp">#pragma omp parallel for lastprivate(x)</span>
+<span class="linenos">37</span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="linenos">38</span><span class="w">    </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span><span class="w"> </span><span class="c1">// x is private to each thread, but will retain value from the last iteration</span>
+<span class="linenos">39</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Thread %d: i = %d, x = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">(),</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span>
+<span class="linenos">40</span><span class="p">}</span>
+<span class="linenos">41</span>
+<span class="linenos">42</span><span class="n">printf</span><span class="p">(</span><span class="s">"After the loop, x = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span><span class="w"> </span><span class="c1">// x has the value from the last iteration (n - 1)</span>
+<span class="linenos">43</span>
+<span class="linenos">44</span>
+<span class="linenos">45</span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">46</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition-exercise exercise important admonition" id="exercise-2">
+<p class="admonition-title">Exercise</p>
+<p>In the following code, monitor the values of the variable <em>counter</em> at the different stages of the runtime.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1">// On cluster Kebnekaise</span>
+<span class="linenos"> 2</span><span class="c1">// ml foss</span>
+<span class="linenos"> 3</span><span class="c1">// export OMP_NUM_THREADS=1</span>
+<span class="linenos"> 4</span><span class="c1">// gcc -O3 -march=native -fopenmp -o test.x 7-threadprivate-openmp.c -lm</span>
+<span class="linenos"> 5</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="linenos"> 6</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos"> 7</span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;omp.h&gt;</span>
+<span class="linenos"> 8</span><span class="cp">#endif</span>
+<span class="linenos"> 9</span>
+<span class="linenos">10</span><span class="c1">// declare a global variable</span>
+<span class="linenos">11</span><span class="kt">int</span><span class="w"> </span><span class="n">counter</span><span class="p">;</span>
+<span class="linenos">12</span>
+<span class="linenos">13</span><span class="c1">// this variable is private to each thread</span>
+<span class="linenos">14</span><span class="cp">#pragma omp threadprivate(counter)</span>
+<span class="linenos">15</span>
+<span class="linenos">16</span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span>
+<span class="linenos">17</span><span class="p">{</span>
+<span class="linenos">18</span>
+<span class="linenos">19</span><span class="n">counter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">20</span>
+<span class="linenos">21</span><span class="cp">#pragma omp parallel</span>
+<span class="linenos">22</span><span class="p">{</span>
+<span class="linenos">23</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos">24</span><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">thread_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="linenos">25</span>
+<span class="linenos">26</span><span class="w">    </span><span class="c1">// Each thread sets its private copy of 'counter'</span>
+<span class="linenos">27</span><span class="w">    </span><span class="n">counter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">thread_id</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
+<span class="linenos">28</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Thread %d: counter = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">thread_id</span><span class="p">,</span><span class="w"> </span><span class="n">counter</span><span class="p">);</span>
+<span class="linenos">29</span>
+<span class="linenos">30</span><span class="w">    </span><span class="c1">// sync all threads</span>
+<span class="linenos">31</span><span class="w">    </span><span class="cp">#pragma omp barrier</span>
+<span class="linenos">32</span>
+<span class="linenos">33</span><span class="w">    </span><span class="c1">// Modify the thread-private variable</span>
+<span class="linenos">34</span><span class="w">    </span><span class="n">counter</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+<span class="linenos">35</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Thread %d after modification: counter = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">thread_id</span><span class="p">,</span><span class="w"> </span><span class="n">counter</span><span class="p">);</span>
+<span class="linenos">36</span><span class="cp">#else</span>
+<span class="linenos">37</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Serial code!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="linenos">38</span><span class="cp">#endif</span>
+<span class="linenos">39</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">40</span>
+<span class="linenos">41</span><span class="c1">// Outside the parallel region, the main thread's 'counter' value is unaffected</span>
+<span class="linenos">42</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"In main thread, counter = %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">counter</span><span class="p">);</span>
+<span class="linenos">43</span>
+<span class="linenos">44</span><span class="cp">#pragma omp parallel</span>
+<span class="linenos">45</span><span class="p">{</span>
+<span class="linenos">46</span><span class="cp">#ifdef _OPENMP</span>
+<span class="linenos">47</span><span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">thread_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">omp_get_thread_num</span><span class="p">();</span>
+<span class="linenos">48</span>
+<span class="linenos">49</span><span class="w">    </span><span class="c1">// print the value of 'counter' in another parallel region</span>
+<span class="linenos">50</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Thread %d: counter = %d in the second parallel region</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="w"> </span><span class="n">thread_id</span><span class="p">,</span><span class="w"> </span><span class="n">counter</span><span class="p">);</span>
+<span class="linenos">51</span>
+<span class="linenos">52</span><span class="cp">#else</span>
+<span class="linenos">53</span><span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">"Serial code!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="linenos">54</span><span class="cp">#endif</span>
+<span class="linenos">55</span><span class="w">    </span><span class="p">}</span>
+<span class="linenos">56</span>
+<span class="linenos">57</span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="linenos">58</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h2>
+<p>This guide covered special private variables in OpenMP:</p>
+<p><em>Special Private Variable Types</em></p>
+<ul class="simple">
+<li><p><strong>firstprivate:</strong> Initialization of private variables from master thread</p></li>
+<li><p><strong>lastprivate:</strong> Set value of private variable to value of last loop iteration or last section at end of construct</p></li>
+<li><p><strong>reduction:</strong> Calculating sums, products, etc. in parallel</p></li>
+<li><p><strong>threadprivate:</strong> Privatize global storage</p></li>
+</ul>
+<p><em>User-Defined Reductions</em></p>
+<ul class="simple">
+<li><p>Available in OpenMP 4.0+</p></li>
+<li><p>Useful for complex data types</p></li>
+<li><p>Requires combiner and initializer functions</p></li>
+</ul>
+<p><em>When to Use Standard Constructs</em></p>
+<p>The above constructs handle standard situations. For special cases, use:</p>
+<ul class="simple">
+<li><p>Explicit initialization of private variables from shared variables</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">atomic</span></code>/<code class="docutils literal notranslate"><span class="pre">critical</span></code> for writes to shared variables</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../worksharing/" class="btn btn-neutral float-left" title="Worksharing and Scheduling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../worksharingii/" class="btn btn-neutral float-right" title="More on Worksharing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, The contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
