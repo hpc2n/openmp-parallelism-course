@@ -9,7 +9,7 @@ Profiling analysis with VTune and Advisor
 VTune Workflow
 ^^^^^^^^^^^^^^
 
-- Load your compiler tool: ``ml foss``
+- Load your compiler tool: ``ml foss/2025b``
 
 - Copy/paste the following C code that contains an OpenMP parallel implementation (at this point you are not
 expected to understand the OpenMP directives):
@@ -17,7 +17,7 @@ expected to understand the OpenMP directives):
 .. code-block:: c
 
     // On cluster Kebnekaise
-    // ml foss
+    // ml foss/2025b
     // gcc -O3 -march=native -g -fopenmp -o test.x fibonacci_recursion_omp_tasking.c -lm
     #include <stdio.h>
     #include <stdlib.h>
@@ -77,15 +77,13 @@ expected to understand the OpenMP directives):
     #SBATCH -c 10
     #SBATCH --time=00:10:00
     #SBATCH --mail-type=END
-    #SBATCH -C skylake
-
 
     export OMP_NUM_THREADS=10
 
     # Load VTUNE
-    ml VTune/2021.6.0
+    ml VTune/2026.4.0
     # Load foss
-    ml foss
+    ml foss/2025b
 
     vtune -collect hotspots -app-working-dir /path-to-your-folder  --app-working-dir=/path-to-your-folder -- /path-to-your-folder/executable list-of-arguments
 
@@ -96,22 +94,20 @@ expected to understand the OpenMP directives):
     gcc -O3 -march=native -g -fopenmp-o test.x fibonacci_recursion_omp_tasking.c -lm
 
 
-
-
 - Fix the paths to the directory where you obtained the executable *test.x* in the *job_vtune.sh* script. 
 
 - Also correct the projectID. Then, submitthe job with **sbatch job_vtune.sh**.
 
 - In this script, the number of threads is set to 10 (it takes ~ 2min.) for the Fibonacci number 56.
 
-- Once the job finishes. Load the Vtune module on the terminal: ``ml VTune/2021.6.0`` and load the gui: 
+- Once the job finishes. Load the Vtune module on the terminal: ``ml VTune/2026.4.0`` and load the gui: 
   *vtune-gui*. Then, load the ``r*hs`` project:
 
 .. figure:: img/vtune1.png
     :align: center
     :scale: 50%
 
-----
+
 
 
 - If you don't see a project, go to *Open Result* and choose the ``r*hs`` project and then the ``*.vtune`` file.
@@ -123,13 +119,13 @@ expected to understand the OpenMP directives):
     :align: center
     :scale: 50%
 
-----
+
 
 .. figure:: img/vtune3.png
     :align: center
     :scale: 50%
 
-----
+
 
 
 Advisor Workflow
@@ -139,14 +135,14 @@ Advisor Workflow
 
 1. Load your compiler tool::
 
-    ml foss
+    ml foss/2025b
 
 2. Use this code::
 
 .. code-block:: c
 
     // On cluster Kebnekaise
-    // ml foss
+    // ml foss/2025b
     // gcc -O3 -march=native -g -o test.x fibonacci_recursion.c -lm
     #include <stdio.h>
     #include <stdlib.h>
@@ -192,12 +188,11 @@ and compile it:
     #SBATCH -c 1
     #SBATCH --time=00:10:00
     #SBATCH --mail-type=END
-    #SBATCH -C skylake
 
     # Load Intel Advisor tool
-    ml Advisor/2023.2.0
+    ml Advisor/2026.0.1
     # Load foss
-    ml foss
+    ml foss/2025b
 
     advisor --collect=roofline --project-dir=./advi_results -- ./executable list-of-arguments    
 
@@ -205,7 +200,7 @@ with the standard command: ``sbatch job_advisor.sh``
 
 5. Note: This script for the Fibonacci number 50 takes approximately 6 minutes.
 
-----
+
 
 **Step 2: View Results with Advisor GUI**
 
@@ -214,7 +209,7 @@ Once the job finishes:
 
 1. Load the Advisor module on the terminal::
 
-    ml Advisor/2023.2.0
+    ml Advisor/2026.0.1
 
 2. Launch the GUI::
 
@@ -228,7 +223,7 @@ Once the job finishes:
     :align: center
     :scale: 70%
 
-----
+
 
 4. Find the ``advi_results`` folder
 
@@ -238,7 +233,7 @@ Once the job finishes:
     :align: center
     :scale: 70%
 
-----
+
 
 5. Choose the ``advi_results.advixeproj`` file
 
@@ -246,7 +241,7 @@ Once the job finishes:
     :align: center
     :scale: 70%
 
-----
+
 
 6. Click **Show Results**
 
@@ -254,7 +249,7 @@ Once the job finishes:
     :align: center
     :scale: 70%
 
-----
+
 
 Measuring Code Performance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -278,7 +273,7 @@ Roofline Model
     :align: center
     :scale: 70%
 
-----
+
 
 The roofline model visualizes performance bottlenecks:
 
@@ -306,7 +301,7 @@ The Roofline analysis provides insights into code performance:
     :align: center
     :scale: 30%
 
-----
+
 
 In the **Code Analytics** view, you can see:
 
