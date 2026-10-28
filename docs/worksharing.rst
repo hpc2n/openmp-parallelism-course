@@ -364,7 +364,7 @@ two-iteration chunks are assigned to threads 0, 1, 2, 3, 0, 1, etc.
          !$omp end parallel do
 
 For this triangular workload, smaller chunks can improve balance, at the
-cost of more scheduling overhead. The original course example compares a
+cost of more scheduling overhead. It shows a
 maximum work share of ``7/16`` for a default static distribution against
 ``5/16`` for a chunk size of 100; these are illustrative workload estimates,
 not general guarantees for every thread count or scheduling implementation.
@@ -406,7 +406,7 @@ runtime overhead.
          end do
          !$omp end parallel do
 
-For the original triangular example, the course estimates that the largest
+For the triangular example, the course estimates that the largest
 thread share falls to about ``0.27`` with ``schedule(dynamic, 100)``.
 Dynamic scheduling can improve load balance but has more dispatch overhead.
 
@@ -644,7 +644,7 @@ The OpenMP ``workshare`` construct is **Fortran-only**. It can distribute
 Fortran array syntax, ``FORALL``, ``WHERE``, and permitted scalar
 assignments. There is **no direct equivalent** directive in C/C++. The
 following tabs show a related *element-wise parallel loop* in C/C++ and the
-original ``workshare`` construct in Fortran; the two mechanisms are not
+``workshare`` construct in Fortran; the two mechanisms are not
 identical.
 
 **Example: Updating arrays**
@@ -750,7 +750,7 @@ The sections can require different amounts of work, and their count may
 not match the number of threads. There is an implicit barrier at the end
 of ``sections`` unless ``nowait`` is specified.
 
-A research application mentioned in the original material is
+A research application is given in
 *Acceleration of Semiempirical QM/MM Methods*, JCTC 13, 3525--3536 (2017).
 
 **Example: Two independent sections**

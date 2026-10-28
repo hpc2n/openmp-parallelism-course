@@ -283,7 +283,7 @@ The ``default`` clause can be used on a parallel or task construct to determine 
 
    .. tab:: Fortran
 
-      .. code-block:: fortran
+      .. code-block:: c
 
          default(shared | none | private | firstprivate)
 
