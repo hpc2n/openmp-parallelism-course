@@ -406,12 +406,6 @@ orders the data access across the two threads.
              end if
          !$omp end parallel
 
-.. warning::
-
-   The original version (writing ``A(5)``, calling ``flush``, and setting a
-   flag) does not by itself define a complete reader/writer protocol.
-   Use an appropriate acquire operation on the reader side. Busy-waiting
-   is for demonstration only, not generally the best design for HPC code.
 
 Implicit Synchronization
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -515,11 +509,7 @@ loops have completed before the third loop uses their results. Combining
 these operations in one loop would often be faster; this is a demonstration
 of synchronization rather than a performance recommendation.
 
-**Example: tensor product, with the dependency correctly synchronized**
-
-The original C example was labeled as having a bad access to ``b`` even
-though the barrier after its second loop also guarantees completion of the
-first loop. The following paired examples make that dependency explicit.
+**Example: tensor product, with the dependency synchronized**
 
 .. tabs::
 
@@ -726,9 +716,7 @@ compatible order.
 
    Every thread calls the routine, but its orphaned ``for``/``do``
    distributes the loop across the team. The examples set the vector to
-   values 0 through 7. The original sample also called a ``vectornorm``
-   function, but did not provide its implementation; this example isolates
-   the orphaned directive so the synchronization is unambiguous.
+   values 0 through 7. 
 
 Performance Impact of Orphaning
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
