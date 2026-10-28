@@ -512,7 +512,7 @@ The quantity computed in all three norm approaches is :math:`\sqrt{\sum_i v(i)\,
 
    .. tab:: C/C++
 
-      For older OpenMP versions, the original course material notes restrictions involving arrays and pointer/reference variables.
+      For older OpenMP versions, there are restrictions involving arrays and pointer/reference variables.
 
       Modern OpenMP permits **contiguous array sections** in reduction clauses under specified restrictions. A pointer variable or C++ reference is not interchangeable with an array section.
 
@@ -848,7 +848,7 @@ More on threadprivate
 
 **Data Persistence**
 
-The original course material highlights these conditions for preserving ``threadprivate`` values between non-nested parallel regions:
+There are some conditions for preserving ``threadprivate`` values between non-nested parallel regions:
 
 - Both parallel regions have the same number of threads.
 - Dynamic adjustment of the number of threads is disabled.
@@ -874,7 +874,7 @@ Use ``omp_set_dynamic`` to control dynamic adjustment:
 
 .. note::
 
-   These are key conditions from the original teaching material, not an exhaustive statement of all OpenMP requirements for persistence. Do not assume thread-to-thread persistence if the runtime may change team membership.
+   These conditions are not an exhaustive statement of all OpenMP requirements for persistence. Do not assume thread-to-thread persistence if the runtime may change team membership.
 
 **Threadprivate Global Storage: C/C++ and Fortran COMMON Blocks**
 
