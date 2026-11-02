@@ -9,7 +9,7 @@ OpenMP parallelism in scientific computing
 
 :Audience: ...
 
-:Date and Time:  Nov.-Dec. 2025, 13:00-15:00
+:Date and Time:  Nov.-Dec. 2026, 13:00-15:00
 
 :Location: On-site
 
