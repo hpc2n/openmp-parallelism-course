@@ -162,6 +162,12 @@ Logging in to Kebnekaise
 
 Remember, the username and password for HPC2N are separate from your SUPR credentials. 
 
+**Open onDemand**
+
+This is the recommended way to connect for this course: https://docs.hpc2n.umu.se/tutorials/connections/#open__ondemand 
+Here, you will be using a computing node so, there is no risk that running your codes can interfere with the 
+other users.
+
 **Linux or macOS**
 
 .. code-block:: bash
