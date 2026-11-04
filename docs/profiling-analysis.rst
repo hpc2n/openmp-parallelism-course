@@ -310,8 +310,7 @@ In the **Code Analytics** view, you can see:
 
 These metrics show the number of operations per second (floating point or integers) for expensive functions in your code.
 
-Key Metrics Displayed
----------------------
+*Key Metrics Displayed*
 
 - **Performance:** Operations per second for each function
 - **Arithmetic Intensity:** Ratio of compute operations to memory access
@@ -323,6 +322,44 @@ The visualization helps identify:
 - Whether your code is memory-bound or compute-bound
 - Optimization opportunities
 - Performance bottlenecks in specific functions
+
+Parallel performance metrics
+----------------------------
+
+**Speedup** measures the benefit of parallelizing a computation while keeping the problem size fixed (**strong scaling**). 
+Let :math:`T_{\mathrm{serial}}` be the time required on one core and :math:`T_{\mathrm{parallel}}(p)` the time required 
+on :math:`p` processors. The speedup :math:`S(p)` compares these execution times, whereas the **efficiency** :math:`E(p)` 
+measures the speedup per processor. The **cost** :math:`C(p)` is the total processor time, and the **overhead** :math:`T_o(p)` 
+is the excess cost compared with serial execution. Ideally, :math:`S(p)=p` and :math:`E(p)=1`; in practice, communication, 
+synchronization, and load imbalance limit performance. **Amdahl's law** expresses the limit when a fraction :math:`\tau` 
+of the code is parallelizable: even with infinitely many processors, the non-parallel fraction imposes a maximum speedup 
+of :math:`1/(1-\tau)`.
+
+.. math::
+
+   \begin{aligned}
+   S(p) &= \frac{T_{\mathrm{serial}}}{T_{\mathrm{parallel}}(p)},
+   & E(p) &= \frac{S(p)}{p}, \\
+   C(p) &= p\,T_{\mathrm{parallel}}(p),
+   & T_o(p) &= p\,T_{\mathrm{parallel}}(p)-T_{\mathrm{serial}}, \\
+   S_{\mathrm{Amdahl}}(p) &= \frac{1}{(1-\tau)+\tau/p},
+   & \lim_{p\to\infty} S_{\mathrm{Amdahl}}(p) &= \frac{1}{1-\tau}.
+   \end{aligned}
+
+**Scaled speedup** is useful when the goal is to solve larger problems as more processors become available (**weak scaling**). 
+Instead of fixing the workload, increase it in proportion to :math:`p` and compare the time for a reference problem on one core, 
+:math:`T_{\mathrm{serial}}`, with the time for the scaled problem on :math:`p` processors, :math:`T_{\mathrm{parallel}}(p)`. 
+The practical scaled-speedup metric from the slides is :math:`pT_{\mathrm{serial}}/T_{\mathrm{parallel}}(p)`; it approaches 
+:math:`p` when the larger problem takes approximately the same time as the reference problem. **Gustafson's law** illustrates 
+how scaled speedup can grow approximately linearly with the processor count for a sufficiently parallel workload. Strong scaling 
+therefore asks how much faster a *fixed* problem can be solved, whereas weak scaling asks how well runtime is maintained as 
+both the problem size and processor count increase.
+
+.. math::
+
+   S_{\mathrm{scaled}}(p) = \frac{p\,T_{\mathrm{serial}}}{T_{\mathrm{parallel}}(p)},
+   \qquad
+   S_{\mathrm{Gustafson}}(p) = 1 + \tau(p-1).
 
 
 .. challenge::
